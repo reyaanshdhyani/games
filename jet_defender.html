@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Jet Defender</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    body{background:#000;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;}
+    canvas{display:block;}
+  </style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+const W = canvas.width  = Math.min(window.innerWidth,  620);
+const H = canvas.height = Math.min(window.innerHeight, 760);
+
+/* ── CONSTANTS ──────────────────────────────────────── */
+const DANGER_Y        = H - 120;
+const PLAYER_Y        = H - 68;
+const BULLET_SPD      = 11;
+const P_MISSILE_SPD   = 7;
+const SHOOT_CD        = 190;
+const P_MISSILE_CD    = 700;
+const COLLECT_R       = 105;
+const MAX_WINGMEN     = 8;
+const PLAYER_MAX_HP   = 10;
+const GEMS_FOR_JET    = 100;
+const WINGS_FOR_JET   = 10;
+
+/* BOX position (bottom-left, always visible) */
+const BOX = { x:8, y:H-54, w:140, h:46 };
+
+/* ── STARS ───────────────────────────────────────────── */
+const stars = Array.from({length:130},()=>({
+  x:Math.random()*W, y:Math.random()*H,
+  r:Math.random()*1.6+0.3, a:Math.random()*0.7+0.3
+}));
+
+/* ── STATE ───────────────────────────────────────────── */
+let level, score, state, time, lvlTimer;
+let enemies, bullets, drops, explosions;
+let enemyMissiles, playerMissiles, enemyBullets;
+let gems, wingmen, jetLevel;
+let playerHP, playerFlash;
+let exchangeOpen, newJetFlash;
+let levelPickerOpen=false, selectedStartLevel=1;
+let logBookOpen=false, logBookScroll=0;
+
+/* ── HISTORY ─────────────────────────────────────────── */
+function loadLog(){ try{return JSON.parse(localStorage.getItem('jd_log')||'{}');}catch(e){return{};} }
+function saveLog(log){ try{localStorage.setItem('jd_log',JSON.stringify(log));}catch(e){} }
+function recordLevel(lvl, sc, result){
+  const log=loadLog();
+  if(!log[lvl]) log[lvl]={tries:0, best:0, results:[]};
+  log[lvl].tries++;
+  if(sc>log[lvl].best) log[lvl].best=sc;
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('en-GB',{day:'numeric',month:'short'})+' '+now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  log[lvl].results.unshift({sc, result, date:dateStr});
+  if(log[lvl].results.length>5) log[lvl].results.pop();
+  saveLog(log);
+}
+
+/* ── INPUT ───────────────────────────────────────────── */
+let leftHeld=false, rightHeld=false;
+let lastTap=0;
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowLeft' ||e.key==='a'||e.key==='A'){leftHeld=true;  e.preventDefault();}
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D'){rightHeld=true; e.preventDefault();}
+  if((e.key===' '||e.key==='Enter')&&!exchangeOpen&&!levelPickerOpen){
+    e.preventDefault();
+    if(state==='start')                           {initGame();startLevel(selectedStartLevel);}
+    else if(state==='gameover'||state==='win')    {initGame();startLevel(selectedStartLevel);}
+  }
+  if(e.key==='Escape'){ exchangeOpen=false; levelPickerOpen=false; logBookOpen=false; }
+});
+document.addEventListener('keyup', e=>{
+  if(e.key==='ArrowLeft' ||e.key==='a'||e.key==='A') leftHeld=false;
+  if(e.key==='ArrowRight'||e.key==='d'||e.key==='D') rightHeld=false;
+});
+
+/* click handler */
+function getCanvasXY(e){
+  const r=canvas.getBoundingClientRect();
+  const scaleX=W/r.width, scaleY=H/r.height;
+  return {mx:(e.clientX-r.left)*scaleX, my:(e.clientY-r.top)*scaleY};
+}
+canvas.addEventListener('click', e=>{
+  const {mx,my}=getCanvasXY(e);
+
+  /* log book */
+  if(logBookOpen){
+    const pw=360, ph=400, px=(W-pw)/2, py=(H-ph)/2;
+    // inside panel?
+    const inside=mx>px&&mx<px+pw&&my>py&&my<py+ph;
+    if(!inside){logBookOpen=false;return;}
+    // close X
+    if(mx>px+pw-32&&my>py+2&&my<py+32){logBookOpen=false;return;}
+    return;
+  }
+
+  /* level picker on start/gameover/win screen */
+  if(levelPickerOpen){
+    const pw=360, ph=320, px=(W-pw)/2, py=(H-ph)/2;
+    // close X
+    if(mx>px+pw-30&&mx<px+pw&&my>py&&my<py+30){levelPickerOpen=false;return;}
+    // level buttons: 8 cols × 5 rows
+    const cols=8, btnW=38, btnH=32, gapX=5, gapY=6;
+    const gridW=cols*btnW+(cols-1)*gapX;
+    const startX=px+(pw-gridW)/2, startY=py+54;
+    for(let i=0;i<40;i++){
+      const col=i%cols, row=Math.floor(i/cols);
+      const bx=startX+col*(btnW+gapX), by=startY+row*(btnH+gapY);
+      if(mx>bx&&mx<bx+btnW&&my>by&&my<by+btnH){
+        selectedStartLevel=i+1; levelPickerOpen=false;
+        return;
+      }
+    }
+    return;
+  }
+
+  /* "Select Level" + "Log Book" buttons on start/over/win screen */
+  if(state==='start'||state==='gameover'||state==='win'){
+    const bx=W/2-80, by=H/2+110, bw=160, bh=38;
+    if(mx>bx&&mx<bx+bw&&my>by&&my<by+bh){ levelPickerOpen=true; return; }
+    const lbx=W/2-80, lby=H/2+158, lbw=160, lbh=38;
+    if(mx>lbx&&mx<lbx+lbw&&my>lby&&my<lby+lbh){ logBookOpen=true; logBookScroll=0; return; }
+    if(my>H/2+205){ initGame(); startLevel(selectedStartLevel); return; }
+  }
+
+  /* if exchange panel is open, handle button clicks */
+  if(exchangeOpen && state==='playing'){
+    const pw=300, ph=220, px=(W-pw)/2, py=(H-ph)/2;
+    if(mx>px+pw-30&&mx<px+pw&&my>py&&my<py+30){exchangeOpen=false;return;}
+    const bAx=px+20, bAy=py+80, bAw=pw-40, bAh=46;
+    if(mx>bAx&&mx<bAx+bAw&&my>bAy&&my<bAy+bAh&&gems>=GEMS_FOR_JET){
+      gems-=GEMS_FOR_JET; upgradeJet(); exchangeOpen=false; return;
+    }
+    const bBx=px+20, bBy=py+140, bBw=pw-40, bBh=46;
+    if(mx>bBx&&mx<bBx+bBw&&my>bBy&&my<bBy+bBh&&wingmen.length>=WINGS_FOR_JET){
+      wingmen.splice(0,WINGS_FOR_JET); upgradeJet(); exchangeOpen=false; return;
+    }
+    return;
+  }
+
+  /* double-click on gem box during play */
+  if(mx>BOX.x&&mx<BOX.x+BOX.w&&my>BOX.y&&my<BOX.y+BOX.h&&state==='playing'){
+    const now=Date.now();
+    if(now-lastTap<420){ exchangeOpen=true; }
+    lastTap=now;
+  }
+});
+
+/* ── PLAYER ──────────────────────────────────────────── */
+const player={x:W/2, y:PLAYER_Y, w:38, h:46, spd:7, lastShot:0, lastMissile:0};
+
+/* ── LEVEL CONFIG ────────────────────────────────────── */
+function levelCfg(lvl){
+  const t = (lvl-1)/39; // 0 at lvl1, 1 at lvl40
+  return {
+    count:      Math.min(3+Math.floor(lvl*0.72),30),
+    descSpd:    0.35 + t*3.5,           // lvl1=0.35 → lvl40=3.85
+    sideSpd:    1.2  + t*4.0,           // gets very fast
+    sideAmp:    W*0.33 + lvl*2,
+    cols:       Math.min(5+Math.floor(lvl/8),7),
+    enemyHP:    2,
+    // missiles: ALL enemies fire from level 1, fast and getting faster
+    missileCD:  Math.max(300, 2200 - t*1900),   // lvl1~2200ms → lvl40~300ms
+    missileSpd: 3.5 + t*7.0,            // lvl1=3.5 → lvl40=10.5
+    // enemy bullets: rapid small shots, from level 1
+    bulletCD:   Math.max(250, 1800 - t*1550),   // lvl1~1800ms → lvl40~250ms
+    bulletSpd:  4 + t*8                 // lvl1=4 → lvl40=12
+  };
+}
+
+/* ── INIT / START ────────────────────────────────────── */
+function initGame(){
+  score=0; level=1; time=0;
+  gems=0; wingmen=[]; jetLevel=1;
+  playerHP=PLAYER_MAX_HP; playerFlash=0;
+  exchangeOpen=false; newJetFlash=0;
+}
+
+function startLevel(lvl){
+  level=lvl; state='playing'; lvlTimer=0;
+  bullets=[]; drops=[]; explosions=[];
+  enemyMissiles=[]; playerMissiles=[]; enemyBullets=[];
+  exchangeOpen=false;
+  const cfg=levelCfg(lvl);
+  enemies=[];
+  const cols=Math.min(cfg.count,cfg.cols);
+  let placed=0;
+  for(let row=0;placed<cfg.count;row++){
+    const inRow=Math.min(cols,cfg.count-placed);
+    const gap=W/(inRow+1);
+    for(let c=0;c<inRow;c++){
+      const bx=gap*(c+1);
+      enemies.push({
+        x:bx, y:48+row*62, bx,
+        phase:Math.random()*Math.PI*2,
+        w:34, h:40,
+        hp:cfg.enemyHP, maxHp:cfg.enemyHP,
+        alive:true, flash:0,
+        lastMissile: Date.now()+Math.random()*cfg.missileCD*1.2,
+        lastBullet:  Date.now()+Math.random()*cfg.bulletCD*1.2,
+        canMissile: true   // ALL enemies shoot missiles from level 1
+      });
+      placed++;
+    }
+  }
+  player.x=W/2;
+  wingmen.forEach((wm,i)=>{wm.x=player.x+wmOff(i); wm.y=PLAYER_Y;});
+}
+
+function wmOff(i){
+  const side=(i%2===0)?1:-1;
+  return side*Math.ceil((i+1)/2)*56;
+}
+
+/* ── SHOOT ───────────────────────────────────────────── */
+function tryBullets(src,arr){
+  const now=Date.now(); if(now-src.lastShot<SHOOT_CD)return;
+  src.lastShot=now;
+  arr.push({x:src.x-5,y:src.y-src.h/2-4});
+  arr.push({x:src.x+5,y:src.y-src.h/2-4});
+}
+function tryMissile(src,arr){
+  if(jetLevel<2)return;
+  const now=Date.now();
+  const cd=jetLevel===2?P_MISSILE_CD:P_MISSILE_CD*0.65;
+  if(now-src.lastMissile<cd)return;
+  src.lastMissile=now;
+  arr.push({x:src.x,y:src.y-src.h/2-8,spd:P_MISSILE_SPD});
+}
+
+/* ── GEMS / EXPLOSIONS ───────────────────────────────── */
+function dropGem(x,y,count=1){
+  for(let i=0;i<count;i++){
+    drops.push({
+      x:x+(Math.random()-0.5)*18,
+      y:y+(Math.random()-0.5)*8,
+      vx:(Math.random()-0.5)*2.5,
+      vy:3.5+Math.random()*2.5,
+      phase:Math.random()*Math.PI*2,
+      collected:false
+    });
+  }
+}
+function mkExp(x,y,big=false){
+  const n=big?24:16, r=big?70:42;
+  explosions.push({x,y,life:big?45:32,max:big?45:32,r,
+    sparks:Array.from({length:n},()=>({
+      dx:(Math.random()-0.5)*2, dy:(Math.random()-0.5)*2,
+      sz:Math.random()*(big?5:3.5)+1,
+      col:['#ff4400','#ffaa00','#ffffff','#ff8800'][Math.random()*4|0]
+    }))
+  });
+}
+
+/* ── WINGMAN / UPGRADE ───────────────────────────────── */
+function spawnWingman(){
+  if(wingmen.length>=MAX_WINGMEN)return;
+  const i=wingmen.length;
+  wingmen.push({x:player.x+wmOff(i),y:PLAYER_Y,w:32,h:38,
+    lastShot:Date.now()+i*80, lastMissile:Date.now()+i*200, born:90});
+  newJetFlash=100;
+}
+function upgradeJet(){
+  jetLevel=Math.min(jetLevel+1,3);
+  newJetFlash=220;
+  mkExp(player.x,player.y,true);
+}
+function canExchangeGems(){return gems>=GEMS_FOR_JET;}
+function canExchangeWings(){return wingmen.length>=WINGS_FOR_JET;}
+
+/* ── UPDATE ──────────────────────────────────────────── */
+function update(){
+  if(state!=='playing') return;
+  time++;
+  const cfg=levelCfg(level);
+
+  /* player move */
+  if(leftHeld)  player.x=Math.max(player.w/2,      player.x-player.spd);
+  if(rightHeld) player.x=Math.min(W-player.w/2,    player.x+player.spd);
+
+  /* wingmen follow */
+  wingmen.forEach((wm,i)=>{
+    wm.x+=(player.x+wmOff(i)-wm.x)*0.12;
+    if(wm.born>0)wm.born--;
+  });
+
+  /* auto-shoot */
+  if(!exchangeOpen){
+    tryBullets(player,bullets);
+    tryMissile(player,playerMissiles);
+    wingmen.forEach(wm=>{tryBullets(wm,bullets);tryMissile(wm,playerMissiles);});
+  }
+
+  /* bullets up */
+  bullets=bullets.filter(b=>b.y>-12);
+  bullets.forEach(b=>b.y-=BULLET_SPD);
+
+  /* player missiles up */
+  playerMissiles=playerMissiles.filter(m=>m.y>-30);
+  playerMissiles.forEach(m=>m.y-=m.spd);
+
+  /* enemy missiles */
+  const now=Date.now();
+  enemyMissiles=enemyMissiles.filter(m=>!m.dead&&m.y<H+30);
+  for(const m of enemyMissiles){
+    m.y+=m.vy; m.x+=m.vx;
+
+    /* player / wingman hit */
+    const friendlies=[player,...wingmen];
+    for(const j of friendlies){
+      if(Math.abs(m.x-j.x)<20&&Math.abs(m.y-j.y)<24){
+        m.dead=true; mkExp(m.x,m.y);
+        if(j===player){
+          playerHP--; playerFlash=70;
+          if(playerHP<=0){state='gameover';recordLevel(level,score,'failed');return;}
+        } else {
+          /* wingman hit → remove that wingman */
+          const wi=wingmen.indexOf(j);
+          if(wi>-1) wingmen.splice(wi,1);
+        }
+        break;
+      }
+    }
+    /* player missiles destroy enemy missiles */
+    for(let pi=playerMissiles.length-1;pi>=0;pi--){
+      const pm=playerMissiles[pi];
+      if(Math.abs(pm.x-m.x)<16&&Math.abs(pm.y-m.y)<22){
+        m.dead=true; playerMissiles.splice(pi,1); mkExp(m.x,m.y); break;
+      }
+    }
+    /* bullets destroy enemy missiles */
+    for(let bi=bullets.length-1;bi>=0;bi--){
+      const b=bullets[bi];
+      if(Math.abs(b.x-m.x)<13&&Math.abs(b.y-m.y)<18){
+        m.dead=true; bullets.splice(bi,1); mkExp(m.x,m.y); break;
+      }
+    }
+  }
+
+  /* enemy bullets move down, hit player / wingmen / player-bullets */
+  enemyBullets=enemyBullets.filter(b=>b.y<H+10);
+  for(let ei=enemyBullets.length-1;ei>=0;ei--){
+    const eb=enemyBullets[ei];
+    eb.y+=eb.spd;
+    /* hit player */
+    if(Math.abs(eb.x-player.x)<18&&Math.abs(eb.y-player.y)<20){
+      enemyBullets.splice(ei,1);
+      playerHP--; playerFlash=60;
+      mkExp(player.x,player.y);
+      if(playerHP<=0){state='gameover';recordLevel(level,score,'failed');return;}
+      continue;
+    }
+    /* hit wingman */
+    let wmHit=false;
+    for(let wi=wingmen.length-1;wi>=0;wi--){
+      const wm=wingmen[wi];
+      if(Math.abs(eb.x-wm.x)<16&&Math.abs(eb.y-wm.y)<18){
+        enemyBullets.splice(ei,1); wingmen.splice(wi,1);
+        mkExp(wm.x,wm.y); wmHit=true; break;
+      }
+    }
+    if(wmHit) continue;
+    /* player bullets can destroy enemy bullets */
+    for(let bi=bullets.length-1;bi>=0;bi--){
+      const b=bullets[bi];
+      if(Math.abs(b.x-eb.x)<10&&Math.abs(b.y-eb.y)<12){
+        enemyBullets.splice(ei,1); bullets.splice(bi,1); break;
+      }
+    }
+  }
+
+  if(playerFlash>0) playerFlash--;
+
+  /* enemies */
+  let anyAlive=false;
+  for(const e of enemies){
+    if(!e.alive)continue;
+    anyAlive=true;
+    const amp=Math.min(cfg.sideAmp, e.bx-e.w/2, W-e.bx-e.w/2);
+    e.x=e.bx+Math.sin(time*0.018*cfg.sideSpd+e.phase)*amp;
+    e.x=Math.max(e.w/2,Math.min(W-e.w/2,e.x));
+    e.y+=cfg.descSpd;
+    if(e.flash>0)e.flash--;
+
+    /* enemy fires missile — aimed at player */
+    if(now-e.lastMissile>cfg.missileCD){
+      e.lastMissile=now;
+      const dx=player.x-e.x, dy=player.y-e.y;
+      const len=Math.sqrt(dx*dx+dy*dy)||1;
+      const spd=cfg.missileSpd;
+      enemyMissiles.push({x:e.x, y:e.y+e.h/2+6,
+        vx:(dx/len)*spd*0.45, vy:(dy/len)*spd, dead:false});
+    }
+    /* enemy fires bullet — straight down */
+    if(now-e.lastBullet>cfg.bulletCD){
+      e.lastBullet=now;
+      enemyBullets.push({x:e.x-4, y:e.y+e.h/2+4, spd:cfg.bulletSpd});
+      enemyBullets.push({x:e.x+4, y:e.y+e.h/2+4, spd:cfg.bulletSpd});
+    }
+    if(e.y+e.h/2>=DANGER_Y){state='gameover';recordLevel(level,score,'failed');return;}
+  }
+
+  /* bullets ↔ enemies (need 2 hits) */
+  outer: for(let bi=bullets.length-1;bi>=0;bi--){
+    const b=bullets[bi];
+    for(const e of enemies){
+      if(!e.alive)continue;
+      if(Math.abs(b.x-e.x)<e.w/2+5&&Math.abs(b.y-e.y)<e.h/2+5){
+        e.hp--; e.flash=14; bullets.splice(bi,1);
+        if(e.hp<=0){
+          e.alive=false; mkExp(e.x,e.y);
+          dropGem(e.x,e.y,1);
+          score+=100*level;
+        }
+        continue outer;
+      }
+    }
+  }
+
+  /* player missiles ↔ enemies (2 damage each) */
+  for(let mi=playerMissiles.length-1;mi>=0;mi--){
+    const m=playerMissiles[mi];
+    for(const e of enemies){
+      if(!e.alive)continue;
+      if(Math.abs(m.x-e.x)<e.w/2+12&&Math.abs(m.y-e.y)<e.h/2+12){
+        e.hp-=2; e.flash=18; playerMissiles.splice(mi,1);
+        if(e.hp<=0){
+          e.alive=false; mkExp(e.x,e.y,true);
+          dropGem(e.x,e.y,2); /* missiles drop 2 gems */
+          score+=160*level;
+        }
+        break;
+      }
+    }
+  }
+
+  /* material drops */
+  const friendlies=[player,...wingmen];
+  drops=drops.filter(d=>!d.collected&&d.y<H+30);
+  for(const d of drops){
+    let nearDist=Infinity, nearJ=null;
+    for(const j of friendlies){
+      const dx=j.x-d.x, dy=j.y-d.y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<nearDist){nearDist=dist;nearJ=j;}
+    }
+    if(nearJ&&nearDist<COLLECT_R){
+      const dx=nearJ.x-d.x, dy=nearJ.y-d.y, len=Math.max(nearDist,1);
+      const pull=0.35*(1-nearDist/COLLECT_R);
+      d.vx+=(dx/len)*pull*6; d.vy+=(dy/len)*pull*6;
+    } else {
+      d.vy=Math.min(d.vy+0.18,8.5);
+    }
+    d.vx*=0.88; d.vy*=0.95;
+    d.x+=d.vx; d.y+=d.vy;
+    for(const j of friendlies){
+      if(Math.abs(d.x-j.x)<26&&Math.abs(d.y-j.y)<26){
+        d.collected=true; gems++;
+        /* auto-spawn wingman every 10 gems (up to max) */
+        if(gems%10===0&&wingmen.length<MAX_WINGMEN) spawnWingman();
+        break;
+      }
+    }
+  }
+
+  explosions=explosions.filter(ex=>ex.life>0);
+  explosions.forEach(ex=>ex.life--);
+  if(newJetFlash>0)newJetFlash--;
+
+  if(!anyAlive){
+    recordLevel(level, score, 'cleared');
+    if(level>=40) state='win';
+    else          {state='lvldone'; lvlTimer=Date.now();}
+  }
+}
+
+/* ── DRAW: helpers ───────────────────────────────────── */
+function drawJet(x,y,w,h,col,isPlayer,flash){
+  ctx.save(); ctx.translate(x,y);
+  if(!isPlayer)ctx.rotate(Math.PI);
+  const c=flash?'#ffffff':col;
+  ctx.fillStyle=c;
+  ctx.beginPath();
+  ctx.moveTo(0,-h*.50);ctx.lineTo(w*.25,h*.05);ctx.lineTo(w*.15,h*.35);
+  ctx.lineTo(-w*.15,h*.35);ctx.lineTo(-w*.25,h*.05);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(-w*.22,h*.05);ctx.lineTo(-w*.52,h*.32);ctx.lineTo(-w*.16,h*.18);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo( w*.22,h*.05);ctx.lineTo( w*.52,h*.32);ctx.lineTo( w*.16,h*.18);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo(-w*.14,h*.32);ctx.lineTo(-w*.28,h*.50);ctx.lineTo(-w*.08,h*.38);ctx.closePath();ctx.fill();
+  ctx.beginPath();ctx.moveTo( w*.14,h*.32);ctx.lineTo( w*.28,h*.50);ctx.lineTo( w*.08,h*.38);ctx.closePath();ctx.fill();
+  ctx.fillStyle=isPlayer?'#88eeff':'#ffbb77';
+  ctx.beginPath();ctx.ellipse(0,-h*.12,w*.085,h*.13,0,0,Math.PI*2);ctx.fill();
+  const gc=isPlayer?'#00ffbb':'#ff5500';
+  ctx.fillStyle=gc;ctx.shadowColor=gc;ctx.shadowBlur=10;
+  ctx.beginPath();ctx.ellipse(0,h*.34,w*.08,h*.07,0,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0; ctx.restore();
+}
+
+function drawEnemyMissile(m){
+  ctx.save(); ctx.translate(m.x,m.y);
+  const ang=Math.atan2(m.vy,m.vx)+Math.PI/2;
+  ctx.rotate(ang);
+  ctx.fillStyle='#ff6600'; ctx.shadowColor='#ff4400'; ctx.shadowBlur=12;
+  ctx.fillRect(-4,-12,8,24);
+  ctx.fillStyle='#ffcc00';
+  ctx.beginPath();ctx.moveTo(0,-16);ctx.lineTo(4,-10);ctx.lineTo(-4,-10);ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(255,100,0,0.6)';
+  ctx.beginPath();ctx.ellipse(0,14,5,8,0,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0; ctx.restore();
+}
+
+function drawPlayerMissile(m){
+  ctx.save(); ctx.translate(m.x,m.y);
+  ctx.fillStyle='#00ffee'; ctx.shadowColor='#00ddff'; ctx.shadowBlur=14;
+  ctx.fillRect(-3,-14,6,22);
+  ctx.fillStyle='#ffffff';
+  ctx.beginPath();ctx.moveTo(0,-18);ctx.lineTo(3.5,-12);ctx.lineTo(-3.5,-12);ctx.closePath();ctx.fill();
+  ctx.fillStyle='rgba(0,180,255,0.5)';
+  ctx.beginPath();ctx.ellipse(0,10,4,7,0,0,Math.PI*2);ctx.fill();
+  ctx.shadowBlur=0; ctx.restore();
+}
+
+function drawGem(x,y,phase){
+  const t=Date.now()*0.004+phase, glow=0.7+0.3*Math.sin(t*2);
+  ctx.save(); ctx.translate(x,y); ctx.rotate(t);
+  const g=ctx.createRadialGradient(0,0,0,0,0,10);
+  g.addColorStop(0,`rgba(120,255,230,${glow})`);
+  g.addColorStop(1,`rgba(0,80,180,0)`);
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,10,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=`rgba(180,255,240,${glow})`; ctx.shadowColor='#00ffee'; ctx.shadowBlur=12;
+  ctx.beginPath();ctx.moveTo(0,-7);ctx.lineTo(5,0);ctx.lineTo(0,7);ctx.lineTo(-5,0);ctx.closePath();ctx.fill();
+  ctx.fillStyle=`rgba(255,255,255,${glow*0.6})`;
+  ctx.beginPath();ctx.moveTo(0,-4);ctx.lineTo(2,0);ctx.lineTo(0,2);ctx.lineTo(-2,0);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0; ctx.restore();
+}
+
+function drawExplosion(ex){
+  const t=1-ex.life/ex.max, r=ex.r*t;
+  ctx.save(); ctx.globalAlpha=1-t;
+  ctx.strokeStyle='hsl(40,100%,60%)'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(ex.x,ex.y,r,0,Math.PI*2); ctx.stroke();
+  const g=ctx.createRadialGradient(ex.x,ex.y,0,ex.x,ex.y,r*.65);
+  g.addColorStop(0,`rgba(255,255,200,${1-t})`); g.addColorStop(1,'rgba(255,80,0,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(ex.x,ex.y,r*.65,0,Math.PI*2); ctx.fill();
+  for(const s of ex.sparks){
+    ctx.fillStyle=s.col;
+    ctx.beginPath();ctx.arc(ex.x+s.dx*t*ex.r,ex.y+s.dy*t*ex.r,s.sz*(1-t),0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCollectorAura(j){
+  const pulse=0.07+0.04*Math.sin(time*0.08);
+  const g=ctx.createRadialGradient(j.x,j.y,10,j.x,j.y,COLLECT_R);
+  g.addColorStop(0,`rgba(0,255,200,${pulse})`);
+  g.addColorStop(0.6,`rgba(0,180,255,${pulse*0.4})`);
+  g.addColorStop(1,'rgba(0,100,255,0)');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.arc(j.x,j.y,COLLECT_R,0,Math.PI*2); ctx.fill();
+}
+
+/* ── DRAW: GEM BOX ───────────────────────────────────── */
+function drawGemBox(){
+  const enough=canExchangeGems()||canExchangeWings();
+  const pulse=0.6+0.4*Math.sin(time*0.12);
+
+  /* box shadow/glow */
+  ctx.save();
+  ctx.shadowColor=enough?`rgba(0,255,180,${pulse})`:'rgba(0,150,200,0.4)';
+  ctx.shadowBlur=enough?18:8;
+
+  /* background */
+  ctx.fillStyle='rgba(0,12,30,0.92)';
+  ctx.strokeStyle=enough?`rgba(0,255,180,${pulse})`:'rgba(0,180,255,0.5)';
+  ctx.lineWidth=2;
+  roundRect(BOX.x,BOX.y,BOX.w,BOX.h,8);
+  ctx.fill(); ctx.stroke();
+  ctx.shadowBlur=0;
+
+  /* gem icon */
+  const gx=BOX.x+14, gy=BOX.y+BOX.h/2;
+  ctx.fillStyle='#00ffdd'; ctx.shadowColor='#00ffee'; ctx.shadowBlur=8;
+  ctx.beginPath();ctx.moveTo(gx,gy-7);ctx.lineTo(gx+5,gy);ctx.lineTo(gx,gy+7);ctx.lineTo(gx-5,gy);ctx.closePath();ctx.fill();
+  ctx.shadowBlur=0;
+
+  /* gem count */
+  ctx.fillStyle='#ffffff'; ctx.font='bold 15px Arial'; ctx.textAlign='left';
+  ctx.fillText(`${gems}`, BOX.x+26, BOX.y+BOX.h/2+5);
+
+  /* progress bar toward 100 */
+  const barX=BOX.x+58, barY=BOX.y+8, barW=BOX.w-66, barH=8;
+  ctx.fillStyle='rgba(255,255,255,0.1)';
+  roundRect(barX,barY,barW,barH,4); ctx.fill();
+  const prog=Math.min(gems/GEMS_FOR_JET,1);
+  ctx.fillStyle=enough?`rgba(0,255,180,${pulse})`:'#0088cc';
+  roundRect(barX,barY,barW*prog,barH,4); ctx.fill();
+
+  /* label */
+  ctx.fillStyle=enough?'#00ffaa':'#aaccdd';
+  ctx.font='bold 9px Arial';
+  ctx.fillText(enough?'DOUBLE TAP → UPGRADE':'/ 100 💎 = new jet',BOX.x+58,BOX.y+BOX.h-8);
+
+  /* wingman count */
+  ctx.fillStyle='#ffdd44'; ctx.font='bold 10px Arial';
+  ctx.fillText(`✈ ×${wingmen.length}`,BOX.x+58,BOX.y+BOX.h/2+1);
+
+  ctx.restore();
+}
+
+/* ── DRAW: EXCHANGE PANEL ────────────────────────────── */
+function drawExchangePanel(){
+  const pw=300, ph=240, px=(W-pw)/2, py=(H-ph)/2;
+
+  ctx.save();
+  ctx.fillStyle='rgba(0,5,20,0.95)'; ctx.strokeStyle='rgba(0,220,180,0.8)'; ctx.lineWidth=2;
+  roundRect(px,py,pw,ph,12); ctx.fill(); ctx.stroke();
+
+  /* title */
+  ctx.textAlign='center'; ctx.fillStyle='#00ffcc';
+  ctx.font='bold 18px Arial'; ctx.fillText('⚙  UPGRADE JET',W/2,py+28);
+  ctx.fillStyle='#889999'; ctx.font='12px Arial';
+  const jlStr=['','Lv.1','Lv.2 — Missiles!','Lv.3 — Rapid Missiles!'];
+  ctx.fillText(`Current: ${jlStr[jetLevel]}  →  ${jlStr[Math.min(jetLevel+1,3)]}`,W/2,py+48);
+
+  /* option A: gems */
+  const aOk=canExchangeGems();
+  ctx.fillStyle=aOk?'rgba(0,180,100,0.85)':'rgba(50,60,70,0.7)';
+  ctx.strokeStyle=aOk?'#00ffaa':'#335544';
+  roundRect(px+20,py+65,pw-40,50,8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=aOk?'#ffffff':'#556677'; ctx.font='bold 14px Arial'; ctx.textAlign='center';
+  ctx.fillText(`💎  Pay 100 Gems  (have: ${gems})`,W/2,py+87);
+  ctx.font='11px Arial';
+  ctx.fillText(aOk?'✓ Click here to upgrade':'✗ Not enough gems',W/2,py+104);
+
+  /* option B: wingmen */
+  const bOk=canExchangeWings();
+  ctx.fillStyle=bOk?'rgba(180,120,0,0.85)':'rgba(50,60,70,0.7)';
+  ctx.strokeStyle=bOk?'#ffcc00':'#554400';
+  roundRect(px+20,py+128,pw-40,50,8); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=bOk?'#ffffff':'#556677'; ctx.font='bold 14px Arial';
+  ctx.fillText(`✈  Exchange 10 Wingmen  (have: ${wingmen.length})`,W/2,py+150);
+  ctx.font='11px Arial';
+  ctx.fillText(bOk?'✓ Click here to upgrade':'✗ Need 10 wingmen',W/2,py+167);
+
+  /* close */
+  ctx.fillStyle='#cc4444'; ctx.font='bold 13px Arial';
+  ctx.fillText('✕  ESC or click ✕ to close',W/2,py+ph-14);
+  ctx.fillStyle='rgba(200,50,50,0.7)';
+  roundRect(px+pw-28,py+4,24,24,5); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold 14px Arial';
+  ctx.fillText('✕',px+pw-16,py+20);
+
+  ctx.restore();
+}
+
+/* ── DRAW: HUD ───────────────────────────────────────── */
+function drawHUD(){
+  ctx.fillStyle='rgba(0,0,0,0.65)'; ctx.fillRect(0,0,W,46);
+
+  ctx.font='bold 14px Arial'; ctx.textAlign='left';
+  ctx.fillStyle='#00ddff';
+  ctx.fillText(`Level ${level}/40`,12,22);
+
+  ctx.textAlign='center'; ctx.fillStyle='#ffcc00';
+  ctx.fillText(`Score: ${score}`,W/2,22);
+
+  const alive=enemies.filter(e=>e.alive).length;
+  ctx.textAlign='right'; ctx.fillStyle='#ff7777';
+  ctx.fillText(`Jets: ${alive}`,W-12,22);
+
+  /* HP bar */
+  const hpW=Math.min(W-24,200);
+  const hpX=(W-hpW)/2, hpY=30, hpH=10;
+  ctx.fillStyle='rgba(255,255,255,0.1)';
+  roundRect(hpX,hpY,hpW,hpH,4); ctx.fill();
+  const hpCol=playerHP>6?'#00ee66':playerHP>3?'#ffaa00':'#ff2222';
+  ctx.fillStyle=hpCol;
+  if(playerFlash>0){ctx.globalAlpha=0.4+0.6*Math.sin(playerFlash*0.4);}
+  roundRect(hpX,hpY,hpW*(playerHP/PLAYER_MAX_HP),hpH,4); ctx.fill();
+  ctx.globalAlpha=1;
+  ctx.textAlign='center'; ctx.fillStyle='#ffffff'; ctx.font='bold 9px Arial';
+  ctx.fillText(`❤  ${playerHP} / ${PLAYER_MAX_HP}  LIVES`,W/2,hpY+hpH-0.5);
+
+  /* jet level badge */
+  const jcols=['','#3399ff','#aa44ff','#ff8800'];
+  ctx.textAlign='left'; ctx.fillStyle=jcols[jetLevel]; ctx.font='bold 11px Arial';
+  const jlabel=jetLevel===1?'Jet Lv.1':jetLevel===2?'✦ Jet Lv.2 — Missiles!':'★ Jet Lv.3 — Rapid!';
+  ctx.fillText(jlabel,12,42);
+
+  /* new jet flash */
+  if(newJetFlash>0){
+    ctx.save();
+    ctx.globalAlpha=Math.min(1,newJetFlash/50);
+    ctx.textAlign='center'; ctx.fillStyle='#ffff00';
+    ctx.shadowColor='#ffaa00'; ctx.shadowBlur=22;
+    ctx.font=`bold ${20+Math.sin(newJetFlash*0.25)*4}px Arial`;
+    const msg=newJetFlash>100?'🚀  JET UPGRADED!':'✈  NEW WINGMAN!';
+    ctx.fillText(msg,W/2,H/2-70);
+    ctx.shadowBlur=0; ctx.restore();
+  }
+}
+
+function drawDangerLine(){
+  const pulse=0.45+0.3*Math.sin(time*0.12);
+  ctx.save();
+  ctx.strokeStyle=`rgba(255,50,50,${pulse})`; ctx.lineWidth=2; ctx.setLineDash([10,6]);
+  ctx.beginPath(); ctx.moveTo(0,DANGER_Y); ctx.lineTo(W,DANGER_Y); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle=`rgba(255,80,80,${pulse})`; ctx.font='bold 11px Arial'; ctx.textAlign='left';
+  ctx.fillText('⚠  DEFENSE LINE  ⚠',10,DANGER_Y-7);
+  ctx.restore();
+}
+
+function drawBg(){
+  ctx.fillStyle='#04040f'; ctx.fillRect(0,0,W,H);
+  for(const s of stars){
+    ctx.globalAlpha=s.a; ctx.fillStyle='#fff';
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+}
+
+function drawOverlay(title,l1,l2,col){
+  ctx.save();
+  ctx.fillStyle='rgba(2,4,22,0.9)'; ctx.fillRect(0,0,W,H);
+  ctx.textAlign='center';
+  ctx.shadowColor=col; ctx.shadowBlur=24;
+  ctx.fillStyle=col; ctx.font=`bold ${Math.min(52,W/9)}px Arial`;
+  ctx.fillText(title,W/2,H/2-60); ctx.shadowBlur=0;
+  ctx.fillStyle='#ddeeff'; ctx.font=`${Math.min(18,W/26)}px Arial`;
+  ctx.fillText(l1,W/2,H/2);
+  ctx.fillStyle='#99aacc'; ctx.font='14px Arial';
+  ctx.fillText(l2,W/2,H/2+32);
+  ctx.restore();
+}
+
+/* ── DRAW: LEVEL PICKER ──────────────────────────────── */
+function drawLevelPicker(){
+  const pw=360, ph=320, px=(W-pw)/2, py=(H-ph)/2;
+  ctx.save();
+  ctx.fillStyle='rgba(0,5,25,0.97)'; ctx.strokeStyle='rgba(0,200,255,0.8)'; ctx.lineWidth=2;
+  roundRect(px,py,pw,ph,14); ctx.fill(); ctx.stroke();
+
+  ctx.textAlign='center'; ctx.fillStyle='#00eeff';
+  ctx.font='bold 18px Arial'; ctx.fillText('🚀  SELECT START LEVEL',W/2,py+30);
+
+  const cols=8, btnW=38, btnH=32, gapX=5, gapY=6;
+  const gridW=cols*btnW+(cols-1)*gapX;
+  const startX=px+(pw-gridW)/2, startY=py+54;
+
+  for(let i=0;i<40;i++){
+    const lv=i+1;
+    const col=i%cols, row=Math.floor(i/cols);
+    const bx=startX+col*(btnW+gapX), by=startY+row*(btnH+gapY);
+    const isSel=lv===selectedStartLevel;
+    ctx.fillStyle=isSel?'rgba(0,220,160,0.9)':'rgba(255,255,255,0.08)';
+    ctx.strokeStyle=isSel?'#00ffaa':'rgba(0,180,255,0.3)';
+    ctx.lineWidth=isSel?2:1;
+    roundRect(bx,by,btnW,btnH,5); ctx.fill(); ctx.stroke();
+    ctx.fillStyle=isSel?'#001a10':'#99bbcc';
+    ctx.font=`bold 12px Arial`; ctx.textAlign='center';
+    ctx.fillText(lv, bx+btnW/2, by+btnH/2+4);
+  }
+
+  ctx.fillStyle='#556677'; ctx.font='11px Arial'; ctx.textAlign='center';
+  ctx.fillText(`Level ${selectedStartLevel} selected`, W/2, py+ph-22);
+
+  ctx.fillStyle='rgba(200,50,50,0.7)';
+  roundRect(px+pw-28,py+4,24,24,5); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold 14px Arial'; ctx.textAlign='center';
+  ctx.fillText('✕',px+pw-16,py+20);
+  ctx.restore();
+}
+
+/* ── DRAW: SELECT LEVEL BUTTON + LOG BOOK BUTTON ─────── */
+function drawSelectLevelBtn(){
+  const pulse=0.7+0.3*Math.sin(Date.now()*0.004);
+  ctx.save();
+  // level select
+  const bx=W/2-80, by=H/2+110, bw=160, bh=38;
+  ctx.fillStyle=`rgba(0,100,180,${0.6*pulse})`;
+  ctx.strokeStyle=`rgba(0,200,255,${pulse})`;
+  ctx.lineWidth=1.5;
+  roundRect(bx,by,bw,bh,10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#aaddff'; ctx.font='bold 14px Arial'; ctx.textAlign='center';
+  ctx.fillText(`📋  Start: Level ${selectedStartLevel}`,W/2,by+bh/2+5);
+  // log book
+  const lbx=W/2-80, lby=H/2+158, lbw=160, lbh=38;
+  ctx.fillStyle=`rgba(80,40,120,${0.6*pulse})`;
+  ctx.strokeStyle=`rgba(180,100,255,${pulse})`;
+  roundRect(lbx,lby,lbw,lbh,10); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#ddaaff'; ctx.font='bold 14px Arial';
+  ctx.fillText('📖  Log Book',W/2,lby+lbh/2+5);
+  ctx.restore();
+}
+
+/* ── DRAW: LOG BOOK ──────────────────────────────────── */
+function drawLogBook(){
+  const log=loadLog();
+  const pw=360, ph=400, px=(W-pw)/2, py=(H-ph)/2;
+  ctx.save();
+  ctx.fillStyle='rgba(4,2,20,0.97)'; ctx.strokeStyle='rgba(160,80,255,0.8)'; ctx.lineWidth=2;
+  roundRect(px,py,pw,ph,14); ctx.fill(); ctx.stroke();
+
+  // title
+  ctx.textAlign='center'; ctx.fillStyle='#cc88ff';
+  ctx.font='bold 18px Arial'; ctx.fillText('📖  LOG BOOK',W/2,py+28);
+
+  // close X
+  ctx.fillStyle='rgba(200,50,50,0.7)';
+  roundRect(px+pw-28,py+4,24,24,5); ctx.fill();
+  ctx.fillStyle='#fff'; ctx.font='bold 14px Arial';
+  ctx.fillText('✕',px+pw-16,py+20);
+
+  // collect played levels
+  const played=Object.keys(log).map(k=>parseInt(k)).sort((a,b)=>a-b);
+  if(!played.length){
+    ctx.fillStyle='#667788'; ctx.font='13px Arial'; ctx.textAlign='center';
+    ctx.fillText('No levels played yet!',W/2,py+ph/2);
+    ctx.restore(); return;
+  }
+
+  // clip inner area
+  ctx.save();
+  ctx.beginPath(); roundRect(px+10,py+40,pw-20,ph-52,8); ctx.clip();
+
+  const rowH=78, padX=px+16, innerW=pw-32;
+  const offsetY=logBookScroll;
+
+  played.forEach((lv,idx)=>{
+    const entry=log[lv];
+    const ry=py+50+idx*rowH+offsetY;
+    if(ry+rowH<py+40||ry>py+ph-12) return; // outside clip
+
+    // row bg
+    ctx.fillStyle='rgba(255,255,255,0.05)';
+    roundRect(padX,ry,innerW,rowH-6,7); ctx.fill();
+    ctx.strokeStyle='rgba(160,80,255,0.2)'; ctx.lineWidth=1;
+    ctx.stroke();
+
+    // level badge
+    ctx.fillStyle='rgba(120,50,200,0.8)';
+    roundRect(padX+4,ry+6,52,28,6); ctx.fill();
+    ctx.fillStyle='#fff'; ctx.font='bold 13px Arial'; ctx.textAlign='center';
+    ctx.fillText('LVL '+lv, padX+30, ry+24);
+
+    // tries & best
+    ctx.textAlign='left'; ctx.fillStyle='#aabbcc'; ctx.font='11px Arial';
+    ctx.fillText(`Tries: ${entry.tries}   Best: ${entry.best} pts`, padX+64, ry+16);
+
+    // last 3 attempts
+    const recent=entry.results.slice(0,3);
+    recent.forEach((r,i)=>{
+      const rx=padX+4+i*114, ry2=ry+36;
+      const cleared=r.result==='cleared';
+      ctx.fillStyle=cleared?'rgba(0,150,80,0.7)':'rgba(160,40,40,0.7)';
+      roundRect(rx,ry2,108,28,5); ctx.fill();
+      ctx.fillStyle='#fff'; ctx.font='bold 10px Arial'; ctx.textAlign='left';
+      ctx.fillText(cleared?'✅ Cleared':'❌ Failed', rx+6, ry2+12);
+      ctx.fillStyle='#ffdd88'; ctx.font='10px Arial';
+      ctx.fillText(r.sc+' pts  '+r.date, rx+6, ry2+24);
+    });
+  });
+
+  ctx.restore(); // unclip
+
+  // scroll hint
+  const totalH=played.length*rowH;
+  const maxScroll=Math.min(0,-(totalH-(ph-60)));
+  if(totalH>ph-60){
+    ctx.fillStyle='rgba(150,100,220,0.5)'; ctx.font='10px Arial'; ctx.textAlign='center';
+    ctx.fillText('▲ ▼  Scroll to see more',W/2,py+ph-8);
+  }
+  ctx.restore();
+}
+
+canvas.addEventListener('wheel', e=>{
+  if(!logBookOpen) return;
+  logBookScroll=Math.min(0,logBookScroll-e.deltaY*0.4);
+  e.preventDefault();
+},{passive:false});
+
+let touchStartY=0;
+canvas.addEventListener('touchstart',e=>{
+  touchStartY=e.touches[0].clientY;
+},{passive:true});
+canvas.addEventListener('touchmove',e=>{
+  if(!logBookOpen)return;
+  const dy=touchStartY-e.touches[0].clientY;
+  logBookScroll=Math.min(0,logBookScroll-dy*0.6);
+  touchStartY=e.touches[0].clientY;
+  e.preventDefault();
+},{passive:false});
+canvas.addEventListener('touchend',e=>{
+  const {mx,my}=getCanvasXY(e.changedTouches[0]);
+  if(logBookOpen){
+    const pw=360,ph=400,px=(W-pw)/2,py=(H-ph)/2;
+    const inside=mx>px&&mx<px+pw&&my>py&&my<py+ph;
+    if(!inside){logBookOpen=false;return;}
+    if(mx>px+pw-32&&my>py+2&&my<py+32){logBookOpen=false;return;}
+    return;
+  }
+  if(state==='start'||state==='gameover'||state==='win'){
+    const bx=W/2-80,by=H/2+110,bw=160,bh=38;
+    if(mx>bx&&mx<bx+bw&&my>by&&my<by+bh){levelPickerOpen=true;return;}
+    const lbx=W/2-80,lby=H/2+158,lbw=160,lbh=38;
+    if(mx>lbx&&mx<lbx+lbw&&my>lby&&my<lby+lbh){logBookOpen=true;logBookScroll=0;return;}
+  }
+},{passive:true});
+
+/* ── UTILITY: roundRect ──────────────────────────────── */
+function roundRect(x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.lineTo(x+w-r,y); ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r); ctx.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ctx.lineTo(x+r,y+h); ctx.arcTo(x,y+h,x,y+h-r,r);
+  ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r);
+  ctx.closePath();
+}
+
+/* ── MAIN DRAW ───────────────────────────────────────── */
+function draw(){
+  drawBg();
+
+  if(state==='start'){
+    ctx.save(); ctx.textAlign='center';
+    ctx.shadowColor='#00aaff'; ctx.shadowBlur=28;
+    ctx.fillStyle='#00ddff'; ctx.font=`bold ${Math.min(52,W/8)}px Arial`;
+    ctx.fillText('JET DEFENDER',W/2,H/2-130); ctx.shadowBlur=0;
+    ctx.fillStyle='#ccddff'; ctx.font='13px Arial';
+    [
+      '🛡  Stop enemy jets crossing the red defense line',
+      '',
+      '← →  Arrow Keys (or A/D) — Move your jet',
+      '🔫  Auto-shoots bullets  |  Lv.2+ fires missiles too',
+      '💎  Collect gems from destroyed jets',
+      '📦  Every 10 gems = new wingman  |  100 gems = upgrade jet',
+      '⚙   Double-tap the gem box (bottom-left) to open exchange',
+      '❤   10 total lives across all 40 levels — survive!',
+      '⚠   Enemy jets have 2 HP — takes 2 hits to destroy',
+      '🚀  Enemy jets fire missiles — dodge or shoot them!',
+    ].forEach((l,i)=>ctx.fillText(l,W/2,H/2-76+i*24));
+    ctx.restore();
+    drawSelectLevelBtn();
+    if((Date.now()/600|0)%2===0){
+      ctx.save(); ctx.fillStyle='#ffdd00'; ctx.font='bold 18px Arial'; ctx.textAlign='center';
+      ctx.fillText('▶  Press SPACE to Start',W/2,H/2+170);
+      ctx.restore();
+    }
+    if(levelPickerOpen) drawLevelPicker();
+    if(logBookOpen) drawLogBook();
+    return;
+  }
+
+  drawDangerLine();
+  [player,...wingmen].forEach(j=>drawCollectorAura(j));
+
+  /* enemies */
+  enemies.forEach(e=>{
+    if(!e.alive)return;
+    const col=e.flash>0?'#ffffff':e.hp===1?'#ff8844':'#ff3333';
+    drawJet(e.x,e.y,e.w,e.h,col,false,e.flash>0);
+    /* HP pip */
+    for(let i=0;i<e.maxHp;i++){
+      ctx.fillStyle=i<e.hp?'#ff4444':'#333';
+      ctx.beginPath();ctx.arc(e.x-5+i*10,e.y+e.h/2+8,3.5,0,Math.PI*2);ctx.fill();
+    }
+  });
+
+  /* enemy missiles */
+  enemyMissiles.forEach(m=>!m.dead&&drawEnemyMissile(m));
+
+  /* enemy bullets — bright red/orange streaks */
+  ctx.save();
+  enemyBullets.forEach(eb=>{
+    ctx.fillStyle='#ff2200'; ctx.shadowColor='#ff5500'; ctx.shadowBlur=8;
+    ctx.fillRect(eb.x-2.5, eb.y-9, 5, 18);
+  });
+  ctx.shadowBlur=0; ctx.restore();
+
+  /* player missiles */
+  playerMissiles.forEach(m=>drawPlayerMissile(m));
+
+  /* bullets */
+  bullets.forEach(b=>{
+    ctx.save();
+    ctx.fillStyle='#00ffaa'; ctx.shadowColor='#00ffaa'; ctx.shadowBlur=10;
+    ctx.fillRect(b.x-2.5,b.y-10,5,18); ctx.restore();
+  });
+
+  /* drops */
+  drops.forEach(d=>!d.collected&&drawGem(d.x,d.y,d.phase));
+
+  explosions.forEach(drawExplosion);
+
+  /* wingmen */
+  wingmen.forEach((wm)=>{
+    ctx.save(); ctx.globalAlpha=wm.born>0?Math.min(1,(90-wm.born)/30):1;
+    drawJet(wm.x,wm.y,wm.w,wm.h,'#ffcc22',true,false);
+    ctx.restore();
+  });
+
+  /* player jet — flash red when hit */
+  const pCol=playerFlash>0&&Math.sin(playerFlash*0.5)>0?'#ff4444':'#3399ff';
+  drawJet(player.x,player.y,player.w,player.h,pCol,true,false);
+
+  drawHUD();
+  drawGemBox();
+
+  if(exchangeOpen) drawExchangePanel();
+
+  if(state==='lvldone'){
+    if(Date.now()-lvlTimer>2200) startLevel(level+1);
+    ctx.save();
+    ctx.fillStyle='rgba(0,0,20,0.72)'; ctx.fillRect(0,H/2-70,W,110);
+    ctx.textAlign='center';
+    ctx.fillStyle='#00ff99'; ctx.shadowColor='#00ff99'; ctx.shadowBlur=18;
+    ctx.font='bold 34px Arial'; ctx.fillText('LEVEL CLEARED!',W/2,H/2-24);
+    ctx.shadowBlur=0; ctx.fillStyle='#fff'; ctx.font='15px Arial';
+    ctx.fillText(`Next: Level ${level+1}  |  ❤ ${playerHP}  |  💎 ${gems}  |  ✈ ${wingmen.length}`,W/2,H/2+14);
+    ctx.restore();
+  }
+
+  if(state==='gameover'){
+    drawOverlay('GAME OVER',`Level ${level}  •  Score: ${score}`,'Press SPACE to restart','#ff4444');
+    drawSelectLevelBtn();
+    if(levelPickerOpen) drawLevelPicker();
+    if(logBookOpen) drawLogBook();
+  }
+  if(state==='win'){
+    drawOverlay('YOU WIN! 🏆','All 40 Levels Conquered!',`Final Score: ${score}  •  Press SPACE to play again`,'#ffdd00');
+    drawSelectLevelBtn();
+    if(levelPickerOpen) drawLevelPicker();
+    if(logBookOpen) drawLogBook();
+  }
+}
+
+/* ── LOOP ────────────────────────────────────────────── */
+function loop(){ update(); draw(); requestAnimationFrame(loop); }
+state='start'; time=0;
+loop();
+</script>
+<script>
+/* --- Cowork input fix ---------------------------------------------------
+   Keeps keyboard focus on the game and stops arrow/space keys from
+   scrolling the page or triggering browser shortcuts. The game's own
+   key handlers still run (propagation is not stopped). */
+(function(){
+  function focusGame(){ try{ window.focus(); if(document.body){document.body.tabIndex=-1; document.body.focus();} }catch(e){} }
+  window.addEventListener('load', focusGame);
+  document.addEventListener('mousedown', focusGame);
+  document.addEventListener('touchstart', focusGame, {passive:true});
+  window.addEventListener('keydown', function(e){
+    var t=e.target;
+    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+    var k=e.key;
+    if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight'||k===' '||k==='Spacebar'){
+      e.preventDefault();
+    }
+  }, true);
+})();
+</script>
+
+</body>
+</html>

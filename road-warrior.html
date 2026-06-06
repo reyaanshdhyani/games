@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROAD WARRIOR — Top-Down · 20 Levels</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{height:100%;background:#070710;overflow:hidden;font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;color:#e8e8f0;}
+  #wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;}
+  canvas{background:#10101e;box-shadow:0 0 60px rgba(0,0,0,.6);display:block;}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(5,5,12,.86);backdrop-filter:blur(3px);z-index:10;}
+  .panel{width:min(660px,93vw);max-height:93vh;overflow:auto;background:linear-gradient(160deg,#1a1a2e,#13131f);border:1px solid #3a3a5a;border-radius:16px;padding:22px 26px;box-shadow:0 20px 60px rgba(0,0,0,.6);}
+  h1{font-size:36px;letter-spacing:3px;text-align:center;margin-bottom:4px;background:linear-gradient(90deg,#ff5e62,#ffd452);-webkit-background-clip:text;background-clip:text;color:transparent;}
+  h2{font-size:23px;text-align:center;margin-bottom:10px;color:#ffd452;letter-spacing:1px;}
+  .sub{text-align:center;color:#9a9ab8;margin-bottom:14px;font-size:13.5px;}
+  .btn{display:block;width:100%;padding:12px;margin:8px 0;border:none;border-radius:10px;cursor:pointer;font-size:16px;font-weight:bold;letter-spacing:1px;color:#10101e;background:linear-gradient(90deg,#ffd452,#ff8a5e);transition:transform .08s,filter .15s;}
+  .btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+  .btn.alt{background:linear-gradient(90deg,#5ec6ff,#8a7dff);color:#0a0a12;}
+  .btn.edit{background:linear-gradient(90deg,#ff5e62,#ff2e6e);color:#fff;}
+  .btn.grn{background:linear-gradient(90deg,#7dff9e,#52c46f);color:#0a2a14;}
+  .btn:disabled{background:#33334d;color:#6a6a85;cursor:not-allowed;transform:none;filter:none;}
+  .wallet{display:flex;justify-content:center;gap:18px;margin:8px 0 14px;font-weight:bold;font-size:16px;}
+  .wallet .c{color:#ffd452;} .wallet .m{color:#7dffd4;}
+  .stat-row{display:flex;justify-content:space-between;padding:5px 0;font-size:14.5px;border-bottom:1px dashed #2c2c44;}
+  .grid{display:grid;gap:9px;margin:10px 0;}
+  .item{background:#191926;border:1px solid #34344f;border-radius:11px;padding:10px 13px;}
+  .item .top{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  .item .name{font-weight:bold;font-size:15px;}
+  .item .desc{font-size:12px;color:#9a9ab8;margin:3px 0 7px;line-height:1.4;}
+  .bar{height:7px;background:#2c2c44;border-radius:5px;overflow:hidden;margin-top:5px;}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,#5ec6ff,#8a7dff);}
+  .act{padding:7px 12px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;font-size:13px;white-space:nowrap;background:linear-gradient(90deg,#7dff9e,#52c46f);color:#0a2a14;}
+  .act.blue{background:linear-gradient(90deg,#5ec6ff,#8a7dff);color:#0a0a12;}
+  .act:disabled{background:#33334d;color:#6a6a85;cursor:not-allowed;}
+  .pill{display:inline-block;background:#26263a;border:1px solid #44445f;border-radius:20px;padding:2px 9px;font-size:11px;margin-left:4px;}
+  .help{font-size:13px;color:#b8b8cc;line-height:1.65;}.help b{color:#ffd452;}
+  .kbd{display:inline-block;background:#26263a;border:1px solid #44445f;border-radius:5px;padding:1px 7px;font-size:12px;}
+  .small{font-size:12px;color:#7a7a98;text-align:center;margin-top:8px;}
+  .warn{background:#2a1620;border:1px solid #6a2a3a;border-radius:10px;padding:11px 13px;margin:10px 0;font-size:13px;color:#ffb3c0;line-height:1.55;}.warn b{color:#ff8a9e;}
+  .navrow{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+  #toast{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:20;background:rgba(20,20,34,.94);border:1px solid #44445f;padding:8px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .3s;pointer-events:none;}
+  .lvlpick{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:10px 0;}
+  .lvlpick button{padding:11px 0;border-radius:9px;border:1px solid #34344f;cursor:pointer;background:#191926;color:#e8e8f0;font-weight:bold;font-size:15px;}
+  .lvlpick button.done{background:#1e3a24;border-color:#3a6a44;color:#9effb0;}
+  .lvlpick button.cur{background:linear-gradient(90deg,#ffd452,#ff8a5e);color:#10101e;}
+  .lvlpick button:disabled{opacity:.32;cursor:not-allowed;}
+  .slots{display:flex;gap:6px;justify-content:center;margin:8px 0;}
+  .slot{width:34px;height:34px;border-radius:8px;border:1px dashed #44445f;display:flex;align-items:center;justify-content:center;font-size:18px;background:#16161f;}
+  .slot.full{border-style:solid;border-color:#7dff9e;background:#16241a;}
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game"></canvas></div>
+<div id="toast"></div>
+<div id="ui"></div>
+<script>
+"use strict";
+/* ============ SETUP ============ */
+const cv=document.getElementById('game'),ctx=cv.getContext('2d'),ui=document.getElementById('ui'),toastEl=document.getElementById('toast');
+let W=760,H=620;
+function fit(){const maxW=Math.min(window.innerWidth,820),maxH=Math.min(window.innerHeight,760);let h=maxH,w=h*0.62;if(w>maxW){w=maxW;h=w/0.62;}W=Math.floor(w);H=Math.floor(h);cv.width=W;cv.height=H;}
+window.addEventListener('resize',fit);fit();
+const clamp=(v,a,b)=>v<a?a:(v>b?b:v),lerp=(a,b,t)=>a+(b-a)*t,rand=(a,b)=>a+Math.random()*(b-a);
+function toast(m){toastEl.textContent=m;toastEl.style.opacity=1;clearTimeout(toast._t);toast._t=setTimeout(()=>toastEl.style.opacity=0,1700);}
+function shade(hex,amt){const n=parseInt(hex.slice(1),16);const r=clamp((n>>16)+amt,0,255),g=clamp(((n>>8)&255)+amt,0,255),b=clamp((n&255)+amt,0,255);return`rgb(${r},${g},${b})`;}
+
+/* ============ SAVE (memory) ============ */
+const SAVE_KEY='roadwarrior_save_v4';
+const defaultSave=()=>({
+  coins:0, materials:0, unlocked:1, maxCleared:0, frontierNormalDone:false,
+  owned:{ shooters:1, shield:false, drone:false },
+  up:{ car:1, gun:1, shield:0, hp:1 },
+  equip:{ shooters:1, shieldOn:false, droneOn:false }
+});
+let save=load();
+function load(){try{const s=JSON.parse(localStorage.getItem(SAVE_KEY));if(s&&s.up&&s.equip)return s;}catch(e){}return defaultSave();}
+function persist(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(save));}catch(e){}}
+
+/* ============ GEAR / UPGRADE RULES ============ */
+// material-upgrade tracks, costliest -> cheapest
+const TRACK={
+  car:   {name:"Car Chassis", max:5, base:8, desc:"+1 loadout slot each level. Equip more shooters/gear. (Costs the most materials.)"},
+  gun:   {name:"Shooters",    max:6, base:6, desc:"Shots start weak and get deadlier every level."},
+  shield:{name:"Energy Shield",max:4,base:5, desc:"Faster reload, and a 2nd charge at max."},
+  hp:    {name:"Health / Hull",max:6,base:3, desc:"More hull, and spikes hurt less (HALF at Lv5). Cheapest."}
+};
+const matCost=t=>Math.ceil(TRACK[t].base*save.up[t]);            // escalates each level
+const slots=()=>1+save.up.car;                                   // car1=2 ... car5=6
+const usedSlots=()=>save.equip.shooters+(save.equip.shieldOn?1:0)+(save.equip.droneOn?1:0);
+const freeSlots=()=>slots()-usedSlots();
+const gunDamage=()=>Math.round((0.6+(save.up.gun-1)*1.15)*10)/10; // weak at lv1
+const maxHull=()=>70+(save.up.hp-1)*32;
+const spikeFrac=()=>clamp(1.0-(save.up.hp-1)*0.125,0.375,1.0);   // hp5 -> 0.5
+const armorReduce=d=>d*clamp(1-(save.up.hp-1)*0.06,0.6,1.0);
+const shieldCharges=()=> (save.owned.shield&&save.equip.shieldOn)?(save.up.shield>=4?2:1):0;
+const shieldRecharge=()=>[10,8,6,4][clamp(save.up.shield-1,0,3)]||10;
+// shop prices (coins)
+const shooterPrice=()=>100+(save.owned.shooters-1)*90;
+const SHIELD_PRICE=150, DRONE_PRICE=240, REPAIR_PRICE=60;
+
+/* ============ LEVELS ============ */
+const LEVEL_NAMES=["First Mile","Rust Flats","Canyon Run","Crossfire","The Gauntlet","Spike Alley","Iron Convoy","Night Highway","Minefield","Half Way","Ambush Ridge","Scrapyard","Toll of Blood","Storm Road","The Narrows","Warlord's Gate","Inferno Pass","No Man's Road","Final Stretch","DEATH HIGHWAY"];
+function levelConfig(n,hard){
+  const t=(n-1)/19;
+  let c={ n, name:LEVEL_NAMES[n-1]||("Sector "+n),
+    goal:1800+n*300, speed:300+t*330,
+    obDensity:1.0+t*2.2, enemyMax:Math.min(2+Math.floor(n/2),8),
+    enemyHp:3+Math.floor(n*1.05), enemyFire:Math.max(1.7-t*1.2,0.42),
+    enemyDescend:90+t*90, enemyStrafe:200+t*200, spawnEvery:Math.max(0.55,2.0-t*1.6),
+    trapRate:n>=3?(0.4+t*1.05):0, robotFrom:4, enemyStart:n>=2, reward:Math.round(60+n*24), hard:false };
+  if(hard){ c.speed*=1.32;c.obDensity*=1.45;c.enemyMax=Math.min(c.enemyMax+2,9);c.enemyHp=Math.round(c.enemyHp*1.6);
+    c.enemyFire*=0.7;c.enemyDescend*=1.3;c.enemyStrafe*=1.35;c.spawnEvery*=0.7;c.trapRate=(c.trapRate||0.3)*1.5;
+    c.enemyStart=true;c.goal=Math.round(c.goal*1.1);c.reward=Math.round(c.reward*1.7);c.hard=true; }
+  return c;
+}
+
+/* ============ INPUT ============ */
+const keys={};
+addEventListener('keydown',e=>{if(["ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Space"].includes(e.code))e.preventDefault();keys[e.code]=true;});
+addEventListener('keyup',e=>keys[e.code]=false);
+
+/* ============ STATE ============ */
+let G=null,mode='menu';
+function road(){const w=Math.min(W*0.66,460);const left=(W-w)/2;return{w,left,right:left+w,cx:W/2};}
+function newRun(levelN,hard){
+  const cfg=levelConfig(levelN,hard),rd=road(),mh=maxHull();
+  const sp=cfg.speed*1.5; // default speed is now the previously-boosted fast speed
+  G={cfg,level:levelN,hard:!!hard,px:rd.cx,vx:0,py:H*0.80,scroll:sp,baseSpeed:sp,
+    dist:0,scrollDist:0,hp:mh,maxhp:mh,
+    obstacles:[],enemies:[],hazards:[],bullets:[],ebul:[],particles:[],pickups:[],floaties:[],
+    obTimer:0.6,enemyTimer:cfg.enemyStart?1.2:1e9,pickTimer:1.5,shootTimer:0,
+    shield:shieldCharges(),shieldMax:shieldCharges(),shieldCD:0,
+    earnedCoins:0,earnedMat:0,kills:0,shake:0,time:0,finished:false,
+    droneAng:0,drone:null,droneTarget:null};
+  mode='play';render();
+}
+
+/* ============ SPAWN ============ */
+function spawnObstacle(){const rd=road();G.obstacles.push({x:rand(rd.left+30,rd.right-30),y:-50,w:46,h:46,kind:Math.random()<0.5?'barrier':'rock'});}
+function spawnEnemy(){
+  if(G.enemies.length>=G.cfg.enemyMax)return;const rd=road();
+  const isRobot=G.level>=G.cfg.robotFrom && Math.random()<0.4;
+  G.enemies.push({type:isRobot?'robot':'car',x:rand(rd.left+40,rd.right-40),y:-70,
+    w:isRobot?48:42,h:isRobot?48:74,
+    hp:isRobot?Math.round(G.cfg.enemyHp*1.4):G.cfg.enemyHp,maxhp:0,
+    holdY:rand(H*0.13,H*0.40),fireT:rand(0.5,G.cfg.enemyFire),trapT:rand(0.6,2.4),hit:0,vx:0});
+  const e=G.enemies[G.enemies.length-1];e.maxhp=e.hp;
+}
+function spawnPickup(){
+  const rd=road(),r=Math.random();
+  const kind=r<0.55?'mat':(r<0.9?'coin':'health');
+  G.pickups.push({x:rand(rd.left+28,rd.right-28),y:-40,kind,v:kind==='coin'?rand(6,12)|0:(kind==='mat'?(rand(1,3)|0||1):0)});
+}
+function enemyShoot(e){
+  const aim=(tx,ty)=>{const dx=tx-e.x,dy=ty-e.y,d=Math.hypot(dx,dy)||1,sp=300+G.scroll*0.3;return{vx:dx/d*sp,vy:dy/d*sp};};
+  if(e.type==='robot'){ // 3-way spread
+    for(const a of [-0.3,0,0.3]){const b=aim(G.px,G.py);const cs=Math.cos(a),sn=Math.sin(a);
+      G.ebul.push({x:e.x,y:e.y+e.h/2,vx:b.vx*cs-b.vy*sn,vy:b.vx*sn+b.vy*cs,r:7});}
+  } else { const b=aim(G.px,G.py);G.ebul.push({x:e.x,y:e.y+e.h/2,vx:b.vx,vy:b.vy,r:7}); }
+}
+function dropTrap(e){G.hazards.push({x:e.x,y:e.y,r:18,kind:'trap'});}
+function playerShoot(){
+  const dmg=gunDamage(),n=save.equip.shooters,spread=24;
+  for(let i=0;i<n;i++){const off=(i-(n-1)/2)*spread;G.bullets.push({x:G.px+off,y:G.py-40,dmg});}
+  for(let i=0;i<4;i++)G.particles.push({x:G.px,y:G.py-40,vx:rand(-1,1),vy:rand(-3,-1),life:0.3,c:'#ffd452'});
+}
+
+/* ============ DAMAGE ============ */
+function damagePlayer(amount,type){
+  const spike=type==='spike';
+  if(G.shield>0){G.shield--;G.shieldCD=shieldRecharge();G.shake=0.25;floaty(spike?"SHIELD SAVED!":"BLOCKED!",'#5ec6ff');
+    for(let i=0;i<18;i++)G.particles.push({x:G.px,y:G.py,vx:rand(-4,4),vy:rand(-4,4),life:0.5,c:'#5ec6ff'});return;}
+  if(spike){const dmg=G.maxhp*spikeFrac();G.hp-=dmg;G.shake=0.5;floaty(spikeFrac()>=1?"FATAL":"-"+Math.round(dmg),'#ff3b3b');}
+  else{G.hp-=armorReduce(amount);G.shake=0.4;}
+  for(let i=0;i<14;i++)G.particles.push({x:G.px,y:G.py,vx:rand(-4,4),vy:rand(-5,3),life:0.5,c:'#ff5e62'});
+  if(G.hp<=0){G.hp=0;gameOver();}
+}
+function floaty(text,color){G.floaties.push({text,color,x:G.px,y:G.py-50,life:1});}
+function boom(x,y,c,n=14){for(let i=0;i<n;i++)G.particles.push({x,y,vx:rand(-5,5),vy:rand(-5,5),life:rand(0.3,0.6),c});}
+function box(ax,ay,aw,ah,bx,by,bw,bh){return Math.abs(ax-bx)<(aw+bw)/2&&Math.abs(ay-by)<(ah+bh)/2;}
+
+/* ============ UPDATE ============ */
+function update(dt){
+  if(mode!=='play'||!G)return;G.time+=dt;const rd=road();
+  // steer
+  if(keys.ArrowLeft)G.vx-=2400*dt;if(keys.ArrowRight)G.vx+=2400*dt;
+  G.vx*=0.82;G.px+=G.vx*dt;
+  if(G.px<rd.left+22){G.px=rd.left+22;G.vx=0;}if(G.px>rd.right-22){G.px=rd.right-22;G.vx=0;}
+  // speed — already at full speed by default; Up does NOT accelerate. Down brakes to help dodge.
+  const top=G.baseSpeed;
+  if(keys.ArrowDown)G.scroll=lerp(G.scroll,top*0.55,dt*3);else G.scroll=lerp(G.scroll,top,dt*1.6);
+  G.dist+=G.scroll*dt;G.scrollDist+=G.scroll*dt;
+  // shoot
+  G.shootTimer-=dt;if(keys.Space&&G.shootTimer<=0){playerShoot();G.shootTimer=0.32-(save.up.gun-1)*0.03;}
+  // shield recharge
+  if(G.shield<G.shieldMax){G.shieldCD-=dt;if(G.shieldCD<=0){G.shield++;G.shieldCD=shieldRecharge();if(G.shield<=G.shieldMax)floaty("SHIELD READY",'#7dff9e');}}
+  // spawns
+  G.obTimer-=dt;if(G.obTimer<=0){spawnObstacle();G.obTimer=1/G.cfg.obDensity*rand(0.7,1.3);}
+  G.enemyTimer-=dt;if(G.enemyTimer<=0){spawnEnemy();G.enemyTimer=G.cfg.spawnEvery*rand(0.7,1.3);}
+  G.pickTimer-=dt;if(G.pickTimer<=0){spawnPickup();G.pickTimer=rand(1.1,2.4);}
+  // obstacles
+  for(const o of G.obstacles)o.y+=G.scroll*dt;
+  G.obstacles=G.obstacles.filter(o=>{if(box(o.x,o.y,o.w,o.h,G.px,G.py,40,68)){damagePlayer(30);boom(o.x,o.y,'#caa');return false;}return o.y<H+60;});
+  // enemies
+  for(const e of G.enemies){
+    if(e.y<e.holdY)e.y+=G.cfg.enemyDescend*dt+G.scroll*0.15*dt;else e.y+=Math.sin(G.time*2+e.x)*8*dt+G.scroll*0.04*dt;
+    const dx=G.px-e.x,strafe=e.type==='robot'?G.cfg.enemyStrafe*0.7:G.cfg.enemyStrafe;
+    e.vx=lerp(e.vx,clamp(dx*4,-strafe,strafe),dt*4);e.x+=e.vx*dt;e.x=clamp(e.x,rd.left+24,rd.right-24);
+    if(e.hit>0)e.hit-=dt;
+    e.fireT-=dt;if(e.fireT<=0&&e.y>10){enemyShoot(e);e.fireT=rand(G.cfg.enemyFire*0.7,G.cfg.enemyFire*1.3);}
+    if(G.cfg.trapRate>0&&e.type==='car'){e.trapT-=dt;if(e.trapT<=0){dropTrap(e);e.trapT=1/G.cfg.trapRate*rand(0.6,1.4);}}
+  }
+  G.enemies=G.enemies.filter(e=>{if(box(e.x,e.y,e.w,e.h,G.px,G.py,40,68)){damagePlayer(36);boom(e.x,e.y,'#ff8a5e',20);return false;}return e.y<H+80&&e.hp>0;});
+  // enemy bullets
+  for(const b of G.ebul){b.x+=b.vx*dt;b.y+=b.vy*dt;}
+  G.ebul=G.ebul.filter(b=>{if(box(b.x,b.y,b.r*2,b.r*2,G.px,G.py,40,68)){damagePlayer(16,'bolt');return false;}return b.y<H+30&&b.y>-30&&b.x>-30&&b.x<W+30;});
+  // traps (spikes) lethal
+  for(const h of G.hazards)h.y+=G.scroll*dt;
+  G.hazards=G.hazards.filter(h=>{if(box(h.x,h.y,h.r*2,h.r*2,G.px,G.py,40,68)){damagePlayer(0,'spike');return false;}return h.y<H+40;});
+  // bullets
+  for(const b of G.bullets)b.y-=760*dt;
+  G.bullets=G.bullets.filter(b=>{for(const e of G.enemies){if(box(b.x,b.y,8,16,e.x,e.y,e.w,e.h)){e.hp-=b.dmg;e.hit=0.12;boom(b.x,b.y,'#ffd452',5);if(e.hp<=0){e.hp=0;killEnemy(e);}return false;}}return b.y>-20;});
+  // pickups fall with the road
+  for(const p of G.pickups)p.y+=G.scroll*dt;
+  // friendly drone: flies OUT to items and gathers them for us (it never harms anything)
+  const droneOn=save.owned.drone&&save.equip.droneOn;
+  G.droneTarget=null;
+  if(droneOn){
+    if(!G.drone)G.drone={x:G.px,y:G.py-78};
+    const d=G.drone; let tgt=null,best=1e9;
+    for(const p of G.pickups){if(p.y>-10&&p.y<H-10){const dd=Math.hypot(p.x-d.x,p.y-d.y);if(dd<best){best=dd;tgt=p;}}}
+    if(tgt){G.droneTarget=tgt;d.x+=(tgt.x-d.x)*Math.min(1,dt*9);d.y+=(tgt.y-d.y)*Math.min(1,dt*9);
+      if(Math.hypot(tgt.x-d.x,tgt.y-d.y)<28){collect(tgt);tgt._got=true;for(let i=0;i<6;i++)G.particles.push({x:d.x,y:d.y,vx:rand(-2,2),vy:rand(-2,2),life:0.4,c:'#7dffd4'});}}
+    else{const hx=G.px+Math.cos(G.droneAng)*26,hy=G.py-80+Math.sin(G.droneAng)*8;d.x+=(hx-d.x)*Math.min(1,dt*5);d.y+=(hy-d.y)*Math.min(1,dt*5);}
+  }
+  G.pickups=G.pickups.filter(p=>{
+    if(p._got)return false;
+    if(box(p.x,p.y,26,26,G.px,G.py,46,72)){collect(p);return false;}
+    return p.y<H+40;
+  });
+  // particles & floaties
+  for(const p of G.particles){p.x+=p.vx;p.y+=p.vy;p.vy+=0.22;p.life-=dt;}G.particles=G.particles.filter(p=>p.life>0);
+  for(const f of G.floaties){f.y-=42*dt;f.life-=dt;}G.floaties=G.floaties.filter(f=>f.life>0);
+  if(G.shake>0)G.shake-=dt;G.droneAng+=dt*10;
+  if(G.dist>=G.cfg.goal&&!G.finished)levelWin();
+}
+function collect(p){
+  if(p.kind==='coin'){G.earnedCoins+=p.v;floaty('+$'+p.v,'#ffd452');}
+  else if(p.kind==='mat'){G.earnedMat+=p.v;floaty('+'+p.v+'✦','#7dffd4');}
+  else if(p.kind==='health'){const heal=Math.round(G.maxhp*0.18);G.hp=Math.min(G.maxhp,G.hp+heal);floaty('+'+heal+' HP','#7dff9e');}
+}
+function killEnemy(e){
+  G.kills++;boom(e.x,e.y,'#ff8a5e',22);
+  G.pickups.push({x:e.x,y:e.y,kind:'coin',v:8+Math.floor(G.level*1.5)});
+  G.pickups.push({x:e.x+rand(-12,12),y:e.y,kind:'mat',v:rand(1,2)|0||1});
+  if(Math.random()<0.28)G.pickups.push({x:e.x+rand(-14,14),y:e.y,kind:'health',v:0});
+}
+
+/* ============ WIN / LOSE ============ */
+function levelWin(){
+  G.finished=true;
+  const reward=Math.round(G.cfg.reward+G.kills*6);
+  G.earnedCoins+=reward;
+  save.coins+=G.earnedCoins;save.materials+=G.earnedMat;
+  save.maxCleared=Math.max(save.maxCleared,G.level);
+  if(G.hard){if(G.level===save.unlocked&&save.unlocked<20)save.unlocked++;save.frontierNormalDone=false;persist();mode=G.level>=20?'victory':'trainwin';}
+  else{if(G.level===save.unlocked){save.frontierNormalDone=true;persist();mode='win';}else{persist();mode='winreplay';}}
+  render();
+}
+function gameOver(){const c=Math.floor(G.earnedCoins*0.4);save.coins+=c;save.materials+=G.earnedMat;G._cc=c;persist();mode='over';render();}
+
+/* ============ CAR SPRITE ============ */
+function drawCar(cx,cy,w,h,color,facing,flash){
+  ctx.save();ctx.translate(cx,cy);if(facing==='down')ctx.rotate(Math.PI);
+  ctx.fillStyle='rgba(0,0,0,.30)';rr(-w/2+3,-h/2+5,w,h,11);ctx.fill();
+  ctx.fillStyle='#141418';const ww=w*0.17,wh=h*0.22;
+  ctx.fillRect(-w/2-ww*0.35,-h*0.34,ww,wh);ctx.fillRect(w/2-ww*0.65,-h*0.34,ww,wh);ctx.fillRect(-w/2-ww*0.35,h*0.12,ww,wh);ctx.fillRect(w/2-ww*0.65,h*0.12,ww,wh);
+  const g=ctx.createLinearGradient(-w/2,0,w/2,0);g.addColorStop(0,shade(color,-34));g.addColorStop(.5,color);g.addColorStop(1,shade(color,-34));
+  ctx.fillStyle=flash?'#fff':g;rr(-w/2,-h/2,w,h,12);ctx.fill();
+  ctx.strokeStyle=shade(color,18);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,-h*0.46);ctx.lineTo(0,-h*0.16);ctx.stroke();
+  ctx.fillStyle='#0d1b26';ctx.beginPath();ctx.moveTo(-w*0.33,-h*0.13);ctx.lineTo(w*0.33,-h*0.13);ctx.lineTo(w*0.24,-h*0.30);ctx.lineTo(-w*0.24,-h*0.30);ctx.closePath();ctx.fill();
+  ctx.fillStyle=shade(color,-16);rr(-w*0.31,-h*0.12,w*0.62,h*0.30,7);ctx.fill();
+  ctx.fillStyle='#0d1b26';ctx.beginPath();ctx.moveTo(-w*0.27,h*0.19);ctx.lineTo(w*0.27,h*0.19);ctx.lineTo(w*0.31,h*0.30);ctx.lineTo(-w*0.31,h*0.30);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#fff6c8';rr(-w*0.42,-h*0.47,w*0.20,h*0.06,3);ctx.fill();rr(w*0.22,-h*0.47,w*0.20,h*0.06,3);ctx.fill();
+  ctx.fillStyle='#ff3b3b';ctx.fillRect(-w*0.42,h*0.40,w*0.22,h*0.05);ctx.fillRect(w*0.20,h*0.40,w*0.22,h*0.05);
+  ctx.restore();
+}
+function drawRobot(cx,cy,s,flash,t){
+  ctx.save();ctx.translate(cx,cy);
+  ctx.fillStyle='rgba(0,0,0,.3)';ctx.beginPath();ctx.arc(3,5,s*0.5,0,7);ctx.fill();
+  // legs
+  ctx.strokeStyle='#5a6070';ctx.lineWidth=4;
+  for(const sx of [-1,1]){ctx.beginPath();ctx.moveTo(sx*s*0.32,s*0.1);ctx.lineTo(sx*s*0.5,s*0.45+Math.sin(t*6+sx)*3);ctx.stroke();}
+  // body
+  const g=ctx.createRadialGradient(-s*0.15,-s*0.15,2,0,0,s*0.55);g.addColorStop(0,flash?'#fff':'#9b6bff');g.addColorStop(1,'#5a2ea6');
+  ctx.fillStyle=g;rr(-s*0.4,-s*0.4,s*0.8,s*0.8,10);ctx.fill();
+  // eye
+  ctx.fillStyle='#10101e';ctx.beginPath();ctx.arc(0,0,s*0.22,0,7);ctx.fill();
+  ctx.fillStyle='#ff3b3b';ctx.beginPath();ctx.arc(0,0,s*0.10,0,7);ctx.fill();
+  // antenna
+  ctx.strokeStyle='#9b6bff';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-s*0.4);ctx.lineTo(0,-s*0.6);ctx.stroke();
+  ctx.fillStyle='#ffd452';ctx.beginPath();ctx.arc(0,-s*0.62,3,0,7);ctx.fill();
+  // gun arms
+  ctx.fillStyle='#3a3a4a';ctx.fillRect(-s*0.52,s*0.05,s*0.14,s*0.2);ctx.fillRect(s*0.38,s*0.05,s*0.14,s*0.2);
+  ctx.restore();
+}
+function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+
+/* ============ WORLD RENDER ============ */
+function drawWorld(){
+  ctx.save();if(G.shake>0)ctx.translate(rand(-1,1)*G.shake*12,rand(-1,1)*G.shake*12);
+  const rd=road(),night=G.level>=8;
+  ctx.fillStyle=night?'#10241a':'#2f7d3a';ctx.fillRect(-20,-20,W+40,H+40);
+  ctx.fillStyle=night?'#0d1f16':'#2a7034';const gs=70,off=G.scrollDist%gs;for(let y=-gs+off;y<H;y+=gs)ctx.fillRect(-20,y,W+40,gs/2);
+  ctx.fillStyle='#2e2e38';ctx.fillRect(rd.left,0,rd.w,H);
+  ctx.fillStyle='#3a3a46';ctx.fillRect(rd.left,0,8,H);ctx.fillRect(rd.right-8,0,8,H);
+  const rs=34,ro=G.scrollDist%(rs*2);for(let y=-rs*2+ro;y<H;y+=rs*2){ctx.fillStyle='#d8d8e0';ctx.fillRect(rd.left-6,y,6,rs);ctx.fillRect(rd.right,y,6,rs);ctx.fillStyle='#cf4040';ctx.fillRect(rd.left-6,y+rs,6,rs);ctx.fillRect(rd.right,y+rs,6,rs);}
+  ctx.fillStyle='#e8e860';const dl=44,gp=36,dof=G.scrollDist%(dl+gp);for(const lx of[rd.left+rd.w/3,rd.left+2*rd.w/3])for(let y=-dl+dof;y<H;y+=dl+gp)ctx.fillRect(lx-3,y,6,dl);
+  for(const o of G.obstacles)drawObstacle(o);
+  for(const p of G.pickups)drawPickup(p);
+  for(const h of G.hazards)drawTrap(h);
+  for(const e of G.enemies){if(e.type==='robot')drawRobot(e.x,e.y,e.w,e.hit>0,G.time);else drawCar(e.x,e.y,e.w,e.h,'#d0392b','down',e.hit>0);
+    const bw=e.w;ctx.fillStyle='#400';ctx.fillRect(e.x-bw/2,e.y-e.h/2-9,bw,4);ctx.fillStyle='#7dff9e';ctx.fillRect(e.x-bw/2,e.y-e.h/2-9,bw*(e.hp/e.maxhp),4);}
+  for(const b of G.ebul){ctx.fillStyle='#ff5e62';ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,7);ctx.fill();ctx.fillStyle='#ffd452';ctx.beginPath();ctx.arc(b.x,b.y,b.r*0.45,0,7);ctx.fill();}
+  for(const b of G.bullets){ctx.fillStyle='#ffe680';ctx.fillRect(b.x-3,b.y-14,6,14);ctx.fillStyle='#fff';ctx.fillRect(b.x-1.5,b.y-14,3,7);}
+  // player
+  drawCar(G.px,G.py,40,72,'#2e86de','up',false);
+  // shooter barrels show count
+  ctx.fillStyle='#1b2733';const n=save.equip.shooters,spr=24;for(let i=0;i<n;i++){const ox=(i-(n-1)/2)*spr;ctx.fillRect(G.px+ox-3,G.py-50,6,16);}
+  if(G.shield>0){ctx.strokeStyle='rgba(94,198,255,'+(0.5+0.3*Math.sin(G.time*8))+')';ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(G.px,G.py,38,50,0,0,7);ctx.stroke();}
+  // friendly collector drone
+  if(save.owned.drone&&save.equip.droneOn&&G.drone){const d=G.drone;
+    // tractor beam to the item it's fetching
+    if(G.droneTarget){ctx.strokeStyle='rgba(125,255,212,.45)';ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(d.x,d.y);ctx.lineTo(G.droneTarget.x,G.droneTarget.y);ctx.stroke();}
+    ctx.fillStyle='rgba(125,255,212,.18)';ctx.beginPath();ctx.arc(d.x,d.y,19,0,7);ctx.fill();         // soft glow
+    ctx.strokeStyle='rgba(125,255,212,.8)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(d.x-16,d.y-9);ctx.lineTo(d.x+16,d.y-9);ctx.stroke(); // rotor bar
+    ctx.fillStyle='#9b9bae';ctx.beginPath();ctx.arc(d.x-15,d.y-9,3,0,7);ctx.fill();ctx.beginPath();ctx.arc(d.x+15,d.y-9,3,0,7);ctx.fill();
+    ctx.fillStyle='#2ce0b0';rr(d.x-11,d.y-8,22,16,7);ctx.fill();                                       // rounded body (clearly friendly teal)
+    ctx.fillStyle='#0a3a30';rr(d.x-7,d.y-3,14,7,3);ctx.fill();                                          // happy visor
+    ctx.fillStyle='#dffff5';ctx.fillRect(d.x-5,d.y-1,3,3);ctx.fillRect(d.x+2,d.y-1,3,3);}               // eyes
+  for(const p of G.particles){ctx.globalAlpha=clamp(p.life*2,0,1);ctx.fillStyle=p.c;ctx.fillRect(p.x-2,p.y-2,4,4);}
+  ctx.globalAlpha=1;ctx.textAlign='center';
+  for(const f of G.floaties){ctx.globalAlpha=clamp(f.life,0,1);ctx.fillStyle=f.color;ctx.font='bold 19px Trebuchet MS';ctx.fillText(f.text,f.x,f.y);}
+  ctx.globalAlpha=1;ctx.textAlign='left';ctx.restore();drawHUD();
+}
+function drawObstacle(o){if(o.kind==='barrier'){ctx.fillStyle='#e0a020';ctx.fillRect(o.x-o.w/2,o.y-o.h/2,o.w,o.h);ctx.fillStyle='#222';for(let i=0;i<3;i++)ctx.fillRect(o.x-o.w/2+i*o.w/3,o.y-o.h/2,o.w/6,o.h);ctx.fillStyle='#fff';ctx.fillRect(o.x-o.w/2,o.y-3,o.w,6);}else{ctx.fillStyle='#6a6a72';ctx.beginPath();ctx.arc(o.x,o.y,o.w*0.5,0,7);ctx.fill();ctx.fillStyle='#85858d';ctx.beginPath();ctx.arc(o.x-6,o.y-6,o.w*0.28,0,7);ctx.fill();}}
+function drawTrap(h){ctx.fillStyle='#ff4d4d';ctx.beginPath();for(let i=0;i<10;i++){const a=i/10*Math.PI*2,r=i%2?h.r:h.r*0.5;ctx.lineTo(h.x+Math.cos(a)*r,h.y+Math.sin(a)*r);}ctx.closePath();ctx.fill();ctx.fillStyle='#7a0000';ctx.beginPath();ctx.arc(h.x,h.y,h.r*0.35,0,7);ctx.fill();}
+function drawPickup(p){
+  if(p.kind==='coin'){ctx.fillStyle='#ffd452';ctx.beginPath();ctx.ellipse(p.x,p.y,13,15,0,0,7);ctx.fill();ctx.fillStyle='#b8860b';ctx.font='bold 16px Trebuchet MS';ctx.textAlign='center';ctx.fillText('$',p.x,p.y+5);ctx.textAlign='left';}
+  else if(p.kind==='mat'){ctx.fillStyle='#7dffd4';ctx.save();ctx.translate(p.x,p.y);ctx.rotate(G.time*2);rr(-11,-11,22,22,4);ctx.fill();ctx.restore();ctx.fillStyle='#0a2a24';ctx.font='bold 14px Trebuchet MS';ctx.textAlign='center';ctx.fillText('✦',p.x,p.y+5);ctx.textAlign='left';}
+  else{ctx.fillStyle='#ff5e7a';const s=13;ctx.beginPath();ctx.moveTo(p.x,p.y+s*0.8);ctx.bezierCurveTo(p.x-s*1.4,p.y-s*0.4,p.x-s*0.5,p.y-s,p.x,p.y-s*0.4);ctx.bezierCurveTo(p.x+s*0.5,p.y-s,p.x+s*1.4,p.y-s*0.4,p.x,p.y+s*0.8);ctx.fill();}
+}
+function drawHUD(){
+  ctx.save();ctx.fillStyle='rgba(10,10,20,.55)';ctx.fillRect(0,0,W,40);
+  ctx.font='bold 14px Trebuchet MS';ctx.fillStyle=G.hard?'#ff8a9e':'#fff';ctx.fillText((G.hard?'⚠ HARD ':'')+'L'+G.level+' '+G.cfg.name,10,25);
+  ctx.textAlign='right';ctx.fillStyle='#ffd452';ctx.fillText('$'+(save.coins+G.earnedCoins),W-90,25);ctx.fillStyle='#7dffd4';ctx.fillText('✦'+(save.materials+G.earnedMat),W-12,25);ctx.textAlign='left';
+  const bx=10,by=H-24,bw=170,bh=14;ctx.fillStyle='#400';rr(bx,by,bw,bh,6);ctx.fill();ctx.fillStyle=G.hp/G.maxhp>0.3?'#7dff9e':'#ff5e62';rr(bx,by,bw*(G.hp/G.maxhp),bh,6);ctx.fill();ctx.fillStyle='#fff';ctx.font='bold 11px Trebuchet MS';ctx.fillText('HULL '+Math.ceil(G.hp),bx+6,by+11);
+  for(let i=0;i<G.shieldMax;i++){ctx.fillStyle=i<G.shield?'#5ec6ff':'#2c3a4a';ctx.beginPath();ctx.arc(bx+bw+20+i*20,by+7,7,0,7);ctx.fill();}
+  const pw=W-20,px=10,py=H-40;ctx.fillStyle='#2c2c44';rr(px,py,pw,8,4);ctx.fill();ctx.fillStyle=G.hard?'#ff5e62':'#8a7dff';rr(px,py,pw*clamp(G.dist/G.cfg.goal,0,1),8,4);ctx.fill();
+  ctx.restore();
+}
+
+/* ============ SCREENS ============ */
+function render(){if(mode==='play'){ui.innerHTML='';return;}
+  const m={menu:scMenu,levelselect:scLevels,garage:scGarage,shop:scShop,upgrade:scUpgrade,loadout:scLoadout,help:scHelp,win:scWin,winreplay:scWinReplay,edit:scEdit,trainwin:scTrainWin,over:scOver,victory:scVictory}[mode];
+  ui.innerHTML='<div class="overlay"><div class="panel">'+m()+'</div></div>';bind();}
+const wallet=()=>`<div class="wallet"><span class="c">$ ${save.coins} coins</span><span class="m">✦ ${save.materials} materials</span></div>`;
+function contLabel(){return save.frontierNormalDone?'⚠ EDIT & TRAIN — Level '+save.unlocked:(save.maxCleared>0?'CONTINUE — Level '+save.unlocked:'START — Level 1');}
+function scMenu(){return`<h1>ROAD WARRIOR</h1><div class="sub">Top-down · 20 brutal levels · build your war machine</div>${wallet()}
+  <div class="stat-row"><span>Levels cleared</span><span>${save.maxCleared} / 20</span></div>
+  <button class="btn ${save.frontierNormalDone?'edit':''}" data-act="continue">${contLabel()}</button>
+  <button class="btn alt" data-act="levelselect">SELECT LEVEL</button>
+  <button class="btn alt" data-act="garage">🔧 GARAGE</button>
+  <button class="btn alt" data-act="help">HOW TO PLAY</button>
+  <div class="small"><a href="#" data-act="reset" style="color:#6a6a85">reset all progress</a></div>`;}
+function scHelp(){return`<h2>How to Play</h2><div class="help">
+  <p><b>Steer:</b> <span class="kbd">◀</span><span class="kbd">▶</span> · <b>Brake:</b> <span class="kbd">▼</span> · <b>Shoot:</b> <span class="kbd">Space</span></p>
+  <p style="margin-top:8px">You're always at full speed — reach the distance goal without your hull hitting zero. Tap <span class="kbd">▼</span> to slow down briefly and thread through tight gaps.</p>
+  <p style="margin-top:8px"><b>Two resources:</b> <b>$ Coins</b> buy new gear in the <b>Shop</b>. <b>✦ Materials</b> (picked up on the road & dropped by kills) upgrade gear in the <b>Upgrade Box</b> — each level costs MORE materials, and you can't upgrade without enough.</p>
+  <p style="margin-top:8px"><b>Spikes are lethal</b> — a charged Shield absorbs one hit (then it must reload; a spike while reloading kills you). High Hull armor reduces spike damage (half at Lv5).</p>
+  <p style="margin-top:8px"><b>Loadout Box:</b> equip/remove shooters, shield and drone. Upgrade your <b>Car</b> for more slots → more shooters = more bullets.</p>
+  <p style="margin-top:8px"><b>Drone</b> (buy from Level 5) auto-collects pickups. Before that you must drive over them. <b>Killing enemies</b> can drop health.</p>
+  <p style="margin-top:8px"><b>EDIT gate:</b> after clearing a level you must beat a harder EDIT version to unlock the next.</p>
+  </div><button class="btn" data-act="back">BACK</button>`;}
+function scLevels(){let c='';for(let i=1;i<=20;i++){const cls=i<save.unlocked?'done':(i===save.unlocked?'cur':''),d=i>save.unlocked?'disabled':'';c+=`<button class="${cls}" ${d} data-play="${i}">${i}</button>`;}
+  return`<h2>Select Level</h2><div class="sub">Reached level ${save.unlocked}${save.frontierNormalDone?' · training pending':''}</div><div class="lvlpick">${c}</div>
+  ${save.frontierNormalDone?`<button class="btn edit" data-act="edit">⚠ EDIT & TRAIN Level ${save.unlocked}</button>`:''}
+  <button class="btn alt" data-act="back">BACK</button>`;}
+/* GARAGE HUB */
+function scGarage(){const next=garageNext();
+  return`<h2>🔧 Garage</h2>${wallet()}
+  <div class="navrow">
+   <button class="btn grn" data-act="shop">🛒 SHOP<br><span style="font-size:11px;font-weight:normal">buy with coins</span></button>
+   <button class="btn alt" data-act="upgrade">⬆ UPGRADE BOX<br><span style="font-size:11px;font-weight:normal">spend materials</span></button>
+   <button class="btn alt" data-act="loadout">🎒 LOADOUT<br><span style="font-size:11px;font-weight:normal">equip / remove</span></button>
+   <button class="btn alt" data-act="help">❓ HOW TO PLAY</button>
+  </div>
+  <button class="btn ${next.cls}" data-act="${next.act}">${next.label}</button>
+  ${(G&&next.act!=='back')?'<button class="btn alt" data-act="menu">MAIN MENU</button>':''}`;}
+function garageNext(){
+  if(save.frontierNormalDone)return{act:'edit',label:'⚠ EDIT & TRAIN ▶',cls:'edit'};
+  if(G&&G.hard)return{act:'nextlevel',label:'NEXT LEVEL ▶',cls:''};
+  if(G)return{act:'menu',label:'DONE — MAIN MENU',cls:'alt'};
+  return{act:'back',label:'BACK',cls:'alt'};
+}
+/* SHOP (coins) */
+function scShop(){
+  const sp=shooterPrice(),canShoot=save.owned.shooters<4&&save.coins>=sp;
+  const shieldOK=!save.owned.shield&&save.maxCleared>=2&&save.coins>=SHIELD_PRICE;
+  const droneOK=!save.owned.drone&&save.maxCleared>=4&&save.coins>=DRONE_PRICE;
+  return`<h2>🛒 Shop</h2>${wallet()}<div class="sub">Buy new gear with coins. Level it up later in the Upgrade Box.</div>
+  <div class="grid">
+   <div class="item"><div class="top"><span class="name">Extra Shooter <span class="pill">own ${save.owned.shooters}/4</span></span>
+     <button class="act" ${canShoot?'':'disabled'} data-shop="shooter">${save.owned.shooters>=4?'MAX':'$'+sp}</button></div>
+     <div class="desc">Another cannon. Equip it in Loadout for more bullets (needs a free slot).</div></div>
+   <div class="item"><div class="top"><span class="name">⚡ Energy Shield</span>
+     <button class="act" ${shieldOK?'':'disabled'} data-shop="shield">${save.owned.shield?'OWNED':(save.maxCleared>=2?'$'+SHIELD_PRICE:'🔒 Clear L2')}</button></div>
+     <div class="desc">Absorbs one deadly hit, then reloads. The only thing that survives a spike early on.</div></div>
+   <div class="item"><div class="top"><span class="name">🛸 Collector Drone</span>
+     <button class="act" ${droneOK?'':'disabled'} data-shop="drone">${save.owned.drone?'OWNED':(save.maxCleared>=4?'$'+DRONE_PRICE:'🔒 Reach L5')}</button></div>
+     <div class="desc">Auto-collects coins, materials & health. Equip it in Loadout.</div></div>
+  </div>
+  <button class="btn" data-act="garage">◀ BACK TO GARAGE</button>`;}
+/* UPGRADE BOX (materials) */
+function scUpgrade(){
+  const order=['car','gun','shield','hp'];
+  const rows=order.map(t=>{
+    const u=TRACK[t],lvl=save.up[t];
+    if(t==='shield'&&!save.owned.shield)return`<div class="item"><div class="top"><span class="name">${u.name}</span><span class="pill">buy in Shop first</span></div><div class="desc">${u.desc}</div></div>`;
+    const maxed=lvl>=u.max,cost=matCost(t),enough=save.materials>=cost;
+    let extra='';
+    if(t==='gun')extra=` <span class="pill">dmg ${gunDamage()}</span>`;
+    if(t==='car')extra=` <span class="pill">${slots()} slots</span>`;
+    if(t==='hp')extra=` <span class="pill">spike ${Math.round(spikeFrac()*100)}%</span>`;
+    return`<div class="item"><div class="top"><span class="name">${u.name} <span style="color:#7a7a98;font-size:12px">Lv ${lvl}/${u.max}</span>${extra}</span>
+      <button class="act blue" ${(!maxed&&enough)?'':'disabled'} data-up="${t}">${maxed?'MAX':(enough?'✦ '+cost:'need ✦'+cost)}</button></div>
+      <div class="desc">${u.desc}</div><div class="bar"><i style="width:${lvl/u.max*100}%"></i></div></div>`;}).join('');
+  return`<h2>⬆ Upgrade Box</h2>${wallet()}<div class="sub">Spend materials. Costs rise each level. Car is dearest, Hull cheapest.</div>
+  <div class="grid">${rows}</div><button class="btn" data-act="garage">◀ BACK TO GARAGE</button>`;}
+/* LOADOUT BOX (equip) */
+function scLoadout(){
+  let sl='';for(let i=0;i<slots();i++)sl+=`<div class="slot ${i<usedSlots()?'full':''}">${i<usedSlots()?'●':''}</div>`;
+  const eq=save.equip;
+  return`<h2>🎒 Loadout Box</h2><div class="sub">Equip / remove gear. Free slots: <b>${freeSlots()}</b> of ${slots()} (upgrade Car for more).</div>
+  <div class="slots">${sl}</div>
+  <div class="grid">
+   <div class="item"><div class="top"><span class="name">Shooters equipped: ${eq.shooters} / own ${save.owned.shooters}</span>
+     <span><button class="act blue" data-eq="sh-" ${eq.shooters>1?'':'disabled'}>–</button>
+     <button class="act" data-eq="sh+" ${(eq.shooters<save.owned.shooters&&freeSlots()>0)?'':'disabled'}>+</button></span></div>
+     <div class="desc">Each equipped shooter fires another bullet. Costs one slot each.</div></div>
+   <div class="item"><div class="top"><span class="name">⚡ Shield ${save.owned.shield?'':'<span class="pill">not owned</span>'}</span>
+     <button class="act ${eq.shieldOn?'blue':''}" ${save.owned.shield&&(eq.shieldOn||freeSlots()>0)?'':'disabled'} data-eq="shield">${eq.shieldOn?'REMOVE':'EQUIP'}</button></div>
+     <div class="desc">Uses one slot. Must be equipped to protect you.</div></div>
+   <div class="item"><div class="top"><span class="name">🛸 Drone ${save.owned.drone?'':'<span class="pill">not owned</span>'}</span>
+     <button class="act ${eq.droneOn?'blue':''}" ${save.owned.drone&&(eq.droneOn||freeSlots()>0)?'':'disabled'} data-eq="drone">${eq.droneOn?'REMOVE':'EQUIP'}</button></div>
+     <div class="desc">Uses one slot. Auto-collects pickups while equipped.</div></div>
+  </div><button class="btn" data-act="garage">◀ BACK TO GARAGE</button>`;}
+/* RESULT SCREENS */
+function results(){return`<div class="stat-row"><span>Enemies destroyed</span><span>${G.kills}</span></div>
+  <div class="stat-row"><span>Coins earned</span><span class="c" style="color:#ffd452">+ $${G.earnedCoins}</span></div>
+  <div class="stat-row"><span>Materials earned</span><span style="color:#7dffd4">+ ✦${G.earnedMat}</span></div>`;}
+function scWin(){return`<h2>✅ Level ${G.level} Cleared!</h2><div class="sub">${G.cfg.name}</div>${results()}
+  <div class="warn"><b>EDIT required.</b> To unlock Level ${G.level+1>20?20:G.level+1}, beat a harder EDIT version of Level ${G.level} first.</div>
+  <button class="btn edit" data-act="edit">⚠ EDIT — TRAIN HARDER</button>
+  <button class="btn grn" data-act="garage">🔧 GARAGE FIRST</button>
+  <button class="btn alt" data-act="menu">MAIN MENU</button>`;}
+function scWinReplay(){return`<h2>✅ Level ${G.level} Cleared</h2><div class="sub">${G.cfg.name} (replay)</div>${results()}
+  <button class="btn grn" data-act="garage">🔧 GARAGE</button><button class="btn" data-act="menu">MAIN MENU</button>`;}
+function scEdit(){const L=G?G.level:save.unlocked;return`<h2>⚠ EDIT — Hardened Training</h2><div class="sub">Level ${L} · ${(LEVEL_NAMES[L-1]||'')} — toughened</div>
+  <div class="warn">Beat this harder version to unlock Level ${L+1>20?'the finale':L+1}:<br>• Speed +32% • Enemies +2 • Enemy hull +60% • Faster fire • More spikes • Longer road</div>
+  <button class="btn edit" data-act="starttrain">▶ START HARDENED RUN</button>
+  <button class="btn grn" data-act="garage">🔧 GARAGE FIRST</button>
+  <button class="btn alt" data-act="menu">MAIN MENU</button>`;}
+function scTrainWin(){return`<h2>🎖 Training Complete!</h2><div class="sub">Hardened Level ${G.level} beaten — Level ${G.level+1} unlocked.</div>${results()}
+  <button class="btn grn" data-act="garage">🔧 GARAGE & NEXT LEVEL</button><button class="btn alt" data-act="menu">MAIN MENU</button>`;}
+function scOver(){return`<h2 style="color:#ff5e62">💥 Wrecked</h2><div class="sub">${G.hard?'Hardened ':''}Level ${G.level} — ${G.cfg.name}</div>
+  <div class="stat-row"><span>Distance</span><span>${Math.floor(G.dist)} / ${G.cfg.goal}</span></div>
+  <div class="stat-row"><span>Salvaged coins</span><span style="color:#ffd452">+ $${G._cc||0}</span></div>
+  <div class="stat-row"><span>Materials kept</span><span style="color:#7dffd4">+ ✦${G.earnedMat}</span></div>
+  <button class="btn" data-retry="1">🔄 RETRY</button><button class="btn grn" data-act="garage">🔧 GARAGE</button><button class="btn alt" data-act="menu">MAIN MENU</button>`;}
+function scVictory(){return`<h1>🏆 YOU WON</h1><div class="sub">All 20 levels and their hardened trials conquered.</div>${wallet()}
+  <button class="btn alt" data-act="levelselect">REPLAY A LEVEL</button><button class="btn" data-act="menu">MAIN MENU</button>`;}
+
+/* ============ BIND ============ */
+function bind(){
+  ui.querySelectorAll('[data-act]').forEach(el=>el.onclick=e=>{e.preventDefault();const a=el.dataset.act;
+    if(a==='continue'){if(save.frontierNormalDone){mode='edit';}else{newRun(save.unlocked,false);return;}render();}
+    else if(a==='nextlevel')newRun(save.unlocked,false);
+    else if(a==='starttrain')newRun(G?G.level:save.unlocked,true);
+    else if(a==='back'){mode=G?'garage':'menu';render();}
+    else if(a==='reset'){if(confirm('Erase all progress, coins and materials?')){save=defaultSave();G=null;mode='menu';persist();render();}}
+    else {mode=a;render();}
+  });
+  ui.querySelectorAll('[data-play]').forEach(el=>el.onclick=()=>newRun(+el.dataset.play,false));
+  ui.querySelectorAll('[data-retry]').forEach(el=>el.onclick=()=>newRun(G.level,G.hard));
+  ui.querySelectorAll('[data-shop]').forEach(el=>el.onclick=()=>buyShop(el.dataset.shop));
+  ui.querySelectorAll('[data-up]').forEach(el=>el.onclick=()=>doUpgrade(el.dataset.up));
+  ui.querySelectorAll('[data-eq]').forEach(el=>el.onclick=()=>doEquip(el.dataset.eq));
+}
+function buyShop(k){
+  if(k==='shooter'){const p=shooterPrice();if(save.owned.shooters<4&&save.coins>=p){save.coins-=p;save.owned.shooters++;persist();render();toast('Extra shooter bought! Equip it in Loadout.');}}
+  else if(k==='shield'){if(!save.owned.shield&&save.coins>=SHIELD_PRICE){save.coins-=SHIELD_PRICE;save.owned.shield=true;save.up.shield=1;if(freeSlots()>0)save.equip.shieldOn=true;persist();render();toast('Shield installed & equipped!');}}
+  else if(k==='drone'){if(!save.owned.drone&&save.coins>=DRONE_PRICE){save.coins-=DRONE_PRICE;save.owned.drone=true;if(freeSlots()>0)save.equip.droneOn=true;persist();render();toast('Drone acquired & equipped!');}}
+}
+function doUpgrade(t){
+  const u=TRACK[t];if(save.up[t]>=u.max)return;const cost=matCost(t);
+  if(save.materials<cost){toast('Not enough materials — need ✦'+cost);return;}
+  save.materials-=cost;save.up[t]++;persist();render();toast(u.name+' upgraded to Lv'+save.up[t]+'!');
+}
+function doEquip(k){
+  const eq=save.equip;
+  if(k==='sh+'){if(eq.shooters<save.owned.shooters&&freeSlots()>0)eq.shooters++;}
+  else if(k==='sh-'){if(eq.shooters>1)eq.shooters--;}
+  else if(k==='shield'){if(eq.shieldOn)eq.shieldOn=false;else if(freeSlots()>0)eq.shieldOn=true;}
+  else if(k==='drone'){if(eq.droneOn)eq.droneOn=false;else if(freeSlots()>0)eq.droneOn=true;}
+  persist();render();
+}
+/* ============ LOOP ============ */
+let last=performance.now();
+function loop(now){let dt=(now-last)/1000;last=now;if(dt>0.05)dt=0.05;if(mode==='play'&&G){update(dt);drawWorld();}requestAnimationFrame(loop);}
+mode='menu';render();requestAnimationFrame(loop);
+</script>
+<script>
+/* --- Cowork input fix ---------------------------------------------------
+   Keeps keyboard focus on the game and stops arrow/space keys from
+   scrolling the page or triggering browser shortcuts. The game's own
+   key handlers still run (propagation is not stopped). */
+(function(){
+  function focusGame(){ try{ window.focus(); if(document.body){document.body.tabIndex=-1; document.body.focus();} }catch(e){} }
+  window.addEventListener('load', focusGame);
+  document.addEventListener('mousedown', focusGame);
+  document.addEventListener('touchstart', focusGame, {passive:true});
+  window.addEventListener('keydown', function(e){
+    var t=e.target;
+    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+    var k=e.key;
+    if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight'||k===' '||k==='Spacebar'){
+      e.preventDefault();
+    }
+  }, true);
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math Hero!</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito',sans-serif;background:linear-gradient(135deg,#fce4ec 0%,#ede7f6 40%,#e0f7fa 100%);min-height:100vh;padding:20px 16px 44px;color:#37474f}
+.wrap{max-width:640px;margin:0 auto}
+
+h1{font-size:2.4rem;font-weight:900;color:#7c4dff;text-align:center;letter-spacing:-1px}
+.subtitle{text-align:center;color:#b0bec5;font-weight:700;font-size:.9rem;margin-top:4px;margin-bottom:18px}
+
+.score-bar{background:#fff;border-radius:20px;padding:14px 16px;display:flex;justify-content:space-around;margin-bottom:14px;box-shadow:0 4px 18px rgba(124,77,255,.1)}
+.sc-num{font-size:1.9rem;font-weight:900;color:#7c4dff;display:block;text-align:center}
+.sc-label{font-size:.68rem;font-weight:800;color:#b0bec5;text-align:center;letter-spacing:.4px;text-transform:uppercase}
+
+.modes{display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.mode-btn{padding:7px 16px;border-radius:50px;border:2px solid #b39ddb;background:#fff;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:800;cursor:pointer;color:#7c4dff;transition:all .2s}
+.mode-btn.on{background:#7c4dff;color:#fff;border-color:#7c4dff}
+
+.card{background:#fff;border-radius:26px;padding:36px 32px 30px;text-align:center;box-shadow:0 8px 32px rgba(124,77,255,.13);margin-bottom:16px}
+.prob{font-size:3.8rem;font-weight:900;letter-spacing:4px;margin-bottom:28px;line-height:1}
+.n1{color:#37474f}.x{color:#ffb3c6;font-size:3.3rem}.n2{color:#7c4dff}
+.ans-input{font-family:'Nunito',sans-serif;font-size:2.3rem;font-weight:800;text-align:center;border:3px solid #ede7f6;border-radius:16px;padding:8px 18px;width:240px;color:#37474f;outline:none;transition:border-color .25s;-moz-appearance:textfield}
+.ans-input::-webkit-outer-spin-button,.ans-input::-webkit-inner-spin-button{-webkit-appearance:none}
+.ans-input:focus{border-color:#7c4dff}
+.submit-btn{display:block;margin:20px auto 0;background:linear-gradient(135deg,#7c4dff,#b39ddb);color:#fff;border:none;border-radius:50px;padding:14px 48px;font-family:'Nunito',sans-serif;font-size:1.2rem;font-weight:900;cursor:pointer;box-shadow:0 5px 20px rgba(124,77,255,.35);transition:transform .15s,box-shadow .15s}
+.submit-btn:hover{transform:translateY(-2px)}.submit-btn:active{transform:scale(.97)}
+
+.feedback{border-radius:22px;padding:20px 22px;margin-bottom:14px;text-align:center;display:none}
+.feedback.ok{background:#f1f8e9;border:3px solid #aed581}
+.feedback.no{background:#fce4ec;border:3px solid #f48fb1}
+.fb-emoji{font-size:2.5rem;display:block;margin-bottom:8px}
+.fb-msg{font-size:1.15rem;font-weight:800;line-height:1.5}
+.fb-big{font-size:1.7rem;font-weight:900}
+.ok-c{color:#558b2f}.no-c{color:#c62828}
+
+.breakdown{background:#fff;border-radius:26px;padding:26px 22px 24px;box-shadow:0 8px 30px rgba(0,0,0,.07);margin-bottom:16px;display:none}
+.bd-title{font-size:1.1rem;font-weight:900;color:#7c4dff;text-align:center;margin-bottom:16px}
+
+.mtabs{display:flex;gap:8px;justify-content:center;margin-bottom:18px}
+.mtab{padding:8px 22px;border-radius:50px;border:2px solid #e8d5ff;background:#f8f5ff;font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:800;cursor:pointer;color:#9c7fe8;transition:all .2s}
+.mtab.on{background:#7c4dff;color:#fff;border-color:#7c4dff}
+
+.mpanel{display:none}.mpanel.on{display:block}
+
+.step{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 15px;border-radius:13px;margin-bottom:9px;opacity:0;transform:translateY(10px);transition:opacity .35s,transform .35s}
+.step.show{opacity:1;transform:none}
+.step-eq{font-size:1rem;font-weight:700;color:#546e7a;flex:1}
+.step-eq strong{font-size:1.15rem;font-weight:900}
+.step-res{font-size:1.25rem;font-weight:900;color:#7c4dff;white-space:nowrap}
+.s1{background:#e3f2fd}.s2{background:#f3e5f5}.s3{background:#fff3e0}
+.s-total{background:#e8f5e9;border:2px solid #a5d6a7}
+.s-total .step-res{color:#2e7d32;font-size:1.4rem}
+.place-note{font-size:.78rem;color:#90a4ae;font-weight:700;display:block;margin-top:2px}
+
+.digit-h{color:#1976d2}.digit-t{color:#9c27b0}.digit-o{color:#f44336}.digit-m{color:#7c4dff}
+
+.prob-col{display:inline-block;background:#f8f5ff;padding:16px 24px;border-radius:16px;font-size:2rem;font-weight:900;letter-spacing:5px;margin-bottom:14px;text-align:right}
+.pc-sep{border:none;border-top:3px solid #b0bec5;margin:8px 0}
+
+.box-wrap{overflow-x:auto;margin-bottom:14px;text-align:center;-webkit-overflow-scrolling:touch}
+.box-table{border-collapse:collapse;margin:0 auto}
+.box-corner{width:64px;height:40px;font-size:.9rem;font-weight:800;color:#b0bec5;text-align:center;vertical-align:middle}
+.box-col-hdr{text-align:center;padding:7px 10px;font-size:.95rem;font-weight:900;color:#37474f;background:#f0f0f0;border:2px solid #e0e0e0;min-width:84px}
+.box-row-hdr{text-align:center;padding:7px 8px;font-size:.95rem;font-weight:900;border:2px solid #e0e0e0;min-width:64px}
+.box-cell{text-align:center;padding:10px 7px;font-size:.92rem;font-weight:800;border:2px solid #e0e0e0;min-width:84px;opacity:0;transform:scale(.4) rotate(-5deg);transition:opacity .28s,transform .28s;will-change:opacity,transform}
+.box-cell.show{opacity:1;transform:scale(1) rotate(0deg)}
+.box-sum{opacity:0;transform:translateY(8px);transition:opacity .4s,transform .4s;text-align:center;padding:12px 14px;background:#e8f5e9;border-radius:14px;margin-top:10px;font-size:.92rem;font-weight:800;color:#546e7a;line-height:1.7}
+.box-sum.show{opacity:1;transform:none}
+.box-sum-big{font-size:1.5rem;font-weight:900;color:#2e7d32;display:block}
+
+.lm-wrap{background:#f8f5ff;border-radius:16px;padding:18px 22px}
+.lm-prob{text-align:right;font-size:2rem;font-weight:900;letter-spacing:4px;color:#37474f}
+.lm-mult{text-align:right;font-size:1.6rem;font-weight:800;letter-spacing:4px;color:#546e7a}
+.lm-sep{border:none;border-top:3px solid #b0bec5;margin:9px 0}
+.lm-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;opacity:0;transform:translateX(22px);transition:opacity .35s,transform .35s}
+.lm-row.show{opacity:1;transform:none}
+.lm-val{font-size:1.7rem;font-weight:900;font-variant-numeric:tabular-nums}
+.lm-label{font-size:.8rem;font-weight:700;color:#90a4ae;text-align:right;max-width:180px}
+.lm-total{text-align:right;font-size:2rem;font-weight:900;color:#2e7d32;opacity:0;transition:opacity .4s}
+.lm-total.show{opacity:1}
+
+.next-btn{display:block;margin:20px auto 0;background:linear-gradient(135deg,#26a69a,#4db6ac);color:#fff;border:none;border-radius:50px;padding:12px 40px;font-family:'Nunito',sans-serif;font-size:1.1rem;font-weight:900;cursor:pointer;box-shadow:0 5px 16px rgba(38,166,154,.35);transition:transform .15s}
+.next-btn:hover{transform:translateY(-2px)}.next-btn:active{transform:scale(.97)}
+
+.confetti-wrap{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+.cp{position:absolute;animation:fall linear forwards}
+@keyframes fall{0%{transform:translateY(-10px) rotate(0deg);opacity:1}100%{transform:translateY(105vh) rotate(800deg);opacity:0}}
+
+.streak-msg{text-align:center;font-size:1rem;font-weight:800;color:#ff9800;min-height:26px;margin-bottom:6px}
+.method-intro{text-align:center;color:#546e7a;font-weight:700;font-size:.88rem;margin-bottom:14px;background:#faf8ff;padding:10px 14px;border-radius:12px;border-left:4px solid #b39ddb}
+.ans-input.shake{animation:shake .45s ease;border-color:#e53935!important}
+@keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-9px)}35%{transform:translateX(9px)}55%{transform:translateX(-6px)}75%{transform:translateX(6px)}90%{transform:translateX(-3px)}}
+.empty-err{color:#e53935;font-weight:800;font-size:.92rem;margin-top:10px;min-height:22px;text-align:center;transition:opacity .3s}
+</style>
+</head>
+<body>
+<div class="confetti-wrap" id="confetti"></div>
+<div class="wrap">
+
+  <div style="padding:16px 0 6px;text-align:center;font-size:2.8rem">🌟</div>
+  <h1>Math Hero!</h1>
+  <p class="subtitle">3-Digit Multiplication Practice</p>
+
+  <div class="score-bar">
+    <div><span class="sc-num" id="sc">0</span><span class="sc-label">✅ Correct</span></div>
+    <div><span class="sc-num" id="st">0</span><span class="sc-label">📝 Total</span></div>
+    <div><span class="sc-num" id="sa">—</span><span class="sc-label">🎯 Accuracy</span></div>
+    <div><span class="sc-num" id="ss">0</span><span class="sc-label">🔥 Streak</span></div>
+  </div>
+
+  <div class="modes">
+    <button class="mode-btn on" id="m1" onclick="setMode(1)">⭐ Easy (×1 digit)</button>
+    <button class="mode-btn" id="m2" onclick="setMode(2)">🚀 Medium (×2 digits)</button>
+    <button class="mode-btn" id="m3" onclick="setMode(3)">💡 Hard (×3 digits)</button>
+  </div>
+
+  <div class="streak-msg" id="streak-msg"></div>
+
+  <div class="card">
+    <div class="prob">
+      <span class="n1" id="n1">—</span>
+      <span class="x"> × </span>
+      <span class="n2" id="n2">—</span>
+    </div>
+    <input type="number" class="ans-input" id="ans" placeholder="?" autocomplete="off">
+    <div class="empty-err" id="empty-err"></div>
+    <button class="submit-btn" id="check-btn">Check it! ✨</button>
+  </div>
+
+  <div class="feedback" id="fb">
+    <span class="fb-emoji" id="fb-emoji"></span>
+    <div class="fb-msg" id="fb-msg"></div>
+  </div>
+
+  <div class="breakdown" id="bd">
+    <div class="bd-title">🔍 Here's how it's done!</div>
+    <div class="mtabs" id="mtabs"></div>
+    <div id="bd-panels"></div>
+    <button class="next-btn" onclick="next()">Next Question →</button>
+  </div>
+
+  <div id="next-ok" style="display:none;text-align:center">
+    <button class="next-btn" onclick="next()">Next Question →</button>
+  </div>
+
+</div>
+<script>
+var A,B,ANS,cor=0,tot=0,str=0,mode=1;
+
+var CORR=['Amazing work! 🎉','You\'re a Math Hero! ⭐','Perfect answer! 🚀','Brilliant! 🌟','Superstar! 💫','Keep it up! 🏆','Unstoppable! ⚡'];
+var MISS=['Nice try! Let\'s see how it\'s done! 💪','Almost! Let\'s learn from this one 🤓','Don\'t worry — let\'s figure it out! 📚'];
+var EMOJ=['🎊','⭐','🏆','🌈','🎯','🎈','🦄'];
+var RC=[
+  {bg:'#e3f2fd',text:'#1565c0',hdr:'#bbdefb'},
+  {bg:'#f3e5f5',text:'#6a1b9a',hdr:'#e1bee7'},
+  {bg:'#fce4ec',text:'#ad1457',hdr:'#f8bbd0'}
+];
+
+function rnd(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+function setMode(m){
+  mode=m;
+  document.getElementById('m1').className='mode-btn'+(m===1?' on':'');
+  document.getElementById('m2').className='mode-btn'+(m===2?' on':'');
+  document.getElementById('m3').className='mode-btn'+(m===3?' on':'');
+  next();
+}
+
+function gen(){
+  A=Math.floor(Math.random()*900)+100;
+  if(mode===1) B=Math.floor(Math.random()*8)+2;
+  else if(mode===2) B=Math.floor(Math.random()*90)+10;
+  else B=Math.floor(Math.random()*900)+100;
+  ANS=A*B;
+}
+
+function next(){
+  gen();
+  document.getElementById('n1').textContent=A;
+  document.getElementById('n2').textContent=B;
+  document.getElementById('ans').value='';
+  document.getElementById('fb').style.display='none';
+  document.getElementById('bd').style.display='none';
+  document.getElementById('next-ok').style.display='none';
+  document.getElementById('streak-msg').textContent='';
+  document.getElementById('ans').focus();
+}
+
+function check(){
+  var v=parseInt(document.getElementById('ans').value,10);
+  if(isNaN(v)){
+    var inp=document.getElementById('ans');
+    var err=document.getElementById('empty-err');
+    inp.classList.remove('shake');
+    void inp.offsetWidth; // reflow to restart animation
+    inp.classList.add('shake');
+    err.textContent='✏️ Type your answer first!';
+    inp.focus();
+    setTimeout(function(){
+      inp.classList.remove('shake');
+      err.textContent='';
+    },1400);
+    return;
+  }
+  document.getElementById('empty-err').textContent='';
+  tot++;
+  document.getElementById('st').textContent=tot;
+  if(v===ANS){
+    cor++;str++;
+    document.getElementById('sc').textContent=cor;
+    showFB(true);
+    launch();
+    document.getElementById('next-ok').style.display='block';
+  } else {
+    str=0;
+    showFB(false,v);
+    buildBreakdown();
+  }
+  document.getElementById('ss').textContent=str;
+  document.getElementById('sa').textContent=tot===0?'—':Math.round(cor/tot*100)+'%';
+  document.getElementById('streak-msg').textContent=str>=3?'🔥 '+str+' in a row! Amazing!':'';
+}
+
+function showFB(ok,user){
+  var el=document.getElementById('fb');
+  el.style.display='block';
+  if(ok){
+    el.className='feedback ok';
+    document.getElementById('fb-emoji').textContent=rnd(EMOJ);
+    document.getElementById('fb-msg').textContent=rnd(CORR);
+  } else {
+    el.className='feedback no';
+    document.getElementById('fb-emoji').textContent='🤔';
+    document.getElementById('fb-msg').innerHTML=
+      rnd(MISS)+'<br>You said <span class="fb-big no-c">'+user.toLocaleString()+
+      '</span>  —  correct is <span class="fb-big ok-c">'+ANS.toLocaleString()+'</span>';
+  }
+}
+
+/* ═══════════════════════════ BREAKDOWN ═══════════════════════════ */
+function buildBreakdown(){
+  var bd=document.getElementById('bd');
+  bd.style.display='block';
+
+  var tabs,panels;
+  if(mode===1){
+    tabs=['🧩 Partial Products','📝 Column Method'];
+    panels=[buildPartial(),buildColumn()];
+  } else {
+    tabs=['📦 Box / Grid Method','📝 Long Multiplication'];
+    panels=[buildBox(),buildLong()];
+  }
+
+  document.getElementById('mtabs').innerHTML=tabs.map(function(t,i){
+    return '<button class="mtab'+(i===0?' on':'')+'" data-tab="'+i+'">'+t+'</button>';
+  }).join('');
+
+  document.getElementById('bd-panels').innerHTML=panels.map(function(p,i){
+    return '<div class="mpanel'+(i===0?' on':'')+'" id="mp'+i+'">'+p+'</div>';
+  }).join('');
+
+  startAnim(0);
+}
+
+function switchTab(idx){
+  document.querySelectorAll('.mtab').forEach(function(t,i){
+    t.className='mtab'+(i===idx?' on':'');
+  });
+  document.querySelectorAll('.mpanel').forEach(function(p,i){
+    p.className='mpanel'+(i===idx?' on':'');
+    if(i===idx) startAnim(idx);
+  });
+}
+
+function startAnim(idx){
+  setTimeout(function(){
+    if(mode===1){ idx===0?animSteps(['pp0','pp1','pp2','pp3']):animSteps(['cm0','cm1','cm2','cm3']); }
+    else { idx===0?animBox():animLong(); }
+  },60);
+}
+
+/* ─── PARTIAL PRODUCTS (Easy, Tab 1) ─────────────────────────────── */
+function buildPartial(){
+  var h=Math.floor(A/100),t=Math.floor((A%100)/10),o=A%10;
+  var p1=o*B, p2=t*10*B, p3=h*100*B;
+  return '<p class="method-intro">Split each digit of '+A+' and multiply each part by '+B+' — then add it all up!</p>'+
+  '<div style="text-align:center;margin-bottom:14px">'+
+  '<div class="prob-col">'+
+  '<div><span class="digit-h">'+h+'</span><span class="digit-t">'+t+'</span><span class="digit-o">'+o+'</span></div>'+
+  '<div style="font-size:1.5rem;color:#b0bec5">× <span class="digit-m">'+B+'</span></div>'+
+  '<hr class="pc-sep">'+
+  '<div style="color:#2e7d32">'+ANS.toLocaleString()+'</div>'+
+  '</div></div>'+
+  '<div class="step s1" id="pp0"><div class="step-eq"><strong class="digit-o">'+o+'</strong> × '+B+'<span class="place-note">ones digit of '+A+'</span></div><div class="step-res">= '+p1.toLocaleString()+'</div></div>'+
+  '<div class="step s2" id="pp1"><div class="step-eq"><strong class="digit-t">'+t+'</strong>0 × '+B+'<span class="place-note">tens digit of '+A+' → means '+t+'0 × '+B+'</span></div><div class="step-res">= '+p2.toLocaleString()+'</div></div>'+
+  '<div class="step s3" id="pp2"><div class="step-eq"><strong class="digit-h">'+h+'</strong>00 × '+B+'<span class="place-note">hundreds digit of '+A+' → means '+h+'00 × '+B+'</span></div><div class="step-res">= '+p3.toLocaleString()+'</div></div>'+
+  '<div class="step s-total" id="pp3"><div class="step-eq" style="color:#2e7d32;font-weight:800">Add them all: <span style="font-size:.85rem;color:#546e7a">'+p1+' + '+p2+' + '+p3+'</span></div><div class="step-res">= '+ANS.toLocaleString()+'</div></div>';
+}
+
+/* ─── COLUMN METHOD (Easy, Tab 2) ────────────────────────────────── */
+function buildColumn(){
+  var h=Math.floor(A/100),t=Math.floor((A%100)/10),o=A%10;
+  var s1=o*B, c1=Math.floor(s1/10), d1=s1%10;
+  var s2=t*B+c1, c2=Math.floor(s2/10), d2=s2%10;
+  var s3=h*B+c2, d3=s3.toString();
+  var c1html=c1>0?'carry <strong style="color:#ff7043">'+c1+'</strong> to tens':'';
+  var c2html=c2>0?'carry <strong style="color:#ff7043">'+c2+'</strong> to hundreds':'';
+  return '<p class="method-intro">Multiply digit by digit from right to left. Any extra tens get "carried" to the next column!</p>'+
+  '<div style="text-align:center;margin-bottom:14px">'+
+  '<div class="prob-col">'+
+  '<div><span class="digit-h">'+h+'</span><span class="digit-t">'+t+'</span><span class="digit-o">'+o+'</span></div>'+
+  '<div style="font-size:1.5rem;color:#b0bec5">× <span class="digit-m">'+B+'</span></div>'+
+  '<hr class="pc-sep">'+
+  '<div style="color:#2e7d32">'+ANS.toLocaleString()+'</div>'+
+  '</div></div>'+
+  '<div class="step s1" id="cm0"><div class="step-eq"><strong class="digit-o">'+o+'</strong> × '+B+' = '+s1+'<span class="place-note">write <strong>'+d1+'</strong>'+(c1>0?' — '+c1html:'')+'</span></div><div class="step-res">→ '+d1+'</div></div>'+
+  '<div class="step s2" id="cm1"><div class="step-eq"><strong class="digit-t">'+t+'</strong> × '+B+(c1>0?' + '+c1+' (carry)':'')+' = '+s2+'<span class="place-note">write <strong>'+d2+'</strong>'+(c2>0?' — '+c2html:'')+'</span></div><div class="step-res">→ '+d2+'</div></div>'+
+  '<div class="step s3" id="cm2"><div class="step-eq"><strong class="digit-h">'+h+'</strong> × '+B+(c2>0?' + '+c2+' (carry)':'')+' = '+s3+'<span class="place-note">write <strong>'+d3+'</strong></span></div><div class="step-res">→ '+d3+'</div></div>'+
+  '<div class="step s-total" id="cm3"><div class="step-eq" style="color:#2e7d32;font-weight:800">Read all digits together:</div><div class="step-res">= '+ANS.toLocaleString()+'</div></div>';
+}
+
+function animSteps(ids){
+  ids.forEach(function(id,i){
+    setTimeout(function(){
+      var el=document.getElementById(id);
+      if(el) el.classList.add('show');
+    },180+i*360);
+  });
+}
+
+/* ─── BOX / GRID METHOD (Medium + Hard, Tab 1) ───────────────────── */
+function buildBox(){
+  var aH=Math.floor(A/100)*100, aT=Math.floor((A%100)/10)*10, aO=A%10;
+  var colVals=[aH,aT,aO];
+  var rowVals=mode===3
+    ? [Math.floor(B/100)*100, Math.floor((B%100)/10)*10, B%10]
+    : [Math.floor(B/10)*10, B%10];
+
+  var nR=rowVals.length, nC=3;
+  var allVals=[], grandTotal=0;
+
+  var tbl='<div class="box-wrap"><table class="box-table"><tbody>';
+  tbl+='<tr><td class="box-corner">×</td>';
+  colVals.forEach(function(v){
+    tbl+='<td class="box-col-hdr">'+v.toLocaleString()+'</td>';
+  });
+  tbl+='</tr>';
+
+  for(var r=0;r<nR;r++){
+    tbl+='<tr>';
+    tbl+='<td class="box-row-hdr" style="background:'+RC[r].hdr+';color:'+RC[r].text+'">'+rowVals[r].toLocaleString()+'</td>';
+    for(var c=0;c<nC;c++){
+      var val=rowVals[r]*colVals[c];
+      allVals.push(val);
+      grandTotal+=val;
+      tbl+='<td class="box-cell" id="bc'+r+''+c+'" style="background:'+RC[r].bg+';color:'+RC[r].text+'">'+val.toLocaleString()+'</td>';
+    }
+    tbl+='</tr>';
+  }
+  tbl+='</tbody></table></div>';
+
+  var parts=allVals.map(function(v){return v.toLocaleString();}).join(' + ');
+  var sumHtml='<div class="box-sum" id="box-sum">Add all the boxes together:<br><span style="font-size:.8rem">'+parts+'</span><span class="box-sum-big">= '+grandTotal.toLocaleString()+'</span></div>';
+
+  return '<p class="method-intro">Break both numbers apart by place value. Fill each box, then add all boxes!</p>'+tbl+sumHtml;
+}
+
+function animBox(){
+  var nR=mode===3?3:2, delay=150;
+  for(var r=0;r<nR;r++){
+    for(var c=0;c<3;c++){
+      (function(r,c,d){
+        setTimeout(function(){
+          var el=document.getElementById('bc'+r+''+c);
+          if(el) el.classList.add('show');
+        },d);
+      })(r,c,delay);
+      delay+=190;
+    }
+  }
+  setTimeout(function(){
+    var el=document.getElementById('box-sum');
+    if(el) el.classList.add('show');
+  },delay+280);
+}
+
+/* ─── LONG MULTIPLICATION (Medium + Hard, Tab 2) ─────────────────── */
+function buildLong(){
+  var rows=[];
+  var bO=B%10, bT=Math.floor((B%100)/10), bH=Math.floor(B/100);
+  var rowCols=['#f44336','#9c27b0','#1976d2'];
+
+  if(bO!==0) rows.push({val:A*bO, color:rowCols[0], lbl:A+' × '+bO+' (ones digit of '+B+')'});
+  if(bT!==0) rows.push({val:A*bT*10, color:rowCols[1], lbl:A+' × '+bT*10+' (tens digit of '+B+')'});
+  if(mode===3&&bH!==0) rows.push({val:A*bH*100, color:rowCols[2], lbl:A+' × '+bH*100+' (hundreds digit of '+B+')'});
+
+  var html='<p class="method-intro">Multiply '+A+' by each digit of '+B+' separately, then add all the rows!</p>';
+  html+='<div class="lm-wrap">';
+  html+='<div class="lm-prob">'+A.toLocaleString()+'</div>';
+  html+='<div class="lm-mult">× '+B.toLocaleString()+'</div>';
+  html+='<hr class="lm-sep">';
+  rows.forEach(function(row,i){
+    html+='<div class="lm-row" id="lr'+i+'"><span class="lm-val" style="color:'+row.color+'">'+row.val.toLocaleString()+'</span><span class="lm-label">'+row.lbl+'</span></div>';
+  });
+  html+='<hr class="lm-sep">';
+  html+='<div class="lm-total" id="lm-total">'+ANS.toLocaleString()+'</div>';
+  html+='</div>';
+  return html;
+}
+
+function animLong(){
+  var nR=mode===3?3:2, delay=200;
+  for(var i=0;i<nR;i++){
+    (function(i,d){
+      setTimeout(function(){
+        var el=document.getElementById('lr'+i);
+        if(el) el.classList.add('show');
+      },d);
+    })(i,delay);
+    delay+=380;
+  }
+  setTimeout(function(){
+    var el=document.getElementById('lm-total');
+    if(el) el.classList.add('show');
+  },delay+250);
+}
+
+/* ─── CONFETTI ───────────────────────────────────────────────────── */
+function launch(){
+  var c=document.getElementById('confetti');
+  var cols=["#ff9eb5","#b39ddb","#80deea","#a5d6a7","#ffe082","#ef9a9a","#ffcc80","#ce93d8","#80cbc4"];
+  for(var i=0;i<75;i++){
+    var p=document.createElement('div');
+    p.className='cp';
+    var size=Math.random()*10+7;
+    p.style.cssText='left:'+Math.random()*100+'vw;top:-14px;background:'+cols[Math.floor(Math.random()*cols.length)]+';width:'+size+'px;height:'+size+'px;border-radius:'+(Math.random()>.5?'50%':'3px')+';animation-duration:'+(Math.random()*1.4+1)+'s;animation-delay:'+(Math.random()*.55)+'s';
+    c.appendChild(p);
+    setTimeout(function(){if(p.parentNode)p.parentNode.removeChild(p);},3200);
+  }
+}
+
+document.getElementById('ans').addEventListener('keydown',function(e){if(e.key==='Enter')check();});
+document.getElementById('check-btn').addEventListener('click',check);
+document.getElementById('mtabs').addEventListener('click',function(e){
+  var btn=e.target.closest('[data-tab]');
+  if(btn) switchTab(parseInt(btn.getAttribute('data-tab'),10));
+});
+next();
+</script>
+<script>
+/* --- Cowork input fix ---------------------------------------------------
+   Keeps keyboard focus on the game and stops arrow/space keys from
+   scrolling the page or triggering browser shortcuts. The game's own
+   key handlers still run (propagation is not stopped). */
+(function(){
+  function focusGame(){ try{ window.focus(); if(document.body){document.body.tabIndex=-1; document.body.focus();} }catch(e){} }
+  window.addEventListener('load', focusGame);
+  document.addEventListener('mousedown', focusGame);
+  document.addEventListener('touchstart', focusGame, {passive:true});
+  window.addEventListener('keydown', function(e){
+    var t=e.target;
+    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+    var k=e.key;
+    if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight'||k===' '||k==='Spacebar'){
+      e.preventDefault();
+    }
+  }, true);
+})();
+</script>
+
+</body>
+</html>

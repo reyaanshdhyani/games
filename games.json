@@ -1,0 +1,23 @@
+{
+  "siteTitle": "🎮 Reyaansh's Game Arcade",
+  "tagline": "Click a game to play. Tip: click once inside the game window so the keyboard controls respond.",
+  "defaultEmoji": "🎮",
+  "defaultControls": "Click to play",
+  "noShim": ["time-travel-explorer.html"],
+  "overrides": {
+    "road-racer.html":           { "name": "Road Racer 90",       "emoji": "🏎️", "controls": "← → steer · Space / P pause",        "order": 1 },
+    "road-warrior.html":         { "name": "Road Warrior",        "emoji": "🚗", "controls": "Arrow keys to drive · 20 levels",     "order": 2 },
+    "metro-rush.html":           { "name": "Metro Rush",          "emoji": "🚇", "controls": "← → lanes · ↑ jump · ↓ roll",         "order": 3 },
+    "subway_runner.html":        { "name": "Subway Runner",       "emoji": "🚆", "controls": "← → move · ↑ jump · ↓ slide · Space", "order": 4 },
+    "moon_rush.html":            { "name": "Moon Rush",           "emoji": "🌙", "controls": "Arrow keys · Space to start",         "order": 5 },
+    "sky_fighter.html":          { "name": "Jet Flyer",           "emoji": "✈️", "controls": "Arrows fly · 1 shoot · 2 loop",       "order": 6 },
+    "jet_defender.html":         { "name": "Jet Defender",        "emoji": "🛩️", "controls": "← → move · Space to fire / start",     "order": 7 },
+    "karate_fighter.html":       { "name": "Karate Fighter",      "emoji": "🥋", "controls": "A / D move · ↑ kick · → punch · ← grab", "order": 8 },
+    "street_brawl.html":         { "name": "Street Brawl",        "emoji": "🥊", "controls": "Arrow keys move · Space to attack",   "order": 9 },
+    "corebound_pc.html":         { "name": "Corebound PC",        "emoji": "🤖", "controls": "WASD move · mouse to aim & shoot",    "order": 10 },
+    "cricket_game.html":         { "name": "Cricket",             "emoji": "🏏", "controls": "← → aim · Space to bowl / hit",       "order": 11 },
+    "math-hero.html":            { "name": "Math Hero",           "emoji": "➗", "controls": "Type the answer · Enter to check",    "order": 12 },
+    "code-typer.html":           { "name": "Code Typer",          "emoji": "⌨️", "controls": "Type the words · learn Python typing", "order": 13 },
+    "time-travel-explorer.html": { "name": "Time Travel Explorer","emoji": "🚀", "controls": "Interactive page",                   "order": 14 }
+  }
+}

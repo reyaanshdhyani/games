@@ -1,0 +1,11 @@
+# macOS junk
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# Editor / OS
+*~
+.vscode/
+.idea/
+Thumbs.db

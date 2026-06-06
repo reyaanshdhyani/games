@@ -1,0 +1,1612 @@
+<!DOCTYPE html>
+<!-- saved from url=(0064)file:///Users/prabhashdhyani/Downloads/time-travel-explorer.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Travel Explorer 🚀</title>
+<link href="./css2" rel="stylesheet">
+<style>
+  :root {
+    --space: #020818;
+    --deep: #0a1628;
+    --panel: #0d1f3c;
+    --blue: #3b82f6;
+    --cyan: #06b6d4;
+    --purple: #8b5cf6;
+    --gold: #f59e0b;
+    --green: #10b981;
+    --red: #ef4444;
+    --orange: #f97316;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --glow-blue: 0 0 20px rgba(59,130,246,0.4);
+    --glow-purple: 0 0 20px rgba(139,92,246,0.4);
+    --glow-gold: 0 0 20px rgba(245,158,11,0.4);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--space);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* Stars background */
+  .stars {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .star {
+    position: absolute;
+    background: white;
+    border-radius: 50%;
+    animation: twinkle var(--dur) ease-in-out infinite;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.3); }
+  }
+
+  /* Layout */
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* Header */
+  .hero {
+    text-align: center;
+    padding: 60px 20px 40px;
+  }
+  .hero-badge {
+    display: inline-block;
+    background: rgba(59,130,246,0.15);
+    border: 1px solid rgba(59,130,246,0.4);
+    color: var(--cyan);
+    font-size: 13px;
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 2px;
+    padding: 6px 18px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: clamp(28px, 6vw, 56px);
+    font-weight: 900;
+    background: linear-gradient(135deg, #fff 0%, var(--cyan) 50%, var(--purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1.1;
+    margin-bottom: 16px;
+  }
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 560px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+
+  /* Nav tabs */
+  .nav {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 40px 0 32px;
+  }
+  .nav-btn {
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--muted);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { border-color: var(--blue); color: var(--blue); }
+  .nav-btn.active {
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    border-color: transparent;
+    color: white;
+    box-shadow: var(--glow-blue);
+  }
+
+  /* Panels */
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Section cards */
+  .card {
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+  .card-title {
+    font-family: 'Orbitron', monospace;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--cyan);
+    margin-bottom: 10px;
+    letter-spacing: 1px;
+  }
+  .card p {
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+  .card p strong { color: var(--text); }
+
+  /* === PANEL 1: TIME IS A RIVER === */
+  .river-scene {
+    position: relative;
+    width: 100%;
+    height: 120px;
+    background: linear-gradient(180deg, rgba(6,182,212,0.05), rgba(6,182,212,0.15));
+    border-radius: 16px;
+    border: 1px solid rgba(6,182,212,0.2);
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  .river-label {
+    position: absolute;
+    top: 8px;
+    left: 16px;
+    font-size: 12px;
+    font-family: 'Orbitron', monospace;
+    color: var(--cyan);
+    letter-spacing: 1px;
+  }
+  .river-person {
+    position: absolute;
+    font-size: 36px;
+    bottom: 12px;
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+  .river-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 24px;
+    color: rgba(6,182,212,0.5);
+  }
+
+  /* Timeline road */
+  .timeline {
+    position: relative;
+    margin: 24px 0;
+  }
+  .timeline-track {
+    height: 6px;
+    background: linear-gradient(90deg, var(--purple), var(--blue), var(--cyan), var(--green));
+    border-radius: 3px;
+    position: relative;
+    margin: 50px 0 60px;
+  }
+  .timeline-markers {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+  }
+  .t-marker {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 18%;
+  }
+  .t-marker .icon { font-size: 28px; margin-bottom: 6px; }
+  .t-marker .year { font-size: 11px; font-family: 'Orbitron', monospace; color: var(--cyan); }
+  .t-marker .label { font-size: 12px; color: var(--muted); text-align: center; margin-top: 3px; }
+  .t-marker .dot {
+    width: 14px; height: 14px;
+    background: var(--blue);
+    border-radius: 50%;
+    border: 2px solid var(--cyan);
+    margin: 8px auto;
+    box-shadow: 0 0 10px var(--cyan);
+  }
+
+  /* YOU marker on timeline */
+  .you-marker {
+    position: absolute;
+    top: -34px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .you-marker .you-icon { font-size: 32px; }
+  .you-marker .you-label {
+    font-size: 11px;
+    font-family: 'Orbitron', monospace;
+    color: var(--gold);
+    letter-spacing: 1px;
+    margin-top: 4px;
+  }
+  .you-marker .stem {
+    width: 2px; height: 30px;
+    background: var(--gold);
+    margin-top: 4px;
+    box-shadow: 0 0 8px var(--gold);
+  }
+
+  .jump-buttons {
+    display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 16px;
+  }
+  .jump-btn {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 10px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .jump-btn:hover { background: rgba(59,130,246,0.2); border-color: var(--blue); transform: translateY(-2px); }
+
+  .jump-result {
+    margin-top: 20px;
+    padding: 16px 20px;
+    border-radius: 14px;
+    background: rgba(59,130,246,0.1);
+    border: 1px solid rgba(59,130,246,0.3);
+    font-size: 16px;
+    color: var(--text);
+    display: none;
+    animation: fadeIn 0.3s ease;
+    line-height: 1.6;
+  }
+
+  /* === PANEL 2: SPEED SLOWS TIME === */
+  .speed-demo {
+    background: rgba(0,0,0,0.3);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 20px 0;
+  }
+  .speed-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+  .speed-title { font-size: 16px; font-weight: 700; color: var(--text); }
+  .speed-val-display {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    color: var(--gold);
+  }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 8px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 4px;
+    outline: none;
+    margin: 12px 0;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 24px; height: 24px;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 12px var(--blue);
+  }
+
+  .clocks-row {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .clock-box {
+    flex: 1;
+    min-width: 150px;
+    max-width: 220px;
+    background: var(--deep);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .clock-box.fast { border-color: rgba(245,158,11,0.4); }
+  .clock-icon { font-size: 40px; margin-bottom: 8px; }
+  .clock-who { font-size: 14px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+  .clock-time-display {
+    font-family: 'Orbitron', monospace;
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--text);
+    margin: 8px 0;
+  }
+  .clock-time-display.fast-clock { color: var(--gold); }
+  .clock-years {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .clock-years span { color: var(--cyan); font-weight: 700; }
+
+  .time-difference {
+    text-align: center;
+    margin-top: 20px;
+    padding: 16px;
+    background: rgba(139,92,246,0.1);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 12px;
+  }
+  .time-difference .diff-label { font-size: 14px; color: var(--muted); }
+  .time-difference .diff-value {
+    font-family: 'Orbitron', monospace;
+    font-size: 20px;
+    color: var(--purple);
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  .time-difference .diff-explain { font-size: 14px; color: var(--text); margin-top: 6px; }
+
+  /* Race animation */
+  .race-track {
+    background: rgba(0,0,0,0.4);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 24px 0;
+  }
+  .race-lane {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+  .race-lane-label {
+    width: 90px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    flex-shrink: 0;
+    text-align: right;
+  }
+  .race-road {
+    flex: 1;
+    height: 44px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .race-road .dashes {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
+    transform: translateY(-50%);
+  }
+  .racer {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 26px;
+    left: 0;
+    transition: left 0.1s linear;
+  }
+  .race-clock {
+    width: 80px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+  .race-clock-face {
+    font-family: 'Orbitron', monospace;
+    font-size: 15px;
+    color: var(--gold);
+    font-weight: 700;
+  }
+  .race-clock-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+  .race-controls { text-align: center; margin-top: 16px; }
+  .start-btn {
+    background: linear-gradient(135deg, var(--green), #059669);
+    border: none;
+    color: white;
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    font-weight: 700;
+    padding: 12px 32px;
+    border-radius: 30px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 0 20px rgba(16,185,129,0.4);
+    transition: all 0.2s;
+  }
+  .start-btn:hover { transform: scale(1.05); }
+  .start-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* === PANEL 3: PLANETS & SPACE === */
+  .solar-scene {
+    position: relative;
+    width: 100%;
+    height: 300px;
+    background: radial-gradient(ellipse at 20% 50%, rgba(245,158,11,0.15) 0%, transparent 50%);
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 20px 0;
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+  .sun {
+    position: absolute;
+    left: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 80px; height: 80px;
+    background: radial-gradient(circle, #fef08a 0%, #f59e0b 50%, #d97706 100%);
+    border-radius: 50%;
+    box-shadow: 0 0 40px rgba(245,158,11,0.8), 0 0 80px rgba(245,158,11,0.3);
+    animation: sunPulse 3s ease-in-out infinite;
+  }
+  @keyframes sunPulse { 0%,100%{box-shadow:0 0 40px rgba(245,158,11,0.8),0 0 80px rgba(245,158,11,0.3)} 50%{box-shadow:0 0 60px rgba(245,158,11,1),0 0 100px rgba(245,158,11,0.5)} }
+  .planet-orbit {
+    position: absolute;
+    border: 1px dashed rgba(255,255,255,0.08);
+    border-radius: 50%;
+    top: 50%;
+    left: 80px;
+    transform: translateY(-50%);
+  }
+  .planet {
+    position: absolute;
+    border-radius: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    transition: transform 0.2s;
+    z-index: 2;
+  }
+  .planet:hover { transform: translateY(-50%) scale(1.3); }
+  .planet-info {
+    display: none;
+    background: var(--panel);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 16px 20px;
+    margin: 12px 0;
+    animation: fadeIn 0.2s ease;
+  }
+  .planet-info.active { display: block; }
+  .planet-info-title { font-size: 16px; font-weight: 800; color: var(--gold); margin-bottom: 6px; }
+  .planet-info p { font-size: 15px; color: var(--muted); line-height: 1.6; }
+  .planet-info p strong { color: var(--text); }
+
+  .planet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .planet-card {
+    background: var(--deep);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 14px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .planet-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.3); }
+  .planet-card .p-icon { font-size: 32px; flex-shrink: 0; }
+  .planet-card .p-name { font-size: 15px; font-weight: 800; color: var(--text); }
+  .planet-card .p-fact { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  .planet-detail {
+    background: rgba(59,130,246,0.08);
+    border: 1px solid rgba(59,130,246,0.25);
+    border-radius: 16px;
+    padding: 20px;
+    margin-top: 16px;
+    display: none;
+    animation: fadeIn 0.2s ease;
+  }
+  .planet-detail.active { display: block; }
+  .planet-detail h3 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+  .planet-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pd-item { background: rgba(0,0,0,0.3); border-radius: 10px; padding: 12px; }
+  .pd-label { font-size: 11px; color: var(--muted); font-family: 'Orbitron', monospace; letter-spacing: 1px; margin-bottom: 4px; }
+  .pd-value { font-size: 16px; font-weight: 700; color: var(--text); }
+  .pd-value.highlight { color: var(--cyan); }
+
+  /* === PANEL 4: BLACK HOLES === */
+  .bh-scene {
+    position: relative;
+    width: 100%;
+    height: 280px;
+    background: #000;
+    border-radius: 20px;
+    overflow: hidden;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .bh-glow {
+    position: absolute;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 0%, transparent 35%, rgba(139,92,246,0.4) 50%, rgba(59,130,246,0.2) 65%, transparent 80%);
+    animation: bhPulse 4s ease-in-out infinite;
+  }
+  @keyframes bhPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+  .bh-core {
+    position: absolute;
+    width: 80px; height: 80px;
+    background: #000;
+    border-radius: 50%;
+    border: 3px solid rgba(139,92,246,0.8);
+    box-shadow: 0 0 30px rgba(139,92,246,0.6), inset 0 0 20px rgba(139,92,246,0.2);
+    z-index: 2;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    font-family: 'Orbitron', monospace;
+    color: rgba(139,92,246,0.8);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .bh-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px solid;
+    animation: bhSpin linear infinite;
+  }
+  @keyframes bhSpin { from{transform:rotate(0deg) scaleY(0.3)} to{transform:rotate(360deg) scaleY(0.3)} }
+
+  .bh-astronaut {
+    position: absolute;
+    right: 20%;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 40px;
+    cursor: pointer;
+    z-index: 3;
+    transition: right 1.5s cubic-bezier(0.4,0,0.2,1), transform 1.5s ease, font-size 1.5s ease;
+  }
+  .bh-astronaut.falling {
+    right: 46%;
+    transform: translateY(-50%) scale(0.5) rotate(180deg);
+  }
+
+  .bh-earth {
+    position: absolute;
+    left: 15%;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 48px;
+    z-index: 3;
+  }
+
+  .bh-time-counter {
+    position: absolute;
+    bottom: 16px;
+    display: flex;
+    gap: 20px;
+    z-index: 4;
+  }
+  .bh-counter-box {
+    background: rgba(0,0,0,0.8);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    padding: 8px 16px;
+    text-align: center;
+  }
+  .bh-counter-label { font-size: 11px; color: var(--muted); font-family: 'Orbitron', monospace; }
+  .bh-counter-val { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; }
+
+  .bh-btn {
+    background: linear-gradient(135deg, var(--purple), #6d28d9);
+    border: none;
+    color: white;
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 10px 24px;
+    border-radius: 30px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    box-shadow: 0 0 20px rgba(139,92,246,0.4);
+    transition: all 0.2s;
+    margin: 8px 4px;
+  }
+  .bh-btn:hover { transform: scale(1.05); }
+
+  .bh-facts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin-top: 20px; }
+  .bh-fact {
+    background: var(--deep);
+    border: 1px solid rgba(139,92,246,0.2);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .bh-fact .bf-icon { font-size: 28px; margin-bottom: 8px; }
+  .bh-fact .bf-title { font-size: 14px; font-weight: 800; color: var(--purple); margin-bottom: 6px; }
+  .bh-fact p { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .bh-fact p strong { color: var(--text); }
+
+  /* === PANEL 5: THE TWIN PARADOX === */
+  .twins-scene {
+    display: flex;
+    gap: 16px;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+  .twin-box {
+    flex: 1;
+    min-width: 200px;
+    background: var(--deep);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+  }
+  .twin-box.space-twin { border-color: rgba(6,182,212,0.4); }
+  .twin-box.earth-twin { border-color: rgba(16,185,129,0.4); }
+  .twin-icon { font-size: 52px; margin-bottom: 8px; }
+  .twin-name { font-size: 16px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+  .twin-status { font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+  .twin-age {
+    font-family: 'Orbitron', monospace;
+    font-size: 36px;
+    font-weight: 900;
+    margin: 8px 0;
+  }
+  .twin-age-label { font-size: 12px; color: var(--muted); }
+  .twin-heart { font-size: 20px; animation: heartbeat 1s ease-in-out infinite; }
+  @keyframes heartbeat { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+
+  .twin-slider-section {
+    background: rgba(0,0,0,0.3);
+    border-radius: 14px;
+    padding: 20px;
+    margin: 20px 0;
+  }
+  .twin-slider-section label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .twin-slider-section label span {
+    font-family: 'Orbitron', monospace;
+    color: var(--gold);
+  }
+
+  /* === PANEL 6: FUN FACTS QUIZ === */
+  .quiz-card {
+    background: var(--panel);
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 20px;
+    border: 1px solid rgba(255,255,255,0.08);
+    text-align: center;
+  }
+  .quiz-q { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 24px; line-height: 1.4; }
+  .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+  .quiz-opt {
+    background: var(--deep);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    padding: 14px 16px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .quiz-opt:hover { background: rgba(59,130,246,0.1); border-color: var(--blue); }
+  .quiz-opt.correct { background: rgba(16,185,129,0.2); border-color: var(--green); color: var(--green); }
+  .quiz-opt.wrong { background: rgba(239,68,68,0.15); border-color: var(--red); color: var(--red); }
+  .quiz-result {
+    font-size: 18px;
+    font-weight: 700;
+    padding: 14px;
+    border-radius: 12px;
+    display: none;
+    margin-top: 12px;
+    animation: fadeIn 0.3s ease;
+  }
+  .quiz-result.correct-result { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .quiz-result.wrong-result { background: rgba(239,68,68,0.1); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .next-btn {
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    border: none;
+    color: white;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    padding: 12px 28px;
+    border-radius: 30px;
+    cursor: pointer;
+    margin-top: 12px;
+    display: none;
+    box-shadow: var(--glow-blue);
+    transition: all 0.2s;
+  }
+  .next-btn:hover { transform: scale(1.05); }
+  .score-display {
+    font-family: 'Orbitron', monospace;
+    font-size: 14px;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .score-display span { color: var(--gold); font-weight: 700; }
+
+  /* Misc util */
+  .info-pill {
+    display: inline-block;
+    background: rgba(6,182,212,0.1);
+    border: 1px solid rgba(6,182,212,0.3);
+    color: var(--cyan);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin: 4px;
+  }
+  .warning-pill {
+    display: inline-block;
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin: 4px;
+  }
+  .callout {
+    background: rgba(139,92,246,0.08);
+    border-left: 4px solid var(--purple);
+    border-radius: 0 12px 12px 0;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 16px;
+    color: var(--text);
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+
+<!-- Starfield -->
+<div class="stars" id="stars"><div class="star" style="width: 1.96774px; height: 1.96774px; left: 6.56402%; top: 90.0785%; --dur: 2.007382413060951s; animation-delay: 2.64991s;"></div><div class="star" style="width: 0.92123px; height: 0.92123px; left: 31.0474%; top: 66.2311%; --dur: 4.046060579120514s; animation-delay: 1.68405s;"></div><div class="star" style="width: 0.944946px; height: 0.944946px; left: 55.5785%; top: 71.9929%; --dur: 5.301481382355668s; animation-delay: 2.71072s;"></div><div class="star" style="width: 1.63738px; height: 1.63738px; left: 95.732%; top: 5.88397%; --dur: 4.566559594553473s; animation-delay: 2.27669s;"></div><div class="star" style="width: 1.71374px; height: 1.71374px; left: 60.7812%; top: 51.0187%; --dur: 2.344520954273826s; animation-delay: 0.148276s;"></div><div class="star" style="width: 1.01255px; height: 1.01255px; left: 76.9558%; top: 91.9635%; --dur: 3.0257258764644s; animation-delay: 2.83942s;"></div><div class="star" style="width: 0.554996px; height: 0.554996px; left: 86.8951%; top: 64.7819%; --dur: 3.731247732228892s; animation-delay: 2.14878s;"></div><div class="star" style="width: 1.67753px; height: 1.67753px; left: 95.5098%; top: 48.2902%; --dur: 2.7580657924533223s; animation-delay: 0.0940609s;"></div><div class="star" style="width: 2.86292px; height: 2.86292px; left: 33.5934%; top: 98.4615%; --dur: 3.054589931752089s; animation-delay: 0.824372s;"></div><div class="star" style="width: 1.33583px; height: 1.33583px; left: 83.2137%; top: 43.3422%; --dur: 2.014540059481865s; animation-delay: 2.64199s;"></div><div class="star" style="width: 1.16454px; height: 1.16454px; left: 27.1252%; top: 83.7536%; --dur: 2.602737228670185s; animation-delay: 2.3793s;"></div><div class="star" style="width: 1.47403px; height: 1.47403px; left: 75.9654%; top: 74.2314%; --dur: 5.259907317560442s; animation-delay: 3.01746s;"></div><div class="star" style="width: 2.44477px; height: 2.44477px; left: 36.8071%; top: 28.0719%; --dur: 3.808017511251166s; animation-delay: 3.08639s;"></div><div class="star" style="width: 1.37757px; height: 1.37757px; left: 65.0114%; top: 22.0165%; --dur: 5.556482878159775s; animation-delay: 1.23556s;"></div><div class="star" style="width: 1.50921px; height: 1.50921px; left: 74.7807%; top: 31.8062%; --dur: 5.375377994073972s; animation-delay: 2.29799s;"></div><div class="star" style="width: 1.93673px; height: 1.93673px; left: 18.5946%; top: 49.9162%; --dur: 4.648070166432788s; animation-delay: 3.73804s;"></div><div class="star" style="width: 1.1746px; height: 1.1746px; left: 88.7019%; top: 69.0198%; --dur: 4.402043021530522s; animation-delay: 0.0524154s;"></div><div class="star" style="width: 2.62773px; height: 2.62773px; left: 21.6472%; top: 60.4527%; --dur: 4.559824827131453s; animation-delay: 0.312684s;"></div><div class="star" style="width: 1.80903px; height: 1.80903px; left: 41.5508%; top: 84.0955%; --dur: 4.871033260286991s; animation-delay: 3.507s;"></div><div class="star" style="width: 1.90292px; height: 1.90292px; left: 49.9755%; top: 51.1521%; --dur: 3.4188473714487895s; animation-delay: 2.24261s;"></div><div class="star" style="width: 1.98575px; height: 1.98575px; left: 60.1124%; top: 85.1952%; --dur: 5.387017055538325s; animation-delay: 1.11713s;"></div><div class="star" style="width: 1.43301px; height: 1.43301px; left: 85.8251%; top: 49.9649%; --dur: 2.25682381404766s; animation-delay: 3.53351s;"></div><div class="star" style="width: 1.48906px; height: 1.48906px; left: 17.7647%; top: 18.6893%; --dur: 3.0888191411455286s; animation-delay: 2.23963s;"></div><div class="star" style="width: 1.4283px; height: 1.4283px; left: 9.54938%; top: 77.0129%; --dur: 5.751248453040759s; animation-delay: 0.0225202s;"></div><div class="star" style="width: 0.980577px; height: 0.980577px; left: 86.9653%; top: 72.9879%; --dur: 3.305847688267392s; animation-delay: 1.51611s;"></div><div class="star" style="width: 2.32967px; height: 2.32967px; left: 85.284%; top: 37.0562%; --dur: 4.2156191010947515s; animation-delay: 3.51114s;"></div><div class="star" style="width: 1.26535px; height: 1.26535px; left: 33.9702%; top: 95.7134%; --dur: 2.997260269221686s; animation-delay: 0.218176s;"></div><div class="star" style="width: 1.23535px; height: 1.23535px; left: 16.0319%; top: 39.6626%; --dur: 2.513332328434836s; animation-delay: 0.926423s;"></div><div class="star" style="width: 1.14809px; height: 1.14809px; left: 56.1405%; top: 99.3209%; --dur: 2.8853403513744924s; animation-delay: 3.35937s;"></div><div class="star" style="width: 2.72845px; height: 2.72845px; left: 34.7531%; top: 22.2924%; --dur: 3.074298913091389s; animation-delay: 1.03652s;"></div><div class="star" style="width: 1.8571px; height: 1.8571px; left: 53.9696%; top: 33.878%; --dur: 3.5248723867018468s; animation-delay: 1.47775s;"></div><div class="star" style="width: 2.21652px; height: 2.21652px; left: 56.2426%; top: 45.3073%; --dur: 5.533210757904092s; animation-delay: 2.0795s;"></div><div class="star" style="width: 2.77764px; height: 2.77764px; left: 47.3805%; top: 91.3856%; --dur: 3.744953626724676s; animation-delay: 1.74607s;"></div><div class="star" style="width: 1.20623px; height: 1.20623px; left: 2.28192%; top: 31.7324%; --dur: 3.182744503096196s; animation-delay: 0.548349s;"></div><div class="star" style="width: 1.73895px; height: 1.73895px; left: 90.177%; top: 73.2399%; --dur: 2.3722964614994377s; animation-delay: 3.1411s;"></div><div class="star" style="width: 1.02107px; height: 1.02107px; left: 63.4205%; top: 24.4767%; --dur: 3.8250630656238553s; animation-delay: 0.796443s;"></div><div class="star" style="width: 1.36333px; height: 1.36333px; left: 32.2226%; top: 97.3467%; --dur: 2.6323101478641684s; animation-delay: 0.815464s;"></div><div class="star" style="width: 0.595361px; height: 0.595361px; left: 68.6822%; top: 79.6438%; --dur: 5.401822914545214s; animation-delay: 3.47485s;"></div><div class="star" style="width: 1.09517px; height: 1.09517px; left: 20.3254%; top: 48.7477%; --dur: 2.5524315249891085s; animation-delay: 3.76596s;"></div><div class="star" style="width: 2.65526px; height: 2.65526px; left: 33.4452%; top: 58.726%; --dur: 3.973850358987966s; animation-delay: 3.34606s;"></div><div class="star" style="width: 2.21664px; height: 2.21664px; left: 46.5707%; top: 82.7816%; --dur: 4.482285629277754s; animation-delay: 3.84955s;"></div><div class="star" style="width: 2.34031px; height: 2.34031px; left: 91.8221%; top: 24.7241%; --dur: 3.7817963989364753s; animation-delay: 0.715682s;"></div><div class="star" style="width: 2.79608px; height: 2.79608px; left: 48.887%; top: 37.2929%; --dur: 4.045415216317102s; animation-delay: 2.26388s;"></div><div class="star" style="width: 2.5101px; height: 2.5101px; left: 39.4463%; top: 83.4238%; --dur: 4.253445208328834s; animation-delay: 0.00658023s;"></div><div class="star" style="width: 0.793691px; height: 0.793691px; left: 60.9354%; top: 78.1546%; --dur: 4.8271927075401315s; animation-delay: 1.04745s;"></div><div class="star" style="width: 1.1392px; height: 1.1392px; left: 64.9611%; top: 13.591%; --dur: 2.514916713276136s; animation-delay: 1.48207s;"></div><div class="star" style="width: 2.10924px; height: 2.10924px; left: 94.1446%; top: 25.456%; --dur: 4.354231466587532s; animation-delay: 3.96354s;"></div><div class="star" style="width: 2.21912px; height: 2.21912px; left: 76.6492%; top: 16.2672%; --dur: 3.330366105244442s; animation-delay: 0.757251s;"></div><div class="star" style="width: 2.67534px; height: 2.67534px; left: 33.7286%; top: 12.4965%; --dur: 5.048011792076885s; animation-delay: 0.42558s;"></div><div class="star" style="width: 0.837313px; height: 0.837313px; left: 5.04522%; top: 1.02813%; --dur: 5.334256707821045s; animation-delay: 0.271316s;"></div><div class="star" style="width: 1.58028px; height: 1.58028px; left: 67.6585%; top: 11.3176%; --dur: 2.7522689097151076s; animation-delay: 2.8791s;"></div><div class="star" style="width: 0.77791px; height: 0.77791px; left: 55.6347%; top: 20.9945%; --dur: 3.7657659152733354s; animation-delay: 1.10113s;"></div><div class="star" style="width: 1.87024px; height: 1.87024px; left: 61.7631%; top: 47.7964%; --dur: 2.421377538289669s; animation-delay: 3.2786s;"></div><div class="star" style="width: 1.99243px; height: 1.99243px; left: 19.0309%; top: 8.51404%; --dur: 2.6689685689874176s; animation-delay: 0.681415s;"></div><div class="star" style="width: 1.92836px; height: 1.92836px; left: 65.868%; top: 20.483%; --dur: 4.414500255901699s; animation-delay: 0.1083s;"></div><div class="star" style="width: 2.0966px; height: 2.0966px; left: 2.04298%; top: 21.882%; --dur: 2.6499901585074213s; animation-delay: 2.42118s;"></div><div class="star" style="width: 1.33555px; height: 1.33555px; left: 87.6661%; top: 54.7326%; --dur: 4.54248236300363s; animation-delay: 3.31004s;"></div><div class="star" style="width: 1.65737px; height: 1.65737px; left: 49.6049%; top: 85.3781%; --dur: 3.434722899936608s; animation-delay: 3.55108s;"></div><div class="star" style="width: 1.96815px; height: 1.96815px; left: 93.6713%; top: 78.5703%; --dur: 2.656922909812196s; animation-delay: 1.02783s;"></div><div class="star" style="width: 1.82531px; height: 1.82531px; left: 80.8394%; top: 21.9392%; --dur: 3.19668575399912s; animation-delay: 0.353701s;"></div><div class="star" style="width: 2.59414px; height: 2.59414px; left: 22.6396%; top: 40.9617%; --dur: 2.0329283983749074s; animation-delay: 0.62911s;"></div><div class="star" style="width: 2.18354px; height: 2.18354px; left: 89.5079%; top: 7.76688%; --dur: 3.6581861011103456s; animation-delay: 0.42253s;"></div><div class="star" style="width: 0.509337px; height: 0.509337px; left: 99.5822%; top: 68.2026%; --dur: 2.8723418566638674s; animation-delay: 1.37563s;"></div><div class="star" style="width: 2.46765px; height: 2.46765px; left: 77.026%; top: 67.4697%; --dur: 5.52895448553929s; animation-delay: 1.90745s;"></div><div class="star" style="width: 1.38613px; height: 1.38613px; left: 70.9094%; top: 13.8771%; --dur: 3.157546363845659s; animation-delay: 1.71673s;"></div><div class="star" style="width: 2.50783px; height: 2.50783px; left: 30.1873%; top: 33.7375%; --dur: 2.9681806962463195s; animation-delay: 2.17991s;"></div><div class="star" style="width: 2.98163px; height: 2.98163px; left: 99.2222%; top: 28.1809%; --dur: 4.398702890425305s; animation-delay: 1.54308s;"></div><div class="star" style="width: 2.95152px; height: 2.95152px; left: 89.5739%; top: 89.9387%; --dur: 2.190741548823993s; animation-delay: 1.92729s;"></div><div class="star" style="width: 1.17595px; height: 1.17595px; left: 69.0513%; top: 36.2869%; --dur: 3.6915377381028285s; animation-delay: 3.39681s;"></div><div class="star" style="width: 1.60597px; height: 1.60597px; left: 45.8378%; top: 58.3452%; --dur: 5.817911778258681s; animation-delay: 0.74008s;"></div><div class="star" style="width: 0.988801px; height: 0.988801px; left: 80.6013%; top: 18.6164%; --dur: 2.0393646344579524s; animation-delay: 2.47359s;"></div><div class="star" style="width: 2.95863px; height: 2.95863px; left: 75.0375%; top: 94.674%; --dur: 4.957547923575205s; animation-delay: 3.8169s;"></div><div class="star" style="width: 1.72487px; height: 1.72487px; left: 3.57794%; top: 85.4724%; --dur: 4.651415392918123s; animation-delay: 2.04391s;"></div><div class="star" style="width: 1.29924px; height: 1.29924px; left: 65.0744%; top: 66.952%; --dur: 4.333853454222853s; animation-delay: 2.56585s;"></div><div class="star" style="width: 1.77572px; height: 1.77572px; left: 14.4787%; top: 68.9262%; --dur: 3.7527270823910053s; animation-delay: 0.273358s;"></div><div class="star" style="width: 1.32008px; height: 1.32008px; left: 46.4774%; top: 36.3675%; --dur: 2.2524505028426165s; animation-delay: 0.574461s;"></div><div class="star" style="width: 1.1933px; height: 1.1933px; left: 16.9062%; top: 35.8146%; --dur: 3.2049565825855355s; animation-delay: 3.104s;"></div><div class="star" style="width: 2.27809px; height: 2.27809px; left: 70.4722%; top: 20.5879%; --dur: 2.5830453728785456s; animation-delay: 3.92959s;"></div><div class="star" style="width: 2.61003px; height: 2.61003px; left: 17.9996%; top: 43.5408%; --dur: 5.378688594486997s; animation-delay: 1.09617s;"></div><div class="star" style="width: 1.7803px; height: 1.7803px; left: 62.4835%; top: 34.2889%; --dur: 4.910250182374275s; animation-delay: 3.50434s;"></div><div class="star" style="width: 2.08194px; height: 2.08194px; left: 31.7291%; top: 95.9445%; --dur: 4.67185021636797s; animation-delay: 1.31129s;"></div><div class="star" style="width: 1.79521px; height: 1.79521px; left: 80.6218%; top: 58.0546%; --dur: 4.5050634707475385s; animation-delay: 3.61358s;"></div><div class="star" style="width: 2.5522px; height: 2.5522px; left: 42.4121%; top: 11.4696%; --dur: 5.81766640405815s; animation-delay: 3.58544s;"></div><div class="star" style="width: 1.8226px; height: 1.8226px; left: 56.8149%; top: 95.753%; --dur: 2.7323870939199395s; animation-delay: 2.15992s;"></div><div class="star" style="width: 1.25072px; height: 1.25072px; left: 33.3329%; top: 15.7474%; --dur: 2.000974988656707s; animation-delay: 2.67871s;"></div><div class="star" style="width: 1.68325px; height: 1.68325px; left: 81.1703%; top: 35.199%; --dur: 3.9224247033048103s; animation-delay: 1.52791s;"></div><div class="star" style="width: 0.561653px; height: 0.561653px; left: 42.5808%; top: 25.2204%; --dur: 2.76927620395092s; animation-delay: 3.09104s;"></div><div class="star" style="width: 2.26708px; height: 2.26708px; left: 17.4749%; top: 29.8676%; --dur: 2.762997837916817s; animation-delay: 1.52872s;"></div><div class="star" style="width: 1.16618px; height: 1.16618px; left: 29.0017%; top: 2.45006%; --dur: 3.443285763555373s; animation-delay: 3.76722s;"></div><div class="star" style="width: 2.79455px; height: 2.79455px; left: 28.1478%; top: 30.4348%; --dur: 2.2657405906125274s; animation-delay: 1.64128s;"></div><div class="star" style="width: 2.04668px; height: 2.04668px; left: 60.2155%; top: 64.4394%; --dur: 3.3482936219500687s; animation-delay: 0.947366s;"></div><div class="star" style="width: 2.11401px; height: 2.11401px; left: 94.4142%; top: 12.3575%; --dur: 5.928437563560857s; animation-delay: 3.43642s;"></div><div class="star" style="width: 2.02461px; height: 2.02461px; left: 39.9677%; top: 40.3825%; --dur: 3.1273166102643564s; animation-delay: 2.23424s;"></div><div class="star" style="width: 2.76345px; height: 2.76345px; left: 57.9766%; top: 97.7074%; --dur: 2.620401505402059s; animation-delay: 0.523002s;"></div><div class="star" style="width: 0.843723px; height: 0.843723px; left: 32.324%; top: 50.1808%; --dur: 4.345746797815059s; animation-delay: 1.60065s;"></div><div class="star" style="width: 2.5758px; height: 2.5758px; left: 50.1772%; top: 27.7479%; --dur: 2.8989462497069156s; animation-delay: 1.03822s;"></div><div class="star" style="width: 1.77613px; height: 1.77613px; left: 41.8529%; top: 33.832%; --dur: 3.2789493995173324s; animation-delay: 3.85696s;"></div><div class="star" style="width: 2.16369px; height: 2.16369px; left: 31.5455%; top: 19.0192%; --dur: 2.8066740253655165s; animation-delay: 0.481628s;"></div><div class="star" style="width: 1.89052px; height: 1.89052px; left: 72.54%; top: 91.6992%; --dur: 4.151186810571886s; animation-delay: 2.48379s;"></div><div class="star" style="width: 0.563421px; height: 0.563421px; left: 39.7936%; top: 45.0695%; --dur: 5.939382521699272s; animation-delay: 3.12872s;"></div><div class="star" style="width: 2.71228px; height: 2.71228px; left: 31.0465%; top: 88.5393%; --dur: 4.424949243636997s; animation-delay: 3.02861s;"></div><div class="star" style="width: 1.56222px; height: 1.56222px; left: 12.6885%; top: 28.9062%; --dur: 5.177380029422198s; animation-delay: 1.69091s;"></div><div class="star" style="width: 2.90745px; height: 2.90745px; left: 45.5864%; top: 63.3689%; --dur: 3.6878096665021256s; animation-delay: 0.245002s;"></div><div class="star" style="width: 2.89611px; height: 2.89611px; left: 80.6489%; top: 91.4158%; --dur: 3.5996573738557713s; animation-delay: 2.76764s;"></div><div class="star" style="width: 1.37123px; height: 1.37123px; left: 56.121%; top: 75.9926%; --dur: 4.444795689475717s; animation-delay: 0.0487826s;"></div><div class="star" style="width: 1.03052px; height: 1.03052px; left: 34.9255%; top: 3.20407%; --dur: 5.035531009524439s; animation-delay: 3.61464s;"></div><div class="star" style="width: 2.13126px; height: 2.13126px; left: 0.504872%; top: 76.5634%; --dur: 5.339796522475099s; animation-delay: 2.15129s;"></div><div class="star" style="width: 1.80296px; height: 1.80296px; left: 86.648%; top: 75.0057%; --dur: 4.842381798249773s; animation-delay: 2.30654s;"></div><div class="star" style="width: 0.873028px; height: 0.873028px; left: 39.5624%; top: 7.51698%; --dur: 3.7742263123955886s; animation-delay: 0.63539s;"></div><div class="star" style="width: 2.0352px; height: 2.0352px; left: 21.4116%; top: 28.6766%; --dur: 2.762000982092653s; animation-delay: 3.89338s;"></div><div class="star" style="width: 1.87592px; height: 1.87592px; left: 81.4991%; top: 52.0321%; --dur: 3.354919132152273s; animation-delay: 1.73407s;"></div><div class="star" style="width: 1.6125px; height: 1.6125px; left: 78.5554%; top: 30.3688%; --dur: 4.856857393467583s; animation-delay: 2.32751s;"></div><div class="star" style="width: 2.68892px; height: 2.68892px; left: 62.4018%; top: 75.1754%; --dur: 2.5431017839523684s; animation-delay: 0.514403s;"></div><div class="star" style="width: 2.45929px; height: 2.45929px; left: 49.7549%; top: 96.2243%; --dur: 2.660276108975446s; animation-delay: 1.06794s;"></div><div class="star" style="width: 2.59611px; height: 2.59611px; left: 86.189%; top: 68.5288%; --dur: 2.7728925462790723s; animation-delay: 1.48425s;"></div><div class="star" style="width: 2.12829px; height: 2.12829px; left: 19.6044%; top: 25.988%; --dur: 5.017204190127224s; animation-delay: 2.42948s;"></div><div class="star" style="width: 0.697577px; height: 0.697577px; left: 33.5503%; top: 82.6184%; --dur: 2.8445694289419228s; animation-delay: 3.84865s;"></div><div class="star" style="width: 2.21807px; height: 2.21807px; left: 84.3417%; top: 51.413%; --dur: 3.029207501655754s; animation-delay: 0.00567352s;"></div><div class="star" style="width: 1.16893px; height: 1.16893px; left: 48.1611%; top: 97.7464%; --dur: 3.5874548225516345s; animation-delay: 2.79571s;"></div><div class="star" style="width: 0.709001px; height: 0.709001px; left: 95.3023%; top: 74.1679%; --dur: 5.611136367192538s; animation-delay: 0.924565s;"></div><div class="star" style="width: 1.28293px; height: 1.28293px; left: 84.554%; top: 51.5683%; --dur: 5.129934302080411s; animation-delay: 0.196123s;"></div><div class="star" style="width: 1.4344px; height: 1.4344px; left: 21.4353%; top: 77.7167%; --dur: 2.7560564909228957s; animation-delay: 3.47884s;"></div><div class="star" style="width: 2.30935px; height: 2.30935px; left: 87.8105%; top: 97.1979%; --dur: 3.12188285905822s; animation-delay: 2.69904s;"></div><div class="star" style="width: 1.05803px; height: 1.05803px; left: 43.1386%; top: 89.5454%; --dur: 5.399935194842127s; animation-delay: 3.55818s;"></div><div class="star" style="width: 1.30974px; height: 1.30974px; left: 32.0954%; top: 68.8265%; --dur: 3.7203296722338717s; animation-delay: 0.238638s;"></div><div class="star" style="width: 2.34329px; height: 2.34329px; left: 71.9614%; top: 50.5613%; --dur: 4.037197751149923s; animation-delay: 3.90958s;"></div><div class="star" style="width: 1.09781px; height: 1.09781px; left: 63.3148%; top: 23.7644%; --dur: 2.9456712720390863s; animation-delay: 2.00413s;"></div><div class="star" style="width: 0.507077px; height: 0.507077px; left: 11.2242%; top: 49.3677%; --dur: 2.5398966080383456s; animation-delay: 2.2405s;"></div><div class="star" style="width: 1.24901px; height: 1.24901px; left: 56.0741%; top: 18.6028%; --dur: 3.163574536080251s; animation-delay: 3.48541s;"></div><div class="star" style="width: 1.24599px; height: 1.24599px; left: 25.7703%; top: 87.6788%; --dur: 5.713593095897481s; animation-delay: 0.390895s;"></div><div class="star" style="width: 0.953042px; height: 0.953042px; left: 61.2255%; top: 30.3483%; --dur: 4.317943507082916s; animation-delay: 3.48219s;"></div><div class="star" style="width: 2.66568px; height: 2.66568px; left: 57.7064%; top: 79.1649%; --dur: 2.68899915208483s; animation-delay: 1.44215s;"></div><div class="star" style="width: 2.44523px; height: 2.44523px; left: 19.721%; top: 89.4138%; --dur: 4.146746201633983s; animation-delay: 3.64818s;"></div><div class="star" style="width: 1.46384px; height: 1.46384px; left: 11.9758%; top: 15.7825%; --dur: 4.8223001455336565s; animation-delay: 0.516664s;"></div><div class="star" style="width: 1.35777px; height: 1.35777px; left: 34.4754%; top: 6.14785%; --dur: 2.4516704000195984s; animation-delay: 2.91714s;"></div><div class="star" style="width: 1.67704px; height: 1.67704px; left: 64.4097%; top: 44.42%; --dur: 3.27499080209279s; animation-delay: 2.93623s;"></div><div class="star" style="width: 2.38783px; height: 2.38783px; left: 85.4348%; top: 81.126%; --dur: 4.812527539271174s; animation-delay: 1.37913s;"></div><div class="star" style="width: 1.79496px; height: 1.79496px; left: 30.2017%; top: 34.5098%; --dur: 3.4266606870287215s; animation-delay: 0.141175s;"></div><div class="star" style="width: 2.17899px; height: 2.17899px; left: 64.1061%; top: 34.3479%; --dur: 2.1493541491603287s; animation-delay: 3.31908s;"></div><div class="star" style="width: 2.73643px; height: 2.73643px; left: 94.4896%; top: 34.5369%; --dur: 2.0033234825469086s; animation-delay: 2.1564s;"></div><div class="star" style="width: 2.38703px; height: 2.38703px; left: 3.8168%; top: 15.5101%; --dur: 2.1410178622962275s; animation-delay: 2.30529s;"></div><div class="star" style="width: 1.10557px; height: 1.10557px; left: 74.9746%; top: 29.7282%; --dur: 3.346091624312799s; animation-delay: 1.59759s;"></div><div class="star" style="width: 1.51011px; height: 1.51011px; left: 93.0956%; top: 91.7669%; --dur: 3.1230470030044413s; animation-delay: 2.33959s;"></div><div class="star" style="width: 0.52917px; height: 0.52917px; left: 38.0938%; top: 0.308426%; --dur: 3.112662033084443s; animation-delay: 2.77831s;"></div><div class="star" style="width: 1.84295px; height: 1.84295px; left: 81.4267%; top: 50.442%; --dur: 4.523071797535874s; animation-delay: 3.75361s;"></div><div class="star" style="width: 1.33906px; height: 1.33906px; left: 19.5781%; top: 7.07848%; --dur: 5.64455314585798s; animation-delay: 0.626455s;"></div><div class="star" style="width: 0.560673px; height: 0.560673px; left: 55.4771%; top: 32.2652%; --dur: 5.302115480048474s; animation-delay: 0.239305s;"></div><div class="star" style="width: 1.08143px; height: 1.08143px; left: 48.5255%; top: 43.8407%; --dur: 4.669855254899764s; animation-delay: 1.66382s;"></div><div class="star" style="width: 2.51092px; height: 2.51092px; left: 59.2845%; top: 36.3017%; --dur: 2.9179121601120412s; animation-delay: 2.14171s;"></div><div class="star" style="width: 2.9196px; height: 2.9196px; left: 34.0426%; top: 12.3425%; --dur: 2.4729957190499983s; animation-delay: 2.14652s;"></div><div class="star" style="width: 1.56907px; height: 1.56907px; left: 41.05%; top: 40.2571%; --dur: 4.462659907266249s; animation-delay: 0.896807s;"></div><div class="star" style="width: 2.87579px; height: 2.87579px; left: 3.52347%; top: 59.114%; --dur: 2.9617749122110157s; animation-delay: 2.10288s;"></div><div class="star" style="width: 2.01616px; height: 2.01616px; left: 94.509%; top: 17.0322%; --dur: 3.652927488323931s; animation-delay: 3.27878s;"></div><div class="star" style="width: 1.49618px; height: 1.49618px; left: 89.5876%; top: 11.0987%; --dur: 4.07150438974589s; animation-delay: 2.04214s;"></div><div class="star" style="width: 2.26755px; height: 2.26755px; left: 14.1128%; top: 9.4889%; --dur: 3.20598201271155s; animation-delay: 0.149615s;"></div><div class="star" style="width: 1.89609px; height: 1.89609px; left: 27.7677%; top: 9.00651%; --dur: 3.9267449430860335s; animation-delay: 2.41698s;"></div><div class="star" style="width: 0.661191px; height: 0.661191px; left: 3.23392%; top: 94.1852%; --dur: 3.060951832806224s; animation-delay: 3.59328s;"></div><div class="star" style="width: 2.50488px; height: 2.50488px; left: 12.8457%; top: 62.323%; --dur: 3.2614169976603193s; animation-delay: 2.53146s;"></div><div class="star" style="width: 2.83818px; height: 2.83818px; left: 40.0927%; top: 16.9792%; --dur: 3.6865394895153534s; animation-delay: 1.61845s;"></div><div class="star" style="width: 2.44944px; height: 2.44944px; left: 4.88465%; top: 47.9297%; --dur: 4.501566846215214s; animation-delay: 3.25059s;"></div><div class="star" style="width: 2.4864px; height: 2.4864px; left: 64.8029%; top: 37.8879%; --dur: 5.385535546430808s; animation-delay: 2.04936s;"></div><div class="star" style="width: 0.803761px; height: 0.803761px; left: 40.3253%; top: 73.329%; --dur: 2.7432100126596923s; animation-delay: 0.445478s;"></div><div class="star" style="width: 2.542px; height: 2.542px; left: 55.5462%; top: 98.5647%; --dur: 4.95169863425103s; animation-delay: 2.1011s;"></div><div class="star" style="width: 2.43979px; height: 2.43979px; left: 30.0065%; top: 7.98413%; --dur: 4.633210359090118s; animation-delay: 3.03011s;"></div><div class="star" style="width: 2.37413px; height: 2.37413px; left: 13.2154%; top: 30.5416%; --dur: 2.5902967633181646s; animation-delay: 2.73029s;"></div><div class="star" style="width: 2.226px; height: 2.226px; left: 56.0898%; top: 57.3005%; --dur: 5.310107140331114s; animation-delay: 2.16803s;"></div><div class="star" style="width: 2.52253px; height: 2.52253px; left: 44.1934%; top: 89.7094%; --dur: 4.292572761684477s; animation-delay: 0.496365s;"></div><div class="star" style="width: 2.08701px; height: 2.08701px; left: 24.5292%; top: 84.7366%; --dur: 4.81512169183939s; animation-delay: 2.27215s;"></div><div class="star" style="width: 1.6204px; height: 1.6204px; left: 21.2636%; top: 23.5471%; --dur: 5.462894991334892s; animation-delay: 0.129295s;"></div><div class="star" style="width: 1.56279px; height: 1.56279px; left: 48.4925%; top: 47.3847%; --dur: 4.97421755863189s; animation-delay: 3.91207s;"></div><div class="star" style="width: 1.93295px; height: 1.93295px; left: 0.0421811%; top: 92.5107%; --dur: 5.2082902780646485s; animation-delay: 0.081001s;"></div><div class="star" style="width: 2.54563px; height: 2.54563px; left: 64.0204%; top: 35.8754%; --dur: 3.9839115422639693s; animation-delay: 1.74773s;"></div><div class="star" style="width: 0.542999px; height: 0.542999px; left: 22.0667%; top: 96.5274%; --dur: 5.800958535883355s; animation-delay: 1.92319s;"></div><div class="star" style="width: 1.63542px; height: 1.63542px; left: 13.9997%; top: 31.5097%; --dur: 4.40324423273276s; animation-delay: 2.04773s;"></div><div class="star" style="width: 2.10791px; height: 2.10791px; left: 24.9137%; top: 27.0503%; --dur: 4.869406354292606s; animation-delay: 0.679873s;"></div><div class="star" style="width: 1.9165px; height: 1.9165px; left: 53.871%; top: 78.8958%; --dur: 3.7906948654812114s; animation-delay: 3.94491s;"></div><div class="star" style="width: 0.628504px; height: 0.628504px; left: 84.4648%; top: 9.21104%; --dur: 2.315070325163216s; animation-delay: 0.866015s;"></div><div class="star" style="width: 2.83453px; height: 2.83453px; left: 86.8879%; top: 49.9819%; --dur: 4.6045784850984495s; animation-delay: 0.879494s;"></div><div class="star" style="width: 2.99085px; height: 2.99085px; left: 41.0423%; top: 86.6046%; --dur: 5.807620296341691s; animation-delay: 3.89822s;"></div><div class="star" style="width: 0.607397px; height: 0.607397px; left: 83.9018%; top: 2.73046%; --dur: 3.9194386068668274s; animation-delay: 0.817924s;"></div></div>
+
+<div class="container">
+  <div class="hero">
+    <div class="hero-badge">🚀 SPACE SCIENCE FOR EXPLORERS</div>
+    <h1>TIME TRAVEL<br>EXPLORER</h1>
+    <p>The universe has a wild secret: <strong>time is not the same everywhere.</strong> Let's find out why — with rockets, black holes, and twin astronauts!</p>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="switchPanel(&#39;intro&#39;)">🕐 What is Time?</button>
+    <button class="nav-btn" onclick="switchPanel(&#39;speed&#39;)">🚀 Speed Slows Time</button>
+    <button class="nav-btn" onclick="switchPanel(&#39;planets&#39;)">🪐 Planets &amp; Gravity</button>
+    <button class="nav-btn" onclick="switchPanel(&#39;blackhole&#39;)">⚫ Black Holes</button>
+    <button class="nav-btn" onclick="switchPanel(&#39;twins&#39;)">👯 Twin Experiment</button>
+    <button class="nav-btn" onclick="switchPanel(&#39;quiz&#39;)">🧠 Quiz Time!</button>
+  </div>
+
+  <!-- ==================== PANEL: INTRO ==================== -->
+  <div id="panel-intro" class="panel active">
+    <div class="card">
+      <div class="card-title">⏱️ TIME IS ALWAYS MOVING</div>
+      <p>Close your eyes for one second. That was time moving! Time carries you forward — from the <strong>past</strong> → through the <strong>present</strong> → into the <strong>future</strong>.</p>
+      <p>You can't stop it. You can't go back. Or... <strong>can you?</strong> Einstein said something shocking: time doesn't move the same for everyone. It depends on how fast you're going!</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🛣️ YOUR JOURNEY THROUGH TIME</div>
+      <p>Click the buttons below to jump across time and explore history!</p>
+
+      <div class="timeline">
+        <div class="timeline-markers">
+          <div class="t-marker">
+            <div class="icon">🦕</div>
+            <div class="dot"></div>
+            <div class="year">65M BC</div>
+            <div class="label">Dinosaurs rule Earth</div>
+          </div>
+          <div class="t-marker">
+            <div class="icon">🏺</div>
+            <div class="dot"></div>
+            <div class="year">3000 BC</div>
+            <div class="label">Ancient Egypt</div>
+          </div>
+          <div class="t-marker">
+            <div class="icon">🏰</div>
+            <div class="dot"></div>
+            <div class="year">1000 AD</div>
+            <div class="label">Castles &amp; knights</div>
+          </div>
+          <div class="t-marker">
+            <div class="icon">🧬</div>
+            <div class="dot"></div>
+            <div class="year">TODAY</div>
+            <div class="label">You are here!</div>
+          </div>
+          <div class="t-marker">
+            <div class="icon">🤖</div>
+            <div class="dot"></div>
+            <div class="year">3000 AD</div>
+            <div class="label">Robot civilizations?</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="jump-buttons">
+        <button class="jump-btn" onclick="timeJump(&#39;dino&#39;)">🦕 Jump to Dinosaurs</button>
+        <button class="jump-btn" onclick="timeJump(&#39;egypt&#39;)">🏺 Visit Egypt</button>
+        <button class="jump-btn" onclick="timeJump(&#39;future&#39;)">🤖 Go to Future</button>
+        <button class="jump-btn" onclick="timeJump(&#39;now&#39;)">🏠 Come Back Home</button>
+      </div>
+
+      <div id="jump-result" class="jump-result" style="display: block;"><strong style="font-size:20px">🏠</strong> <br><br>You're back in 2025! Phew. Your breakfast is still warm. Your phone has 47 notifications. Time travel is tiring work — maybe grab a snack?</div>
+    </div>
+
+    <div class="callout">
+      💡 <strong>Big question:</strong> Scientists have actually found a way to travel forward in time — for real! It's not science fiction. Want to know how? Head to the next section →
+    </div>
+  </div>
+
+  <!-- ==================== PANEL: SPEED ==================== -->
+  <div id="panel-speed" class="panel">
+    <div class="card">
+      <div class="card-title">🧠 EINSTEIN'S BIG DISCOVERY</div>
+      <p>In 1905, a young scientist named <strong>Albert Einstein</strong> discovered something nobody expected: <strong>the faster you move, the slower time passes for you.</strong></p>
+      <p>This is called <strong>Time Dilation</strong> — and it's completely real! We've measured it. Here's the wild part: if you could fly near the speed of light, <strong>1 year for you = hundreds of years on Earth.</strong></p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🏁 THE GREAT TIME RACE</div>
+      <p>Press START to watch two friends race. One stays on Earth, one zooms off in a rocket. Watch their clocks — they won't match!</p>
+
+      <div class="race-track">
+        <div class="race-lane">
+          <div class="race-lane-label">🌍 Earth friend</div>
+          <div class="race-road">
+            <div class="dashes"></div>
+            <div class="racer" id="racer-earth" style="left: 544.64px;">🧍</div>
+          </div>
+          <div class="race-clock">
+            <div class="race-clock-face" id="clock-earth">05:00</div>
+            <div class="race-clock-label">Earth time</div>
+          </div>
+        </div>
+        <div class="race-lane">
+          <div class="race-lane-label">🚀 Rocket friend</div>
+          <div class="race-road">
+            <div class="dashes"></div>
+            <div class="racer" id="racer-rocket" style="left: 544.64px;">🧑‍🚀</div>
+          </div>
+          <div class="race-clock">
+            <div class="race-clock-face" id="clock-rocket" style="color: var(--cyan)">03:05</div>
+            <div class="race-clock-label">Rocket time</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="race-controls">
+        <button class="start-btn" id="race-start-btn" onclick="startRace()">▶ RACE AGAIN</button>
+      </div>
+      <div id="race-result" class="jump-result" style="margin-top: 16px; display: block;">🏁 Race done! Earth friend's clock: <strong>5.0 seconds</strong>. Rocket friend's clock: <strong>3.5 seconds</strong>.<br><br>The rocket friend's time ran <strong>30% slower!</strong> If this were a year-long trip at near light speed, the rocket friend would have aged much less. They time-traveled to the future! 🚀</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚡ HOW MUCH DOES TIME SLOW?</div>
+      <p>Drag the slider to change your rocket speed. Watch how time slows down compared to Earth!</p>
+
+      <div class="speed-demo">
+        <div class="speed-label-row">
+          <div class="speed-title">Your rocket speed</div>
+          <div class="speed-val-display" id="speed-pct">99% of light speed</div>
+        </div>
+        <input type="range" id="speed-slider" min="1" max="99" value="10" oninput="updateTimeDilation(this.value)">
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:-8px;">
+          <span>Slow 🐢</span>
+          <span>Speed of light ⚡</span>
+        </div>
+      </div>
+
+      <div class="clocks-row">
+        <div class="clock-box">
+          <div class="clock-icon">🌍</div>
+          <div class="clock-who">You on Earth</div>
+          <div class="clock-time-display">10 years</div>
+          <div class="clock-years">Time passes: <span>10 years</span></div>
+        </div>
+        <div style="display:flex; align-items:center; font-size:28px; color:var(--muted);">→</div>
+        <div class="clock-box fast">
+          <div class="clock-icon">🚀</div>
+          <div class="clock-who">You in rocket</div>
+          <div class="clock-time-display fast-clock" id="rocket-clock-display">1.411 years</div>
+          <div class="clock-years">Time passes: <span id="rocket-years">1.411 years</span></div>
+        </div>
+      </div>
+
+      <div class="time-difference">
+        <div class="diff-label">Time difference after 10 Earth years:</div>
+        <div class="diff-value" id="diff-value">You'd be 8.589 years YOUNGER — nearly 8.6 whole years!</div>
+        <div class="diff-explain" id="diff-explain">🤯 At 99% of light speed, almost NO time passes for you! You'd barely age while decades fly by on Earth!</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">👨‍🚀 REAL PROOF: ASTRONAUTS DO THIS!</div>
+      <div style="display:flex; gap:16px; flex-wrap:wrap;">
+        <div style="flex:1; min-width:200px;">
+          <div style="font-size:40px; text-align:center; margin:8px;">🛸</div>
+          <p><strong>GPS satellites</strong> orbit Earth at high speed. Because of time dilation, their clocks run slightly slower. Engineers must correct for this EVERY DAY — otherwise your maps would be off by miles!</p>
+        </div>
+        <div style="flex:1; min-width:200px;">
+          <div style="font-size:40px; text-align:center; margin:8px;">👨‍🚀</div>
+          <p><strong>ISS astronauts</strong> travel at 28,000 km/h. After 6 months in space, they return <strong>0.007 seconds younger</strong> than people who stayed on Earth. Tiny — but real time travel!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PANEL: PLANETS ==================== -->
+  <div id="panel-planets" class="panel">
+    <div class="card">
+      <div class="card-title">🪐 GRAVITY ALSO BENDS TIME!</div>
+      <p>Speed isn't the only thing that slows time. <strong>Gravity does too!</strong> Einstein discovered that massive objects like planets and stars bend space — and time itself!</p>
+      <p>The stronger the gravity, the <strong>slower time passes.</strong> So time actually passes a tiny bit slower on the ground than high up in the mountains — because you're closer to Earth's heavy mass!</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🌍 CLICK A PLANET TO EXPLORE ITS TIME WARP</div>
+      <div class="planet-grid" id="planet-grid">
+    <div class="planet-card" onclick="showPlanet(0)">
+      <div class="p-icon">⚫</div>
+      <div>
+        <div class="p-name">Mercury ☿</div>
+        <div class="p-fact">1.05x slower than deep space</div>
+      </div>
+    </div>
+  
+    <div class="planet-card" onclick="showPlanet(1)">
+      <div class="p-icon">🟡</div>
+      <div>
+        <div class="p-name">Venus ♀</div>
+        <div class="p-fact">Nearly same as Earth</div>
+      </div>
+    </div>
+  
+    <div class="planet-card" onclick="showPlanet(2)">
+      <div class="p-icon">🔴</div>
+      <div>
+        <div class="p-name">Mars 🔴</div>
+        <div class="p-fact">Slightly faster than Earth</div>
+      </div>
+    </div>
+  
+    <div class="planet-card" onclick="showPlanet(3)">
+      <div class="p-icon">🟠</div>
+      <div>
+        <div class="p-name">Jupiter ♃</div>
+        <div class="p-fact">1.000003x slower than Earth</div>
+      </div>
+    </div>
+  
+    <div class="planet-card" onclick="showPlanet(4)">
+      <div class="p-icon">💫</div>
+      <div>
+        <div class="p-name">Neutron Star 💫</div>
+        <div class="p-fact">~25% slower than deep space!</div>
+      </div>
+    </div>
+  
+    <div class="planet-card" onclick="showPlanet(5)">
+      <div class="p-icon">🌀</div>
+      <div>
+        <div class="p-name">Black Hole Event Horizon ⚫</div>
+        <div class="p-fact">TIME STOPS at the edge!</div>
+      </div>
+    </div>
+  </div>
+      <div class="planet-detail active" id="planet-detail">
+        <h3 id="pd-name">Black Hole Event Horizon ⚫</h3>
+        <div class="planet-detail-grid" id="pd-grid">
+    <div class="pd-item"><div class="pd-label">GRAVITY</div><div class="pd-value">INFINITE</div></div>
+    <div class="pd-item"><div class="pd-label">DAY LENGTH</div><div class="pd-value">N/A</div></div>
+    <div class="pd-item"><div class="pd-label">TIME EFFECT</div><div class="pd-value highlight">TIME STOPS at the edge!</div></div>
+    <div class="pd-item"><div class="pd-label">DISTANCE FROM SUN</div><div class="pd-value">Varies</div></div>
+    <div class="pd-item" style="grid-column:1/-1"><div class="pd-label">⏱️ TIME DILATION</div><div class="pd-value" style="font-size:14px; font-weight:600; color:var(--muted); line-height:1.6">At the edge (event horizon) of a black hole, time stops COMPLETELY from the perspective of a distant observer. 1 second there = billions of years far away. The ultimate time machine!</div></div>
+    <div class="pd-item" style="grid-column:1/-1"><div class="pd-label">🌟 FUN FACT</div><div class="pd-value" style="font-size:14px; font-weight:600; color:var(--muted); line-height:1.6">If you fell into a black hole, you'd look frozen to someone watching from far away — they'd never actually see you cross the edge due to extreme time dilation!</div></div>
+  </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⏱️ TIME ON DIFFERENT PLANETS</div>
+      <p>Imagine you lived on different planets — here's how time would feel compared to Earth:</p>
+      <div style="margin-top:16px;">
+        <div id="planet-time-bars">
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+      <div style="width:140px; font-size:13px; color:var(--muted); text-align:right; flex-shrink:0;">Mercury</div>
+      <div style="flex:1; height:24px; background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.08);">
+        <div style="height:100%; background:linear-gradient(90deg, var(--blue), var(--purple)); border-radius:12px; width:56.018806603691985%; display:flex; align-items:center; padding:0 10px;">
+          <span style="font-size:11px; color:white; font-weight:700;">⚫</span>
+        </div>
+      </div>
+      <div style="width:140px; font-size:12px; color:var(--cyan); flex-shrink:0;">1.05x slower than deep space</div>
+    </div>
+  
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+      <div style="width:140px; font-size:13px; color:var(--muted); text-align:right; flex-shrink:0;">Venus</div>
+      <div style="flex:1; height:24px; background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.08);">
+        <div style="height:100%; background:linear-gradient(90deg, var(--blue), var(--purple)); border-radius:12px; width:81.37893150408814%; display:flex; align-items:center; padding:0 10px;">
+          <span style="font-size:11px; color:white; font-weight:700;">🟡</span>
+        </div>
+      </div>
+      <div style="width:140px; font-size:12px; color:var(--cyan); flex-shrink:0;">Nearly same as Earth</div>
+    </div>
+  
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+      <div style="width:140px; font-size:13px; color:var(--muted); text-align:right; flex-shrink:0;">Mars</div>
+      <div style="flex:1; height:24px; background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.08);">
+        <div style="height:100%; background:linear-gradient(90deg, var(--blue), var(--purple)); border-radius:12px; width:81.70307591263196%; display:flex; align-items:center; padding:0 10px;">
+          <span style="font-size:11px; color:white; font-weight:700;">🔴</span>
+        </div>
+      </div>
+      <div style="width:140px; font-size:12px; color:var(--cyan); flex-shrink:0;">Slightly faster than Earth</div>
+    </div>
+  
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+      <div style="width:140px; font-size:13px; color:var(--muted); text-align:right; flex-shrink:0;">Jupiter</div>
+      <div style="flex:1; height:24px; background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.08);">
+        <div style="height:100%; background:linear-gradient(90deg, var(--blue), var(--purple)); border-radius:12px; width:59.85918188511692%; display:flex; align-items:center; padding:0 10px;">
+          <span style="font-size:11px; color:white; font-weight:700;">🟠</span>
+        </div>
+      </div>
+      <div style="width:140px; font-size:12px; color:var(--cyan); flex-shrink:0;">1.000003x slower than Earth</div>
+    </div>
+  
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+      <div style="width:140px; font-size:13px; color:var(--muted); text-align:right; flex-shrink:0;">Neutron</div>
+      <div style="flex:1; height:24px; background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.08);">
+        <div style="height:100%; background:linear-gradient(90deg, var(--blue), var(--purple)); border-radius:12px; width:73.94499952066214%; display:flex; align-items:center; padding:0 10px;">
+          <span style="font-size:11px; color:white; font-weight:700;">💫</span>
+        </div>
+      </div>
+      <div style="width:140px; font-size:12px; color:var(--cyan); flex-shrink:0;">~25% slower than deep space!</div>
+    </div>
+  </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PANEL: BLACK HOLES ==================== -->
+  <div id="panel-blackhole" class="panel">
+    <div class="card">
+      <div class="card-title">⚫ THE ULTIMATE TIME MACHINE: BLACK HOLES</div>
+      <p>A black hole is a place in space where gravity is so incredibly strong that <strong>nothing can escape — not even light.</strong> And here's the wildest part: near a black hole, <strong>time nearly stops.</strong></p>
+      <p>If you hovered just outside a black hole for 1 hour, <strong>thousands of years could pass on Earth.</strong> This is science fact, not science fiction!</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎮 BLACK HOLE TIME SIMULATOR</div>
+      <p>Click "Fall Closer" to move the astronaut toward the black hole. Watch what happens to time!</p>
+
+      <div class="bh-scene">
+        <div class="bh-glow"></div>
+        <!-- rings -->
+        <div class="bh-ring" style="width:130px;height:130px;border-color:rgba(139,92,246,0.6);animation-duration:3s;"></div>
+        <div class="bh-ring" style="width:160px;height:160px;border-color:rgba(59,130,246,0.4);animation-duration:5s;animation-direction:reverse;"></div>
+        <div class="bh-ring" style="width:190px;height:190px;border-color:rgba(6,182,212,0.2);animation-duration:8s;"></div>
+        <div class="bh-core">BLACK<br>HOLE</div>
+        <div class="bh-earth">🌍</div>
+        <div class="bh-astronaut" id="bh-astronaut" style="right: 22%; font-size: 40px; opacity: 1;">👨‍🚀</div>
+        <div class="bh-time-counter">
+          <div class="bh-counter-box">
+            <div class="bh-counter-label">ASTRONAUT TIME</div>
+            <div class="bh-counter-val" id="bh-astro-time" style="color:var(--cyan)">1 hour</div>
+          </div>
+          <div class="bh-counter-box">
+            <div class="bh-counter-label">EARTH TIME</div>
+            <div class="bh-counter-val" id="bh-earth-time" style="color:var(--gold)">~1 year</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align:center; margin-top:12px;">
+        <button class="bh-btn" onclick="fallCloser()">🌀 Fall Closer</button>
+        <button class="bh-btn" onclick="resetBH()" style="background: linear-gradient(135deg,#374151,#1f2937); box-shadow:none;">↩ Reset</button>
+      </div>
+      <div id="bh-message" class="jump-result" style="margin-top: 16px; display: block; border-color: rgba(139, 92, 246, 0.5); background: rgba(139, 92, 246, 0.15);">🚨 Danger zone! You're near the photon sphere. 1 hour for you = 1 year on Earth! If you went back now, everyone you know would be 1 year older.</div>
+    </div>
+
+    <div class="bh-facts">
+      <div class="bh-fact">
+        <div class="bf-icon">🌟</div>
+        <div class="bf-title">How big?</div>
+        <p>The biggest black holes are called <strong>supermassive</strong>. The one at the center of our galaxy (Milky Way) is <strong>4 million times heavier than the Sun!</strong></p>
+      </div>
+      <div class="bh-fact">
+        <div class="bf-icon">🎥</div>
+        <div class="bf-title">We photographed one!</div>
+        <p>In 2019, scientists took the <strong>first ever photo</strong> of a black hole. It's 6.5 billion times heavier than the Sun and 55 million light-years away!</p>
+      </div>
+      <div class="bh-fact">
+        <div class="bf-icon">🍝</div>
+        <div class="bf-title">Spaghettification</div>
+        <p>If you fell INTO a black hole, you'd get stretched like spaghetti! The gravity pulls your feet much harder than your head. Scientists actually call this <strong>"spaghettification."</strong></p>
+      </div>
+      <div class="bh-fact">
+        <div class="bf-icon">🌈</div>
+        <div class="bf-title">Light bends around them</div>
+        <p>Black holes are so heavy they actually <strong>bend the path of light</strong> around them. You can see things that are behind a black hole because light curves around it!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PANEL: TWINS ==================== -->
+  <div id="panel-twins" class="panel">
+    <div class="card">
+      <div class="card-title">👯 THE TWIN PARADOX</div>
+      <p>Here's the most mind-bending thought experiment in science! Imagine <strong>twin siblings</strong> — Arav and Priya — born on the same day.</p>
+      <p><strong>Arav</strong> stays on Earth. <strong>Priya</strong> blasts off in a rocket at 90% the speed of light for a journey. When she comes back — <strong>who is older?</strong></p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">⚙️ SET THE MISSION &amp; FIND OUT</div>
+      <div class="twin-slider-section">
+        <label>Mission duration (Earth years) <span id="mission-years-label">10 years</span></label>
+        <input type="range" min="1" max="50" value="10" id="mission-years" oninput="updateTwins()">
+      </div>
+      <div class="twin-slider-section">
+        <label>Rocket speed (% of light speed) <span id="rocket-speed-label">90%</span></label>
+        <input type="range" min="50" max="99" value="90" id="rocket-speed-twin" oninput="updateTwins()">
+      </div>
+
+      <div class="twins-scene">
+        <div class="twin-box earth-twin">
+          <div class="twin-icon">🧑</div>
+          <div class="twin-name">Arav</div>
+          <div class="twin-status">📍 Stayed on Earth</div>
+          <div class="twin-heart">❤️</div>
+          <div class="twin-age" id="twin-earth-age" style="color: var(--green)">10</div>
+          <div class="twin-age-label">years older</div>
+        </div>
+        <div style="display:flex; align-items:center; font-size:32px; padding:8px;">⚡</div>
+        <div class="twin-box space-twin">
+          <div class="twin-icon">👩‍🚀</div>
+          <div class="twin-name">Priya</div>
+          <div class="twin-status">🚀 Flew near light speed</div>
+          <div class="twin-heart">❤️</div>
+          <div class="twin-age" id="twin-space-age" style="color: var(--cyan)">4.36</div>
+          <div class="twin-age-label">years older</div>
+        </div>
+      </div>
+
+      <div class="time-difference">
+        <div class="diff-label">Age difference when Priya returns:</div>
+        <div class="diff-value" id="twin-diff">Arav is 5.64 years OLDER than Priya!</div>
+        <div class="diff-explain" id="twin-explain">Priya only aged 4.36 years while 10 years passed on Earth. She time-traveled 5.64 years into the future!</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      🤯 <strong>This is real physics!</strong> The twin paradox isn't actually a paradox — it has a real answer. Time truly passes slower for the fast-moving twin. Priya aged less. She effectively time-traveled into Arav's future!
+    </div>
+  </div>
+
+  <!-- ==================== PANEL: QUIZ ==================== -->
+  <div id="panel-quiz" class="panel">
+    <div class="quiz-card" style="display: block;">
+      <div class="score-display">Score: <span id="score-display">0</span> / <span id="total-display">0</span> 🌟</div>
+      <div class="quiz-q" id="quiz-question">Q1: What happens to time when you travel very fast?</div>
+      <div class="quiz-options" id="quiz-options">
+    <button class="quiz-opt" onclick="answerQ(0)">Time speeds up</button>
+  
+    <button class="quiz-opt" onclick="answerQ(1)">Time slows down</button>
+  
+    <button class="quiz-opt" onclick="answerQ(2)">Time stops completely</button>
+  
+    <button class="quiz-opt" onclick="answerQ(3)">Nothing changes</button>
+  </div>
+      <div class="quiz-result correct-result" id="quiz-result" style="display: none;">✅ Time Dilation! 'Dilation' means stretching or expanding. Time stretches differently for different observers depending on their speed and gravity.</div>
+      <button class="next-btn" id="next-btn" onclick="nextQuestion()" style="display: none;">🏆 See Final Score!</button>
+    </div>
+    <div id="quiz-complete" style="display: none; text-align: center; padding: 40px 20px;">
+      <div style="font-size:72px; margin-bottom:16px;">🏆</div>
+      <div style="font-family:&#39;Orbitron&#39;,monospace; font-size:28px; font-weight:900; color:var(--gold); margin-bottom:12px;">MISSION COMPLETE!</div>
+      <div style="font-size:18px; color:var(--muted); margin-bottom:24px;" id="final-score-msg">🌟 Amazing! 8/8 — You're a Time Travel Scientist!</div>
+      <button class="start-btn" onclick="restartQuiz()">🔄 Play Again</button>
+    </div>
+  </div>
+
+</div><!-- end container -->
+
+<script>
+// ========== STARS ==========
+(function() {
+  const container = document.getElementById('stars');
+  for (let i = 0; i < 180; i++) {
+    const s = document.createElement('div');
+    s.className = 'star';
+    const size = Math.random() * 2.5 + 0.5;
+    s.style.cssText = `
+      width:${size}px; height:${size}px;
+      left:${Math.random()*100}%;
+      top:${Math.random()*100}%;
+      --dur:${2+Math.random()*4}s;
+      animation-delay:${Math.random()*4}s;
+    `;
+    container.appendChild(s);
+  }
+})();
+
+// ========== NAV ==========
+function switchPanel(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+// ========== TIME JUMP ==========
+const jumpData = {
+  dino: { icon:'🦕', text: 'You landed 65 million years ago! Tyrannosaurus Rex is walking nearby. The sky looks smoky from massive volcanoes. There are no humans anywhere — you\'re completely alone! Better not sneeze...' },
+  egypt: { icon:'🏺', text: 'You\'re in ancient Egypt, 5,000 years ago! The Great Pyramid is being built right now. Workers are moving massive stone blocks. The Sphinx hasn\'t even been carved yet!' },
+  future: { icon:'🤖', text: 'Year 3000! Cities float in the sky. Robots and humans work together. Climate change was fixed 500 years ago. Someone just asked a computer a question — and the computer answered faster than blinking.' },
+  now: { icon:'🏠', text: 'You\'re back in 2025! Phew. Your breakfast is still warm. Your phone has 47 notifications. Time travel is tiring work — maybe grab a snack?' }
+};
+function timeJump(dest) {
+  const d = jumpData[dest];
+  const el = document.getElementById('jump-result');
+  el.style.display = 'block';
+  el.innerHTML = `<strong style="font-size:20px">${d.icon}</strong> <br><br>${d.text}`;
+}
+
+// ========== RACE ==========
+let raceRunning = false;
+let raceAnimId = null;
+function startRace() {
+  if (raceRunning) return;
+  raceRunning = true;
+  document.getElementById('race-start-btn').disabled = true;
+  const earthRacer = document.getElementById('racer-earth');
+  const rocketRacer = document.getElementById('racer-rocket');
+  const earthClock = document.getElementById('clock-earth');
+  const rocketClock = document.getElementById('clock-rocket');
+  const result = document.getElementById('race-result');
+  result.style.display = 'none';
+
+  let startTime = null;
+  const duration = 5000;
+  const earthSpeed = 1.0;
+  const rocketSpeed = 1.0;
+  const dilationFactor = 0.7; // rocket time runs at 70%
+
+  function animate(ts) {
+    if (!startTime) startTime = ts;
+    const elapsed = ts - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    const trackWidth = earthRacer.parentElement.offsetWidth - 36;
+    earthRacer.style.left = (progress * trackWidth * 0.92) + 'px';
+    rocketRacer.style.left = (progress * trackWidth * 0.92) + 'px';
+
+    // Earth clock: 5 seconds
+    const earthSec = (progress * 5).toFixed(1);
+    const rocketSec = (progress * 5 * dilationFactor).toFixed(1);
+    earthClock.textContent = `00:0${earthSec}`.replace('00:05.0','00:05.0');
+    rocketClock.textContent = `00:0${rocketSec}`;
+
+    const em = Math.floor(progress * 5);
+    const es = ((progress * 5) % 1 * 10).toFixed(0);
+    const rm = Math.floor(progress * 5 * dilationFactor);
+    const rs = ((progress * 5 * dilationFactor) % 1 * 10).toFixed(0);
+    earthClock.textContent = `0${em}:0${es}`;
+    rocketClock.textContent = `0${rm}:0${rs}`;
+
+    if (progress < 1) {
+      raceAnimId = requestAnimationFrame(animate);
+    } else {
+      result.style.display = 'block';
+      result.innerHTML = `🏁 Race done! Earth friend's clock: <strong>5.0 seconds</strong>. Rocket friend's clock: <strong>3.5 seconds</strong>.<br><br>The rocket friend's time ran <strong>30% slower!</strong> If this were a year-long trip at near light speed, the rocket friend would have aged much less. They time-traveled to the future! 🚀`;
+      raceRunning = false;
+      document.getElementById('race-start-btn').disabled = false;
+      document.getElementById('race-start-btn').textContent = '▶ RACE AGAIN';
+    }
+  }
+  requestAnimationFrame(animate);
+}
+
+// ========== TIME DILATION SLIDER ==========
+function updateTimeDilation(v) {
+  const pct = parseInt(v);
+  document.getElementById('speed-pct').textContent = pct + '% of light speed';
+  const gamma = 1 / Math.sqrt(1 - (pct/100) * (pct/100));
+  const rocketYears = (10 / gamma).toFixed(3);
+  const diff = (10 - parseFloat(rocketYears)).toFixed(3);
+  document.getElementById('rocket-clock-display').textContent = rocketYears + ' years';
+  document.getElementById('rocket-years').textContent = rocketYears + ' years';
+
+  if (pct < 20) {
+    document.getElementById('diff-value').textContent = `You'd be ${diff} years YOUNGER!`;
+    document.getElementById('diff-explain').textContent = `At ${pct}% of light speed, the effect is tiny but measurable with precise instruments.`;
+  } else if (pct < 60) {
+    document.getElementById('diff-value').textContent = `You'd be ${diff} years YOUNGER!`;
+    document.getElementById('diff-explain').textContent = `At ${pct}% of light speed, the difference is getting noticeable — you'd come back noticeably younger!`;
+  } else if (pct < 90) {
+    document.getElementById('diff-value').textContent = `You'd be ${diff} years YOUNGER!`;
+    document.getElementById('diff-explain').textContent = `Wow! At ${pct}% of light speed, only ${rocketYears} years pass for you while 10 years pass on Earth. Huge difference!`;
+  } else {
+    document.getElementById('diff-value').textContent = `You'd be ${diff} years YOUNGER — nearly ${parseFloat(diff).toFixed(1)} whole years!`;
+    document.getElementById('diff-explain').textContent = `🤯 At ${pct}% of light speed, almost NO time passes for you! You'd barely age while decades fly by on Earth!`;
+  }
+}
+updateTimeDilation(10);
+
+// ========== PLANETS ==========
+const planets = [
+  {
+    name: 'Mercury ☿', icon: '⚫', color: '#94a3b8',
+    gravity: '0.38g', dayLength: '59 Earth days', distFromSun: '58 million km',
+    timeFact: 'Very close to the Sun — time runs a tiny bit slower here due to Sun\'s gravity AND Mercury moves fast in its orbit. GPS would need correction!',
+    timeEffect: '1.05x slower than deep space',
+    funFact: 'A year on Mercury is only 88 Earth days, but a day is 59 Earth days — so a year is less than 2 Mercury days!'
+  },
+  {
+    name: 'Venus ♀', icon: '🟡', color: '#f59e0b',
+    gravity: '0.9g', dayLength: '243 Earth days', distFromSun: '108 million km',
+    timeFact: 'Almost the same size as Earth, so gravity and time dilation are very similar. But Venus spins backwards and VERY slowly!',
+    timeEffect: 'Nearly same as Earth',
+    funFact: 'A day on Venus is longer than a year on Venus! And the sun rises in the west and sets in the east.'
+  },
+  {
+    name: 'Mars 🔴', icon: '🔴', color: '#ef4444',
+    gravity: '0.38g', dayLength: '24.6 hours', distFromSun: '228 million km',
+    timeFact: 'Mars has weaker gravity than Earth. Time runs very slightly faster here because gravity\'s time-slowing effect is weaker. Future Martian settlers would age just a tiny bit faster!',
+    timeEffect: 'Slightly faster than Earth',
+    funFact: 'Elon Musk wants to send humans to Mars by 2030! The journey takes about 7 months.'
+  },
+  {
+    name: 'Jupiter ♃', icon: '🟠', color: '#f97316',
+    gravity: '2.5g', dayLength: '10 hours', distFromSun: '779 million km',
+    timeFact: 'Jupiter is MASSIVE — 318 Earths! Its huge gravity pulls time noticeably slower. If you stood on Jupiter (you can\'t — no solid surface!), time would tick measurably slower than on Earth.',
+    timeEffect: '1.000003x slower than Earth',
+    funFact: 'The Great Red Spot on Jupiter is a storm that\'s been going for over 350 years — longer than humans have been using telescopes!'
+  },
+  {
+    name: 'Neutron Star 💫', icon: '💫', color: '#8b5cf6',
+    gravity: '100 billion g!', dayLength: '1.4 milliseconds!', distFromSun: 'Varies',
+    timeFact: 'A neutron star packs more mass than our Sun into a city-sized ball! The gravity is so extreme that time near its surface runs significantly slower. 1 hour there = more time passing far away.',
+    timeEffect: '~25% slower than deep space!',
+    funFact: 'A teaspoon of neutron star material would weigh a billion tonnes — more than all the humans on Earth combined!'
+  },
+  {
+    name: 'Black Hole Event Horizon ⚫', icon: '🌀', color: '#6d28d9',
+    gravity: 'INFINITE', dayLength: 'N/A', distFromSun: 'Varies',
+    timeFact: 'At the edge (event horizon) of a black hole, time stops COMPLETELY from the perspective of a distant observer. 1 second there = billions of years far away. The ultimate time machine!',
+    timeEffect: 'TIME STOPS at the edge!',
+    funFact: 'If you fell into a black hole, you\'d look frozen to someone watching from far away — they\'d never actually see you cross the edge due to extreme time dilation!'
+  }
+];
+
+function renderPlanets() {
+  const grid = document.getElementById('planet-grid');
+  grid.innerHTML = planets.map((p, i) => `
+    <div class="planet-card" onclick="showPlanet(${i})">
+      <div class="p-icon">${p.icon}</div>
+      <div>
+        <div class="p-name">${p.name}</div>
+        <div class="p-fact">${p.timeEffect}</div>
+      </div>
+    </div>
+  `).join('');
+
+  const bars = document.getElementById('planet-time-bars');
+  bars.innerHTML = planets.slice(0,5).map(p => `
+    <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+      <div style="width:140px; font-size:13px; color:var(--muted); text-align:right; flex-shrink:0;">${p.name.split(' ')[0]}</div>
+      <div style="flex:1; height:24px; background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.08);">
+        <div style="height:100%; background:linear-gradient(90deg, var(--blue), var(--purple)); border-radius:12px; width:${50 + Math.random()*40}%; display:flex; align-items:center; padding:0 10px;">
+          <span style="font-size:11px; color:white; font-weight:700;">${p.icon}</span>
+        </div>
+      </div>
+      <div style="width:140px; font-size:12px; color:var(--cyan); flex-shrink:0;">${p.timeEffect}</div>
+    </div>
+  `).join('');
+}
+
+function showPlanet(i) {
+  const p = planets[i];
+  document.getElementById('pd-name').textContent = p.name;
+  document.getElementById('pd-grid').innerHTML = `
+    <div class="pd-item"><div class="pd-label">GRAVITY</div><div class="pd-value">${p.gravity}</div></div>
+    <div class="pd-item"><div class="pd-label">DAY LENGTH</div><div class="pd-value">${p.dayLength}</div></div>
+    <div class="pd-item"><div class="pd-label">TIME EFFECT</div><div class="pd-value highlight">${p.timeEffect}</div></div>
+    <div class="pd-item"><div class="pd-label">DISTANCE FROM SUN</div><div class="pd-value">${p.distFromSun}</div></div>
+    <div class="pd-item" style="grid-column:1/-1"><div class="pd-label">⏱️ TIME DILATION</div><div class="pd-value" style="font-size:14px; font-weight:600; color:var(--muted); line-height:1.6">${p.timeFact}</div></div>
+    <div class="pd-item" style="grid-column:1/-1"><div class="pd-label">🌟 FUN FACT</div><div class="pd-value" style="font-size:14px; font-weight:600; color:var(--muted); line-height:1.6">${p.funFact}</div></div>
+  `;
+  document.getElementById('planet-detail').classList.add('active');
+}
+
+// ========== BLACK HOLE ==========
+let bhStep = 0;
+const bhSteps = [
+  { right: '35%', astroTime: '1 hour', earthTime: '~2 hours', msg: '🌀 Getting closer to the black hole! Time is starting to slow down. For every 1 hour you experience, people on Earth live 2 hours.' },
+  { right: '28%', astroTime: '1 hour', earthTime: '~1 day', msg: '⚠️ Very close now! Gravity is intense. 1 hour for you = 1 whole day on Earth. Your friends are growing older much faster than you!' },
+  { right: '22%', astroTime: '1 hour', earthTime: '~1 year', msg: '🚨 Danger zone! You\'re near the photon sphere. 1 hour for you = 1 year on Earth! If you went back now, everyone you know would be 1 year older.' },
+  { right: '50.5%', astroTime: '1 hour', earthTime: '∞ (time stopped!)', msg: '🌑 EVENT HORIZON! You\'ve reached the edge of no return. From Earth\'s view, you appear completely FROZEN — time has stopped for you. This is the ultimate time dilation!' }
+];
+
+function fallCloser() {
+  if (bhStep >= bhSteps.length) { resetBH(); return; }
+  const step = bhSteps[bhStep];
+  const astronaut = document.getElementById('bh-astronaut');
+  astronaut.style.right = step.right;
+  document.getElementById('bh-astro-time').textContent = step.astroTime;
+  document.getElementById('bh-earth-time').textContent = step.earthTime;
+  const msg = document.getElementById('bh-message');
+  msg.style.display = 'block';
+  msg.innerHTML = step.msg;
+  if (bhStep === 3) {
+    astronaut.style.fontSize = '16px';
+    astronaut.style.opacity = '0.3';
+    msg.style.borderColor = 'rgba(139,92,246,0.5)';
+    msg.style.background = 'rgba(139,92,246,0.15)';
+  }
+  bhStep++;
+}
+function resetBH() {
+  bhStep = 0;
+  const a = document.getElementById('bh-astronaut');
+  a.style.right = '20%';
+  a.style.fontSize = '40px';
+  a.style.opacity = '1';
+  document.getElementById('bh-astro-time').textContent = '1 hour';
+  document.getElementById('bh-earth-time').textContent = '1 hour';
+  document.getElementById('bh-message').style.display = 'none';
+}
+
+// ========== TWIN PARADOX ==========
+function updateTwins() {
+  const earthYears = parseInt(document.getElementById('mission-years').value);
+  const speedPct = parseInt(document.getElementById('rocket-speed-twin').value);
+  document.getElementById('mission-years-label').textContent = earthYears + ' years';
+  document.getElementById('rocket-speed-label').textContent = speedPct + '%';
+
+  const gamma = 1 / Math.sqrt(1 - (speedPct/100)**2);
+  const priyaYears = (earthYears / gamma).toFixed(2);
+  const diff = (earthYears - parseFloat(priyaYears)).toFixed(2);
+
+  document.getElementById('twin-earth-age').textContent = earthYears;
+  document.getElementById('twin-space-age').textContent = priyaYears;
+  document.getElementById('twin-diff').textContent = `Arav is ${diff} years OLDER than Priya!`;
+  document.getElementById('twin-explain').textContent = `Priya only aged ${priyaYears} years while ${earthYears} years passed on Earth. She time-traveled ${diff} years into the future!`;
+}
+updateTwins();
+
+// ========== QUIZ ==========
+const questions = [
+  { q: "What happens to time when you travel very fast?", opts: ["Time speeds up", "Time slows down", "Time stops completely", "Nothing changes"], answer: 1, explain: "✅ Time slows down! The faster you go, the slower time passes for you. This is called time dilation." },
+  { q: "Astronauts on the Space Station travel at 28,000 km/h. When they return to Earth, they are:", opts: ["Older than expected", "Exactly the same age", "Slightly younger than expected", "Twice as old"], answer: 2, explain: "✅ Slightly younger! Because of time dilation at high speeds, their clocks run a tiny bit slower. They've time-traveled — just a little!" },
+  { q: "What is a Black Hole?", opts: ["A hole you dig in space", "A place where gravity is so strong even light can't escape", "A dark planet with no sun", "A kind of telescope"], answer: 1, explain: "✅ A black hole is where gravity is so incredibly strong that NOTHING can escape it — not even light!" },
+  { q: "GPS satellites have to correct their clocks every day because of time dilation. What causes this?", opts: ["The satellites run on different batteries", "They move fast + are far from Earth's gravity", "They get confused by clouds", "Astronauts reset them manually"], answer: 1, explain: "✅ Both speed AND gravity affect time for GPS satellites! Without daily corrections, your maps would drift off by miles." },
+  { q: "In the Twin Paradox — one twin stays on Earth, one travels at near light-speed and returns. Who is older when they reunite?", opts: ["The one who traveled", "They're the same age", "The one on Earth", "Neither ages"], answer: 2, explain: "✅ The Earth twin is older! The traveler's time ran slower due to high speed, so they aged less. They effectively traveled to the future!" },
+  { q: "Near a black hole's event horizon, what happens to time?", opts: ["Time speeds up dramatically", "Time stays normal", "Time nearly stops compared to far away", "Time runs backwards"], answer: 2, explain: "✅ Time nearly stops at the event horizon! 1 hour near a black hole could equal thousands of years far away. It's the ultimate time dilation!" },
+  { q: "Who discovered that moving fast slows down time?", opts: ["Isaac Newton", "Albert Einstein", "Galileo Galilei", "Neil Armstrong"], answer: 1, explain: "✅ Albert Einstein! He published his Special Theory of Relativity in 1905 at age 26, changing how we understand time, space, and gravity forever." },
+  { q: "What is it called when time passes at different speeds depending on speed and gravity?", opts: ["Time Multiplication", "Time Dilation", "Gravity Deflection", "Clock Stretching"], answer: 1, explain: "✅ Time Dilation! 'Dilation' means stretching or expanding. Time stretches differently for different observers depending on their speed and gravity." }
+];
+
+let currentQ = 0;
+let score = 0;
+let answered = false;
+
+function renderQuestion() {
+  const q = questions[currentQ];
+  document.getElementById('quiz-question').textContent = `Q${currentQ+1}: ${q.q}`;
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('total-display').textContent = currentQ;
+  document.getElementById('quiz-result').style.display = 'none';
+  document.getElementById('next-btn').style.display = 'none';
+  answered = false;
+  const opts = document.getElementById('quiz-options');
+  opts.innerHTML = q.opts.map((o, i) => `
+    <button class="quiz-opt" onclick="answerQ(${i})">${o}</button>
+  `).join('');
+}
+
+function answerQ(i) {
+  if (answered) return;
+  answered = true;
+  const q = questions[currentQ];
+  const opts = document.querySelectorAll('.quiz-opt');
+  opts.forEach((o, idx) => {
+    if (idx === q.answer) o.classList.add('correct');
+    else if (idx === i && i !== q.answer) o.classList.add('wrong');
+  });
+  const res = document.getElementById('quiz-result');
+  res.style.display = 'block';
+  if (i === q.answer) {
+    score++;
+    res.className = 'quiz-result correct-result';
+    res.textContent = q.explain;
+  } else {
+    res.className = 'quiz-result wrong-result';
+    res.textContent = `❌ Not quite! ${q.explain}`;
+  }
+  document.getElementById('score-display').textContent = score;
+  document.getElementById('next-btn').style.display = 'inline-block';
+  if (currentQ === questions.length - 1) {
+    document.getElementById('next-btn').textContent = '🏆 See Final Score!';
+  }
+}
+
+function nextQuestion() {
+  currentQ++;
+  if (currentQ >= questions.length) {
+    document.querySelector('.quiz-card').style.display = 'none';
+    document.getElementById('quiz-complete').style.display = 'block';
+    const msg = score >= 6 ? `🌟 Amazing! ${score}/${questions.length} — You're a Time Travel Scientist!` :
+                score >= 4 ? `👍 Good job! ${score}/${questions.length} — Keep exploring the cosmos!` :
+                `🚀 ${score}/${questions.length} — Keep learning, space explorer!`;
+    document.getElementById('final-score-msg').textContent = msg;
+  } else {
+    renderQuestion();
+  }
+}
+
+function restartQuiz() {
+  currentQ = 0; score = 0;
+  document.querySelector('.quiz-card').style.display = 'block';
+  document.getElementById('quiz-complete').style.display = 'none';
+  renderQuestion();
+}
+
+// Init
+renderPlanets();
+renderQuestion();
+</script>
+
+
+</body></html>

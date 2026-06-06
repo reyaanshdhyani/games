@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Game</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; font-family: sans-serif; padding: 20px; }
+  #title { font-size: 28px; font-weight: 600; color: #fff; letter-spacing: 2px; margin-bottom: 10px; }
+  #scorebar { display: flex; gap: 28px; font-size: 14px; color: #aaa; margin-bottom: 10px; }
+  #scorebar span { font-weight: 600; color: #fff; }
+  canvas { border-radius: 12px; border: 1px solid #333; cursor: pointer; display: block; }
+  #msg { font-size: 15px; font-weight: 600; color: #fff; min-height: 24px; text-align: center; margin-top: 10px; }
+  #controls { font-size: 13px; color: #aaa; text-align: center; margin-top: 6px; }
+  #btns { margin-top: 10px; }
+  button { background: transparent; border: 1px solid #555; color: #fff; padding: 8px 24px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  button:hover { background: rgba(255,255,255,0.1); }
+</style>
+</head>
+<body>
+<div id="title">Cricket</div>
+<div id="scorebar">
+  Runs: <span id="sRuns">0</span>
+  Wickets: <span id="sWick">0</span>/10
+  Balls: <span id="sBalls">0</span>/30
+  Extras: <span id="sExtras">0</span>
+</div>
+<canvas id="cv" width="700" height="420"></canvas>
+<div id="msg">Press Space or tap canvas to start</div>
+<div id="controls">Space / tap = HIT &nbsp;|&nbsp; Left/Right arrow = choose shot direction</div>
+<div id="btns"><button onclick="startInnings()">New Game</button></div>
+
+<script>
+const cv = document.getElementById('cv');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+
+const elRuns = document.getElementById('sRuns');
+const elWick = document.getElementById('sWick');
+const elBalls = document.getElementById('sBalls');
+const elExtras = document.getElementById('sExtras');
+const elMsg = document.getElementById('msg');
+
+let runs, wickets, balls, extras, gameState, raf;
+let ball, batSwing, resultTimer, resultText, resultColor;
+let bowlerAnim, bowlerStep, fielders, dirIdx;
+
+const CX = W/2, PITCH_TOP = 75, PITCH_BOT = 355;
+const PITCH_W = 62;
+const BATS_Y = PITCH_BOT - 20;
+const BOWL_Y = PITCH_TOP + 20;
+
+function resetBall() {
+  ball = { x: CX, y: BOWL_Y + 10, active: false, hit: false, speed: 0, tx: CX, ty: BATS_Y };
+}
+
+function resetBatSwing() {
+  batSwing = { active: false, angle: 0 };
+}
+
+function placeFielders() {
+  fielders = [
+    {x:CX-165, y:210},{x:CX+165, y:210},
+    {x:CX-230, y:290},{x:CX+230, y:290},
+    {x:CX-105, y:350},{x:CX+105, y:350},
+    {x:CX-245, y:165},{x:CX+245, y:165},
+    {x:CX, y:135},
+  ];
+}
+
+function startInnings() {
+  runs = 0; wickets = 0; balls = 0; extras = 0;
+  gameState = 'ready'; dirIdx = 2;
+  bowlerAnim = 0; bowlerStep = 0;
+  resultText = ''; resultTimer = 0;
+  resetBall(); resetBatSwing(); placeFielders();
+  updateScore();
+  elMsg.textContent = 'Space or tap = HIT  |  Left/Right = choose shot direction';
+  if (raf) cancelAnimationFrame(raf);
+  raf = requestAnimationFrame(loop);
+}
+
+function updateScore() {
+  elRuns.textContent = runs;
+  elWick.textContent = wickets;
+  elBalls.textContent = balls;
+  elExtras.textContent = extras;
+}
+
+function deliverBall() {
+  if (gameState !== 'ready') return;
+  gameState = 'bowling';
+  bowlerAnim = 0; bowlerStep = 0;
+  resetBall(); resetBatSwing();
+  const variation = (Math.random() - 0.5) * 34;
+  ball.tx = CX + variation;
+  ball.speed = 3.6 + Math.random() * 2.2;
+  setTimeout(() => { ball.active = true; }, 700);
+}
+
+function playerHit() {
+  if (gameState !== 'bowling' || !ball.active || ball.hit) return;
+  ball.hit = true;
+  batSwing.active = true; batSwing.angle = 0;
+  const ballDist = Math.abs(ball.y - BATS_Y);
+  let quality;
+  if (ballDist < 18) quality = 'perfect';
+  else if (ballDist < 38) quality = 'good';
+  else if (ballDist < 62) quality = 'ok';
+  else quality = 'miss';
+
+  let outcome, runsScored = 0, isOut = false;
+  if (quality === 'perfect') {
+    const r = Math.random();
+    if (r < 0.35) { runsScored = 6; outcome = 'SIX! Massive hit!'; }
+    else if (r < 0.75) { runsScored = 4; outcome = 'FOUR! Beautiful shot!'; }
+    else { runsScored = 3; outcome = '3 runs!'; }
+  } else if (quality === 'good') {
+    const r = Math.random();
+    if (r < 0.2) { runsScored = 4; outcome = 'FOUR!'; }
+    else if (r < 0.55) { runsScored = 2; outcome = '2 runs!'; }
+    else { runsScored = 1; outcome = '1 run'; }
+  } else if (quality === 'ok') {
+    const r = Math.random();
+    if (r < 0.3) { runsScored = 1; outcome = '1 run - defensive'; }
+    else if (r < 0.55) { runsScored = 0; outcome = 'Dot ball'; }
+    else { isOut = true; outcome = 'CAUGHT OUT! Edged to slip!'; }
+  } else {
+    const r = Math.random();
+    if (r < 0.55) { isOut = true; outcome = 'BOWLED OUT! Stumps shattered!'; }
+    else { runsScored = 0; outcome = 'Missed! Dot ball.'; }
+  }
+
+  if (isOut) { wickets++; resultText = outcome; resultColor = '#E24B4A'; }
+  else { runs += runsScored; resultText = outcome; resultColor = runsScored >= 4 ? '#1D9E75' : runsScored > 0 ? '#378ADD' : '#888'; }
+
+  balls++;
+  updateScore();
+  gameState = 'result';
+  resultTimer = 90;
+  if (wickets >= 10 || balls >= 30) setTimeout(endInnings, 1500);
+}
+
+function endInnings() {
+  gameState = 'over';
+  elMsg.textContent = 'Innings over! ' + runs + ' runs for ' + wickets + ' wickets. Click New Game!';
+}
+
+function drawField() {
+  ctx.fillStyle = '#2E7D32';
+  ctx.beginPath(); ctx.ellipse(CX, H/2+10, 330, 205, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#388E3C';
+  ctx.beginPath(); ctx.ellipse(CX, H/2+10, 310, 190, 0, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#8D6E4A';
+  ctx.fillRect(CX - PITCH_W/2, PITCH_TOP, PITCH_W, PITCH_BOT - PITCH_TOP);
+  ctx.strokeStyle = '#A0876A'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(CX-30, BATS_Y+5); ctx.lineTo(CX+30, BATS_Y+5); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(CX-30, BOWL_Y+8); ctx.lineTo(CX+30, BOWL_Y+8); ctx.stroke();
+}
+
+function drawStumps(cx, cy) {
+  ctx.strokeStyle = '#F5DEB3'; ctx.lineWidth = 2;
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath(); ctx.moveTo(cx+i*6, cy); ctx.lineTo(cx+i*6, cy-18); ctx.stroke();
+  }
+  ctx.fillStyle = '#F5DEB3';
+  ctx.fillRect(cx-11, cy-20, 22, 3);
+}
+
+function drawFielders() {
+  fielders.forEach(f => {
+    ctx.fillStyle = '#1565C0';
+    ctx.beginPath(); ctx.arc(f.x, f.y, 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#BBDEFB';
+    ctx.beginPath(); ctx.arc(f.x, f.y-11, 5, 0, Math.PI*2); ctx.fill();
+  });
+}
+
+function drawBowler() {
+  const bx = CX, by = BOWL_Y;
+  const ro = bowlerStep < 8 ? (bowlerStep%2)*4-2 : 0;
+  ctx.fillStyle = '#B71C1C';
+  ctx.beginPath(); ctx.arc(bx+ro, by-32, 7, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#B71C1C'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(bx+ro, by-25); ctx.lineTo(bx+ro, by-8); ctx.stroke();
+  const arm = bowlerStep > 6 ? Math.sin(bowlerStep*0.8)*18 : 0;
+  ctx.beginPath(); ctx.moveTo(bx+ro, by-20); ctx.lineTo(bx+ro+14+arm, by-14+arm); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx+ro, by-8); ctx.lineTo(bx+ro-5, by); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx+ro, by-8); ctx.lineTo(bx+ro+5, by); ctx.stroke();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(bx+ro, by-32, 3, 0, Math.PI*2); ctx.fill();
+}
+
+function drawBatsman() {
+  const bx = CX, by = BATS_Y;
+  ctx.fillStyle = '#F9A825';
+  ctx.beginPath(); ctx.arc(bx, by-34, 8, 0, Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.beginPath(); ctx.arc(bx, by-44, 5, 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#F9A825'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(bx, by-26); ctx.lineTo(bx, by-8); ctx.stroke();
+  const ba = batSwing.active ? Math.sin(batSwing.angle)*42 : 0;
+  ctx.beginPath(); ctx.moveTo(bx, by-18); ctx.lineTo(bx+20+ba, by-10-Math.abs(ba)*0.3); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx, by-8); ctx.lineTo(bx-5, by); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(bx, by-8); ctx.lineTo(bx+5, by); ctx.stroke();
+  ctx.fillStyle = '#795548';
+  ctx.fillRect(bx+18+ba, by-12-Math.abs(ba)*0.3, 5, 20);
+}
+
+function drawBall() {
+  if (!ball.active && !ball.hit) return;
+  const progress = Math.min(1,(ball.y-(BOWL_Y+10))/(BATS_Y-BOWL_Y-10));
+  const size = 5 + progress*4;
+  ctx.fillStyle = '#D32F2F';
+  ctx.beginPath(); ctx.arc(ball.x, ball.y, Math.max(3,size), 0, Math.PI*2); ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.arc(ball.x, ball.y, Math.max(3,size), 0.2, Math.PI-0.2); ctx.stroke();
+}
+
+function drawShotDir() {
+  const labels = ['Fine Leg','Mid Wicket','Straight','Cover','Point'];
+  ctx.font = '500 12px sans-serif'; ctx.textAlign = 'center';
+  for (let i = 0; i < labels.length; i++) {
+    const x = 70 + i*112;
+    if (i === dirIdx) { ctx.fillStyle = '#1D9E75'; } else { ctx.fillStyle = 'rgba(0,0,0,0.4)'; }
+    ctx.fillRect(x-44, H-34, 88, 23);
+    ctx.fillStyle = i===dirIdx ? '#fff' : 'rgba(255,255,255,0.75)';
+    ctx.fillText(labels[i], x, H-17);
+  }
+  ctx.textAlign = 'left';
+}
+
+function drawTimingBar() {
+  if (gameState !== 'bowling' || !ball.active) return;
+  const bx = W-26, by = PITCH_TOP, bh = PITCH_BOT-PITCH_TOP;
+  ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.fillRect(bx, by, 14, bh);
+  [{s:0.55,e:0.7,c:'#FFF176'},{s:0.7,e:0.85,c:'#A5D6A7'},{s:0.85,e:0.95,c:'#66BB6A'}].forEach(z=>{
+    ctx.fillStyle=z.c; ctx.fillRect(bx, by+z.s*bh, 14, (z.e-z.s)*bh);
+  });
+  const prog = Math.min(1,(ball.y-BOWL_Y)/(BATS_Y-BOWL_Y));
+  ctx.fillStyle='#fff'; ctx.fillRect(bx, by+prog*bh-3, 14, 6);
+  ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.font='11px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('HIT', bx+7, by-6); ctx.textAlign='left';
+}
+
+function drawResult() {
+  if (!resultText || resultTimer <= 0) return;
+  ctx.globalAlpha = Math.min(1, resultTimer/20);
+  ctx.font = '600 22px sans-serif'; ctx.fillStyle = resultColor; ctx.textAlign='center';
+  ctx.fillText(resultText, CX, H/2-10);
+  ctx.globalAlpha = 1; ctx.textAlign='left';
+}
+
+function drawReadyPrompt() {
+  if (gameState !== 'ready') return;
+  ctx.fillStyle = 'rgba(255,255,255,0.8)'; ctx.font='13px sans-serif'; ctx.textAlign='center';
+  ctx.fillText('Press Space or tap to face the next delivery', CX, PITCH_TOP-12);
+  ctx.textAlign='left';
+}
+
+function loop() {
+  ctx.clearRect(0,0,W,H);
+  drawField(); drawFielders();
+  drawStumps(CX, PITCH_BOT); drawStumps(CX, PITCH_TOP+5);
+  drawBowler(); drawBatsman(); drawBall();
+  drawShotDir(); drawTimingBar(); drawResult(); drawReadyPrompt();
+
+  if (gameState === 'bowling') {
+    if (bowlerAnim < 42) { bowlerAnim++; bowlerStep = Math.floor(bowlerAnim/5); }
+    if (ball.active && !ball.hit) {
+      ball.y += ball.speed;
+      ball.x += (ball.tx - CX)*0.015;
+      if (ball.y >= BATS_Y+22) {
+        resultText = 'Dot ball — missed!'; resultColor = '#888';
+        balls++; updateScore(); gameState='result'; resultTimer=70;
+        if (wickets>=10||balls>=30) setTimeout(endInnings,1200);
+      }
+    }
+  }
+  if (gameState === 'result') {
+    resultTimer--;
+    if (batSwing.active) { batSwing.angle+=0.2; if (batSwing.angle>Math.PI) batSwing.active=false; }
+    if (resultTimer<=0 && wickets<10 && balls<30) { gameState='ready'; resetBall(); }
+  }
+  if (gameState !== 'over') raf = requestAnimationFrame(loop);
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code==='Space') { e.preventDefault(); gameState==='ready'?deliverBall():playerHit(); }
+  if (e.code==='ArrowLeft') dirIdx=Math.max(0,dirIdx-1);
+  if (e.code==='ArrowRight') dirIdx=Math.min(4,dirIdx+1);
+});
+cv.addEventListener('click', ()=>{ gameState==='ready'?deliverBall():playerHit(); });
+cv.addEventListener('touchstart', e=>{ e.preventDefault(); gameState==='ready'?deliverBall():playerHit(); },{passive:false});
+
+startInnings();
+</script>
+<script>
+/* --- Cowork input fix ---------------------------------------------------
+   Keeps keyboard focus on the game and stops arrow/space keys from
+   scrolling the page or triggering browser shortcuts. The game's own
+   key handlers still run (propagation is not stopped). */
+(function(){
+  function focusGame(){ try{ window.focus(); if(document.body){document.body.tabIndex=-1; document.body.focus();} }catch(e){} }
+  window.addEventListener('load', focusGame);
+  document.addEventListener('mousedown', focusGame);
+  document.addEventListener('touchstart', focusGame, {passive:true});
+  window.addEventListener('keydown', function(e){
+    var t=e.target;
+    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+    var k=e.key;
+    if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight'||k===' '||k==='Spacebar'){
+      e.preventDefault();
+    }
+  }, true);
+})();
+</script>
+
+</body>
+</html>

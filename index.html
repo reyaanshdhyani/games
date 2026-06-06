@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎮 Reyaansh&#x27;s Game Arcade</title>
+<style>
+  :root{ --bg:#0f1226; --card:#1b1f3a; --card2:#242a52; --accent:#7c5cff; --text:#eef1ff; --muted:#a7adcf; }
+  *{ box-sizing:border-box; }
+  body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+        background:radial-gradient(1200px 700px at 50% -10%,#23285a 0%,var(--bg) 60%); color:var(--text); min-height:100vh; }
+  header{ text-align:center; padding:46px 20px 10px; }
+  header h1{ margin:0; font-size:40px; letter-spacing:.5px; }
+  header p{ color:var(--muted); margin:10px 0 0; font-size:15px; }
+  .grid{ max-width:1040px; margin:30px auto 60px; padding:0 20px;
+         display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; }
+  a.card{ text-decoration:none; color:inherit; background:linear-gradient(160deg,var(--card2),var(--card));
+          border:1px solid #2f3666; border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:8px;
+          transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
+  a.card:hover{ transform:translateY(-4px); box-shadow:0 12px 30px rgba(0,0,0,.45); border-color:var(--accent); }
+  .emoji{ font-size:34px; }
+  .name{ font-size:18px; font-weight:700; }
+  .controls{ font-size:12.5px; color:var(--muted); line-height:1.5; }
+  footer{ text-align:center; color:var(--muted); font-size:12.5px; padding:0 20px 40px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎮 Reyaansh&#x27;s Game Arcade</h1>
+  <p>Click a game to play. Tip: click once inside the game window so the keyboard controls respond.</p>
+</header>
+
+<div class="grid">
+  <a class="card" href="./road-racer.html"><span class="emoji">🏎️</span><span class="name">Road Racer 90</span><span class="controls">← → steer · Space / P pause</span></a>
+  <a class="card" href="./road-warrior.html"><span class="emoji">🚗</span><span class="name">Road Warrior</span><span class="controls">Arrow keys to drive · 20 levels</span></a>
+  <a class="card" href="./metro-rush.html"><span class="emoji">🚇</span><span class="name">Metro Rush</span><span class="controls">← → lanes · ↑ jump · ↓ roll</span></a>
+  <a class="card" href="./subway_runner.html"><span class="emoji">🚆</span><span class="name">Subway Runner</span><span class="controls">← → move · ↑ jump · ↓ slide · Space</span></a>
+  <a class="card" href="./moon_rush.html"><span class="emoji">🌙</span><span class="name">Moon Rush</span><span class="controls">Arrow keys · Space to start</span></a>
+  <a class="card" href="./sky_fighter.html"><span class="emoji">✈️</span><span class="name">Jet Flyer</span><span class="controls">Arrows fly · 1 shoot · 2 loop</span></a>
+  <a class="card" href="./jet_defender.html"><span class="emoji">🛩️</span><span class="name">Jet Defender</span><span class="controls">← → move · Space to fire / start</span></a>
+  <a class="card" href="./karate_fighter.html"><span class="emoji">🥋</span><span class="name">Karate Fighter</span><span class="controls">A / D move · ↑ kick · → punch · ← grab</span></a>
+  <a class="card" href="./street_brawl.html"><span class="emoji">🥊</span><span class="name">Street Brawl</span><span class="controls">Arrow keys move · Space to attack</span></a>
+  <a class="card" href="./corebound_pc.html"><span class="emoji">🤖</span><span class="name">Corebound PC</span><span class="controls">WASD move · mouse to aim &amp; shoot</span></a>
+  <a class="card" href="./cricket_game.html"><span class="emoji">🏏</span><span class="name">Cricket</span><span class="controls">← → aim · Space to bowl / hit</span></a>
+  <a class="card" href="./math-hero.html"><span class="emoji">➗</span><span class="name">Math Hero</span><span class="controls">Type the answer · Enter to check</span></a>
+  <a class="card" href="./code-typer.html"><span class="emoji">⌨️</span><span class="name">Code Typer</span><span class="controls">Type the words · learn Python typing</span></a>
+  <a class="card" href="./time-travel-explorer.html"><span class="emoji">🚀</span><span class="name">Time Travel Explorer</span><span class="controls">Interactive page</span></a>
+</div>
+
+<footer>14 games · this menu builds itself when a new game is added 🎮</footer>
+</body>
+</html>
