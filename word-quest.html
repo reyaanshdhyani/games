@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Quest - Learn a Word a Day!</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  :root{
+    --bg1:#6a8dff; --bg2:#9b6bff; --card:#ffffff; --ink:#2b2350; --muted:#7a78a3;
+    --green:#28c76f; --red:#ff5b5b; --gold:#ffc83d; --soft:#f3f1ff;
+    --l1:#ff8fab; --l2:#5ec8ff; --l3:#ffb13d;
+  }
+  body{
+    font-family:"Segoe UI",-apple-system,Roboto,"Helvetica Neue",Arial,sans-serif;
+    color:var(--ink);
+    background:linear-gradient(135deg,var(--bg1),var(--bg2));
+    min-height:100vh; padding:18px; display:flex; justify-content:center;
+  }
+  .app{ width:100%; max-width:640px; }
+  .topbar{ display:flex; align-items:center; justify-content:space-between; color:#fff; margin-bottom:16px; }
+  .logo{ font-size:26px; font-weight:800; letter-spacing:.5px; }
+  .logo small{ display:block; font-size:12px; font-weight:600; opacity:.85; letter-spacing:1px; }
+  .stats{ display:flex; gap:10px; }
+  .pill{ background:rgba(255,255,255,.22); backdrop-filter:blur(6px); padding:8px 12px; border-radius:14px; font-weight:700; font-size:14px; }
+  .card{ background:var(--card); border-radius:24px; padding:22px; box-shadow:0 18px 40px rgba(40,20,90,.25); }
+  h2{ font-size:20px; margin-bottom:4px; }
+  .sub{ color:var(--muted); font-size:14px; margin-bottom:18px; }
+  .levels{ display:grid; gap:14px; }
+  .level{ border:none; text-align:left; color:#fff; border-radius:20px; padding:18px 20px; cursor:pointer; display:flex; align-items:center; gap:16px; transition:transform .12s; }
+  .level:active{ transform:scale(.97); }
+  .level .emoji{ font-size:34px; }
+  .level .ltext{ flex:1; }
+  .level .ltext b{ font-size:18px; display:block; }
+  .level .ltext span{ font-size:13px; opacity:.92; }
+  .level .arrow{ font-size:22px; opacity:.9; }
+  .lv1{ background:linear-gradient(135deg,#ff9ec0,#ff6f9c); }
+  .lv2{ background:linear-gradient(135deg,#74d3ff,#3aa0ff); }
+  .lv3{ background:linear-gradient(135deg,#ffc861,#ff9b1f); }
+  .btn{ border:none; cursor:pointer; font-family:inherit; font-weight:800; border-radius:16px; padding:14px 18px; font-size:16px; transition:transform .12s, filter .12s; }
+  .btn:active{ transform:scale(.96); }
+  .btn-primary{ background:linear-gradient(135deg,#7a5bff,#9b6bff); color:#fff; width:100%; }
+  .btn-ghost{ background:var(--soft); color:var(--ink); }
+  .row{ display:flex; gap:10px; margin-top:16px; }
+  .progress{ height:10px; background:var(--soft); border-radius:99px; overflow:hidden; margin:6px 0 18px; }
+  .progress > i{ display:block; height:100%; background:linear-gradient(90deg,#7a5bff,#9b6bff); border-radius:99px; transition:width .3s; }
+
+  /* word card */
+  .wordhead{ display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .word{ font-size:34px; font-weight:800; color:var(--ink); }
+  .pos{ font-size:13px; font-weight:700; color:#fff; background:var(--muted); padding:3px 10px; border-radius:99px; }
+  .speak{ background:var(--soft); border:none; cursor:pointer; border-radius:12px; padding:8px 12px; font-size:18px; }
+  .label{ font-size:12px; font-weight:800; letter-spacing:1px; color:var(--muted); margin-top:18px; text-transform:uppercase; }
+  .meaning{ font-size:18px; line-height:1.5; margin-top:4px; }
+  .example{ font-size:17px; line-height:1.5; margin-top:4px; font-style:italic; color:#4a4570; background:var(--soft); padding:14px 16px; border-radius:14px; }
+  .counter{ text-align:center; color:var(--muted); font-weight:700; font-size:14px; margin-bottom:8px; }
+
+  /* quiz */
+  .q{ font-size:22px; font-weight:800; margin:6px 0 6px; }
+  .qword{ color:#7a5bff; }
+  .options{ display:grid; gap:12px; margin-top:14px; }
+  .opt{ text-align:left; background:var(--soft); border:3px solid transparent; border-radius:16px; padding:14px 16px; font-size:16px; font-weight:600; cursor:pointer; transition:transform .1s; color:var(--ink); }
+  .opt:active{ transform:scale(.98); }
+  .opt.correct{ border-color:var(--green); background:#e7fbf0; }
+  .opt.wrong{ border-color:var(--red); background:#ffecec; }
+  .opt:disabled{ cursor:default; }
+  .feedback{ text-align:center; font-weight:800; font-size:18px; margin-top:14px; min-height:24px; }
+
+  /* result */
+  .result{ text-align:center; }
+  .bigstar{ font-size:64px; }
+  .score{ font-size:40px; font-weight:800; margin:6px 0; }
+  .stars{ font-size:30px; letter-spacing:4px; }
+  .msg{ color:var(--muted); font-size:16px; margin:10px 0 4px; }
+
+  .hidden{ display:none !important; }
+  .center{ text-align:center; }
+  .footnote{ color:#fff; opacity:.8; font-size:12px; text-align:center; margin-top:16px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">Word Quest<small>A NEW WORD EVERY DAY</small></div>
+    <div class="stats">
+      <div class="pill">🔥 <span id="streak">0</span></div>
+      <div class="pill">⭐ <span id="points">0</span></div>
+    </div>
+  </div>
+
+  <!-- HOME -->
+  <div id="home" class="card">
+    <h2>Pick your level 🚀</h2>
+    <div class="sub" id="todayLine">Today's fresh words are ready!</div>
+    <div class="levels">
+      <button class="level lv1" data-level="0">
+        <span class="emoji">🐣</span>
+        <span class="ltext"><b>Level 1 · Explorer</b><span>Easy everyday words</span></span>
+        <span class="arrow">›</span>
+      </button>
+      <button class="level lv2" data-level="1">
+        <span class="emoji">🦊</span>
+        <span class="ltext"><b>Level 2 · Adventurer</b><span>Trickier, fun words</span></span>
+        <span class="arrow">›</span>
+      </button>
+      <button class="level lv3" data-level="2">
+        <span class="emoji">🦉</span>
+        <span class="ltext"><b>Level 3 · Champion</b><span>Big, powerful words</span></span>
+        <span class="arrow">›</span>
+      </button>
+    </div>
+    <div class="footnote">Come back tomorrow for brand-new words in every level!</div>
+  </div>
+
+  <!-- LEARN -->
+  <div id="learn" class="card hidden">
+    <div class="counter" id="learnCounter">Word 1 of 5</div>
+    <div class="progress"><i id="learnBar" style="width:0%"></i></div>
+    <div class="wordhead">
+      <span class="word" id="lWord">word</span>
+      <span class="pos" id="lPos">noun</span>
+      <button class="speak" id="lSpeak" title="Hear the word">🔊</button>
+    </div>
+    <div class="label">What it means</div>
+    <div class="meaning" id="lMeaning"></div>
+    <div class="label">How to use it</div>
+    <div class="example" id="lExample"></div>
+    <div class="row">
+      <button class="btn btn-ghost" id="lBack" style="flex:1">◀ Back</button>
+      <button class="btn btn-primary" id="lNext" style="flex:2">Next ▶</button>
+    </div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="quiz" class="card hidden">
+    <div class="counter" id="quizCounter">Question 1 of 5</div>
+    <div class="progress"><i id="quizBar" style="width:0%"></i></div>
+    <div class="q">What does <span class="qword" id="qWord">word</span> mean?</div>
+    <div class="options" id="qOptions"></div>
+    <div class="feedback" id="qFeedback"></div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result" class="card result hidden">
+    <div class="bigstar" id="rEmoji">🎉</div>
+    <div class="score"><span id="rScore">0</span>/5</div>
+    <div class="stars" id="rStars">⭐⭐⭐</div>
+    <div class="msg" id="rMsg">Great job!</div>
+    <div class="row">
+      <button class="btn btn-ghost" id="rHome" style="flex:1">🏠 Home</button>
+      <button class="btn btn-primary" id="rReplay" style="flex:1">↻ Try again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- WORD BANK ---------------- */
+const BANK = [
+[ // Level 1 - Explorer
+ {w:"brave",p:"adjective",m:"Showing courage; not afraid to do something hard.",e:"The brave girl helped the lost puppy cross the road."},
+ {w:"giant",p:"adjective",m:"Very, very large.",e:"The giant tree was taller than our house."},
+ {w:"gather",p:"verb",m:"To bring things together in one place.",e:"We gather leaves in the park every autumn."},
+ {w:"silent",p:"adjective",m:"Making no sound at all; very quiet.",e:"The classroom was silent during the test."},
+ {w:"curious",p:"adjective",m:"Wanting to learn or know about things.",e:"The curious kitten peeked inside the box."},
+ {w:"gentle",p:"adjective",m:"Kind and careful, not rough.",e:"Be gentle when you hold the baby bird."},
+ {w:"wander",p:"verb",m:"To walk around slowly without a clear plan.",e:"We like to wander through the garden."},
+ {w:"cozy",p:"adjective",m:"Warm, comfortable, and snug.",e:"I read my book in a cozy corner."},
+ {w:"clever",p:"adjective",m:"Quick to learn and good at solving problems.",e:"The clever fox found a way out of the trap."},
+ {w:"shiny",p:"adjective",m:"Bright and reflecting light.",e:"She wore shiny red shoes to the party."},
+ {w:"whisper",p:"verb",m:"To speak very softly.",e:"He whispered a secret in my ear."},
+ {w:"jolly",p:"adjective",m:"Happy and cheerful.",e:"The jolly clown made everyone laugh."},
+ {w:"sturdy",p:"adjective",m:"Strong and not easily broken.",e:"We built a sturdy fort out of wood."},
+ {w:"sprint",p:"verb",m:"To run very fast for a short time.",e:"She had to sprint to catch the bus."},
+ {w:"tasty",p:"adjective",m:"Having a good flavor; delicious.",e:"Mom made a tasty bowl of soup."},
+ {w:"friendly",p:"adjective",m:"Kind and easy to get along with.",e:"Our new neighbor is very friendly."},
+ {w:"muddy",p:"adjective",m:"Covered with wet, sticky dirt.",e:"His boots were muddy after the rain."},
+ {w:"giggle",p:"verb",m:"To laugh in a soft, silly way.",e:"The kids giggled at the funny joke."},
+ {w:"bright",p:"adjective",m:"Giving a lot of light; full of light.",e:"The sun was bright in the morning sky."},
+ {w:"hop",p:"verb",m:"To jump on one foot or with both feet.",e:"The rabbit can hop over the fence."},
+ {w:"calm",p:"adjective",m:"Quiet and peaceful; not upset.",e:"The lake was calm and still."},
+ {w:"messy",p:"adjective",m:"Not neat; in disorder.",e:"My desk gets messy when I do crafts."},
+ {w:"chase",p:"verb",m:"To run after someone or something.",e:"The dog loves to chase the ball."},
+ {w:"proud",p:"adjective",m:"Feeling happy about something you did well.",e:"I was proud of my drawing."},
+ {w:"sleepy",p:"adjective",m:"Feeling tired and ready to sleep.",e:"The sleepy baby yawned and closed her eyes."}
+],
+[ // Level 2 - Adventurer
+ {w:"courage",p:"noun",m:"The strength to do something even when it feels scary.",e:"It took courage to speak in front of the class."},
+ {w:"enormous",p:"adjective",m:"Extremely large; huge.",e:"The whale is an enormous animal."},
+ {w:"explore",p:"verb",m:"To travel and discover new places or things.",e:"We love to explore the forest trails."},
+ {w:"fragile",p:"adjective",m:"Easily broken or damaged.",e:"Handle the glass vase carefully; it's fragile."},
+ {w:"generous",p:"adjective",m:"Happy to give and share with others.",e:"She is generous and shares her toys."},
+ {w:"hesitate",p:"verb",m:"To pause before doing something because you're unsure.",e:"Don't hesitate to ask for help."},
+ {w:"imagine",p:"verb",m:"To form a picture of something in your mind.",e:"Imagine a world made of candy."},
+ {w:"jealous",p:"adjective",m:"Upset because someone has something you want.",e:"He felt jealous of his friend's new bike."},
+ {w:"mysterious",p:"adjective",m:"Strange and hard to explain or understand.",e:"A mysterious light glowed in the cave."},
+ {w:"nervous",p:"adjective",m:"Worried or a little scared about something.",e:"I felt nervous before the big game."},
+ {w:"observe",p:"verb",m:"To watch carefully.",e:"Scientists observe how plants grow."},
+ {w:"peculiar",p:"adjective",m:"Strange or unusual.",e:"The soup had a peculiar smell."},
+ {w:"rescue",p:"verb",m:"To save someone from danger.",e:"Firefighters rescue people from fires."},
+ {w:"stubborn",p:"adjective",m:"Not willing to change your mind.",e:"The stubborn mule would not move."},
+ {w:"tremble",p:"verb",m:"To shake a little, often from cold or fear.",e:"Her hands trembled in the cold wind."},
+ {w:"victory",p:"noun",m:"A win in a game, fight, or contest.",e:"The team celebrated their victory."},
+ {w:"wisdom",p:"noun",m:"Knowing what is right and smart from experience.",e:"Grandma shares her wisdom with us."},
+ {w:"anxious",p:"adjective",m:"Feeling worried or uneasy.",e:"He was anxious about the test results."},
+ {w:"brilliant",p:"adjective",m:"Very bright, or very clever.",e:"She had a brilliant idea for the project."},
+ {w:"dodge",p:"verb",m:"To move quickly to avoid something.",e:"He had to dodge the flying ball."},
+ {w:"fierce",p:"adjective",m:"Very strong, powerful, or aggressive.",e:"The fierce lion roared loudly."},
+ {w:"grateful",p:"adjective",m:"Feeling thankful.",e:"I'm grateful for my good friends."},
+ {w:"hollow",p:"adjective",m:"Empty inside.",e:"Owls live in the hollow tree."},
+ {w:"precious",p:"adjective",m:"Very valuable or important.",e:"This ring is precious to my mom."},
+ {w:"swift",p:"adjective",m:"Moving very fast.",e:"The swift deer ran across the field."}
+],
+[ // Level 3 - Champion
+ {w:"abundant",p:"adjective",m:"Existing in large amounts; plentiful.",e:"Water was abundant after the heavy rains."},
+ {w:"bewildered",p:"adjective",m:"Very confused.",e:"The bewildered tourist couldn't read the map."},
+ {w:"conquer",p:"verb",m:"To overcome or defeat.",e:"She worked hard to conquer her fear of heights."},
+ {w:"deliberate",p:"adjective",m:"Done on purpose and carefully planned.",e:"His choice was deliberate, not an accident."},
+ {w:"elaborate",p:"adjective",m:"Having many detailed parts.",e:"They built an elaborate sandcastle."},
+ {w:"frantic",p:"adjective",m:"Wildly worried or hurried.",e:"She made a frantic search for her lost keys."},
+ {w:"gigantic",p:"adjective",m:"Extremely big.",e:"The gigantic ship filled the whole harbor."},
+ {w:"hesitant",p:"adjective",m:"Slow to act because of doubt.",e:"He was hesitant to dive into the cold pool."},
+ {w:"inevitable",p:"adjective",m:"Certain to happen; unavoidable.",e:"With dark clouds, rain was inevitable."},
+ {w:"jubilant",p:"adjective",m:"Feeling or showing great joy.",e:"The crowd was jubilant after the win."},
+ {w:"luminous",p:"adjective",m:"Giving off light; glowing.",e:"The luminous stars filled the night sky."},
+ {w:"meticulous",p:"adjective",m:"Very careful about small details.",e:"She was meticulous when painting the model."},
+ {w:"notorious",p:"adjective",m:"Famous for something bad.",e:"The notorious pirate scared every sailor."},
+ {w:"obstacle",p:"noun",m:"Something that blocks your way.",e:"He jumped over every obstacle in the race."},
+ {w:"persuade",p:"verb",m:"To convince someone to do something.",e:"I tried to persuade my dad to get a dog."},
+ {w:"reluctant",p:"adjective",m:"Unwilling; not wanting to do something.",e:"She was reluctant to leave the fun party."},
+ {w:"sophisticated",p:"adjective",m:"Advanced, complex, or refined.",e:"The robot used sophisticated technology."},
+ {w:"tremendous",p:"adjective",m:"Very large or great.",e:"They made a tremendous effort to win."},
+ {w:"vigorous",p:"adjective",m:"Strong, energetic, and active.",e:"He went for a vigorous morning run."},
+ {w:"weary",p:"adjective",m:"Very tired.",e:"The weary travelers rested by the road."},
+ {w:"cautious",p:"adjective",m:"Careful to avoid danger.",e:"Be cautious when crossing the busy street."},
+ {w:"diligent",p:"adjective",m:"Working hard and carefully.",e:"The diligent student finished all her homework."},
+ {w:"immense",p:"adjective",m:"Extremely large.",e:"The desert stretched across an immense area."},
+ {w:"ponder",p:"verb",m:"To think about something carefully.",e:"She paused to ponder the tricky question."},
+ {w:"radiant",p:"adjective",m:"Shining brightly; full of joy.",e:"Her radiant smile lit up the whole room."}
+]
+];
+
+const WORDS_PER_DAY = 5;
+
+/* ---------------- STATE & STORAGE ---------------- */
+const SKEY = "wordquest_progress_v1";
+function loadState(){
+  try{ return JSON.parse(localStorage.getItem(SKEY)) || {}; }catch(e){ return {}; }
+}
+function saveState(s){ try{ localStorage.setItem(SKEY, JSON.stringify(s)); }catch(e){} }
+let state = loadState();
+if(!state.points) state.points = 0;
+if(!state.streak) state.streak = 0;
+
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
+function dayNumber(){ return Math.floor(Date.now()/86400000); } // days since epoch (local-ish)
+
+// Update streak once per day on open
+(function handleStreak(){
+  const t = todayStr();
+  if(state.lastOpen !== t){
+    const y = new Date(Date.now()-86400000);
+    const ystr = y.getFullYear()+"-"+(y.getMonth()+1)+"-"+y.getDate();
+    state.streak = (state.lastOpen===ystr) ? (state.streak+1) : 1;
+    state.lastOpen = t;
+    saveState(state);
+  }
+})();
+
+/* ---------------- DAILY WORD SELECTION ---------------- */
+// Deterministic: same words all day, new words tomorrow, cycles through bank.
+function todaysWords(level){
+  const list = BANK[level];
+  const start = (dayNumber() * WORDS_PER_DAY) % list.length;
+  const out = [];
+  for(let i=0;i<WORDS_PER_DAY;i++){ out.push(list[(start+i)%list.length]); }
+  return out;
+}
+
+// seeded shuffle so quiz option order is stable within a session render
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+
+/* ---------------- UI HELPERS ---------------- */
+const $ = id => document.getElementById(id);
+const screens = ["home","learn","quiz","result"];
+function show(name){ screens.forEach(s=>$(s).classList.toggle("hidden", s!==name)); window.scrollTo(0,0); }
+function refreshStats(){ $("streak").textContent=state.streak; $("points").textContent=state.points; }
+
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.rate = 0.9; u.lang = "en-US";
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---------------- GAME FLOW ---------------- */
+let curLevel=0, curWords=[], lIdx=0;        // learn
+let qIdx=0, qScore=0, qLocked=false;        // quiz
+
+document.querySelectorAll(".level").forEach(btn=>{
+  btn.addEventListener("click",()=>startLevel(parseInt(btn.dataset.level)));
+});
+
+function startLevel(level){
+  curLevel = level;
+  curWords = todaysWords(level);
+  lIdx = 0;
+  renderLearn();
+  show("learn");
+}
+
+function renderLearn(){
+  const item = curWords[lIdx];
+  $("lWord").textContent = item.w;
+  $("lPos").textContent = item.p;
+  $("lMeaning").textContent = item.m;
+  $("lExample").textContent = "“"+item.e+"”";
+  $("learnCounter").textContent = "Word "+(lIdx+1)+" of "+curWords.length;
+  $("learnBar").style.width = ((lIdx+1)/curWords.length*100)+"%";
+  $("lNext").textContent = (lIdx===curWords.length-1) ? "Start Quiz 🎯" : "Next ▶";
+  speak(item.w);
+}
+
+$("lSpeak").addEventListener("click",()=>speak(curWords[lIdx].w));
+$("lBack").addEventListener("click",()=>{
+  if(lIdx>0){ lIdx--; renderLearn(); } else { show("home"); }
+});
+$("lNext").addEventListener("click",()=>{
+  if(lIdx<curWords.length-1){ lIdx++; renderLearn(); }
+  else { startQuiz(); }
+});
+
+function startQuiz(){
+  qIdx=0; qScore=0; qLocked=false;
+  renderQuiz();
+  show("quiz");
+}
+
+function renderQuiz(){
+  qLocked=false;
+  const item = curWords[qIdx];
+  $("qWord").textContent = item.w;
+  $("qFeedback").textContent = "";
+  $("quizCounter").textContent = "Question "+(qIdx+1)+" of "+curWords.length;
+  $("quizBar").style.width = ((qIdx+1)/curWords.length*100)+"%";
+
+  // distractors from same level, different word
+  const pool = BANK[curLevel].filter(x=>x.w!==item.w);
+  const distractors = shuffle(pool).slice(0,3).map(x=>x.m);
+  const opts = shuffle([item.m, ...distractors]);
+
+  const box = $("qOptions");
+  box.innerHTML = "";
+  opts.forEach(text=>{
+    const b = document.createElement("button");
+    b.className="opt"; b.textContent=text;
+    b.addEventListener("click",()=>answer(b, text===item.m));
+    box.appendChild(b);
+  });
+}
+
+function answer(btn, correct){
+  if(qLocked) return;
+  qLocked=true;
+  const buttons = [...document.querySelectorAll("#qOptions .opt")];
+  const correctMeaning = curWords[qIdx].m;
+  buttons.forEach(b=>{
+    b.disabled=true;
+    if(b.textContent===correctMeaning) b.classList.add("correct");
+  });
+  if(correct){
+    qScore++;
+    state.points += 10; saveState(state); refreshStats();
+    $("qFeedback").textContent = pick(["Yes! 🎉","Correct! ⭐","Awesome! 🙌","You got it! ✅"]);
+    $("qFeedback").style.color = "var(--green)";
+  } else {
+    btn.classList.add("wrong");
+    $("qFeedback").textContent = "Not quite — see the green one 👆";
+    $("qFeedback").style.color = "var(--red)";
+  }
+  setTimeout(()=>{
+    if(qIdx<curWords.length-1){ qIdx++; renderQuiz(); }
+    else showResult();
+  }, 1100);
+}
+
+function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+
+function showResult(){
+  const total = curWords.length;
+  $("rScore").textContent = qScore;
+  let stars, emoji, msg;
+  const ratio = qScore/total;
+  if(ratio===1){ stars="⭐⭐⭐"; emoji="🏆"; msg="Perfect score! You're a word champion!"; }
+  else if(ratio>=0.6){ stars="⭐⭐"; emoji="🎉"; msg="Great work! Keep it up!"; }
+  else { stars="⭐"; emoji="💪"; msg="Good try! Practice makes perfect."; }
+  $("rStars").textContent = stars;
+  $("rEmoji").textContent = emoji;
+  $("rMsg").textContent = msg;
+  show("result");
+}
+
+$("rHome").addEventListener("click",()=>{ refreshStats(); show("home"); });
+$("rReplay").addEventListener("click",()=>{ startLevel(curLevel); });
+
+/* ---------------- INIT ---------------- */
+refreshStats();
+const d = new Date();
+$("todayLine").textContent = d.toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}) + " — fresh words are ready!";
+show("home");
+</script>
+<script>
+/* --- Cowork input fix (auto-added) -------------------------------------
+   Keeps keyboard focus on the game and stops arrow/space keys from
+   scrolling the page or triggering browser shortcuts. The game's own
+   key handlers still run (propagation is not stopped). */
+(function(){
+  function focusGame(){ try{ window.focus(); if(document.body){document.body.tabIndex=-1; document.body.focus();} }catch(e){} }
+  window.addEventListener('load', focusGame);
+  document.addEventListener('mousedown', focusGame);
+  document.addEventListener('touchstart', focusGame, {passive:true});
+  window.addEventListener('keydown', function(e){
+    var t=e.target;
+    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+    var k=e.key;
+    if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight'||k===' '||k==='Spacebar'){
+      e.preventDefault();
+    }
+  }, true);
+})();
+</script>
+</body>
+</html>
