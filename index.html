@@ -9,46 +9,112 @@
   *{ box-sizing:border-box; }
   body{ margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
         background:radial-gradient(1200px 700px at 50% -10%,#23285a 0%,var(--bg) 60%); color:var(--text); min-height:100vh; }
-  header{ text-align:center; padding:46px 20px 10px; }
+  header{ text-align:center; padding:46px 20px 6px; }
   header h1{ margin:0; font-size:40px; letter-spacing:.5px; }
   header p{ color:var(--muted); margin:10px 0 0; font-size:15px; }
-  .grid{ max-width:1040px; margin:30px auto 60px; padding:0 20px;
-         display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; }
-  a.card{ text-decoration:none; color:inherit; background:linear-gradient(160deg,var(--card2),var(--card));
-          border:1px solid #2f3666; border-radius:16px; padding:20px; display:flex; flex-direction:column; gap:8px;
-          transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
-  a.card:hover{ transform:translateY(-4px); box-shadow:0 12px 30px rgba(0,0,0,.45); border-color:var(--accent); }
-  .emoji{ font-size:34px; }
+  .wrap{ max-width:1040px; margin:0 auto; padding:0 20px; }
+  .bar{ max-width:1040px; margin:22px auto 0; padding:0 20px; min-height:34px; }
+  .back{ display:none; align-items:center; gap:8px; cursor:pointer; background:var(--card2); color:var(--text);
+         border:1px solid #2f3666; border-radius:10px; padding:8px 14px; font-size:14px; font-weight:600; }
+  .back:hover{ border-color:var(--accent); }
+  .section-title{ text-align:center; margin:18px 0 0; font-size:24px; font-weight:800; }
+  .section-title .em{ margin-right:8px; }
+  .grid{ margin:24px auto 60px; display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:18px; }
+  .tile, a.card{ text-decoration:none; color:inherit; background:linear-gradient(160deg,var(--card2),var(--card));
+          border:1px solid #2f3666; border-radius:16px; padding:22px; display:flex; flex-direction:column; gap:8px;
+          cursor:pointer; transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease; }
+  .tile:hover, a.card:hover{ transform:translateY(-4px); box-shadow:0 12px 30px rgba(0,0,0,.45); border-color:var(--accent); }
+  .emoji{ font-size:36px; }
   .name{ font-size:18px; font-weight:700; }
-  .controls{ font-size:12.5px; color:var(--muted); line-height:1.5; }
+  .blurb, .controls{ font-size:12.5px; color:var(--muted); line-height:1.5; }
+  .count{ font-size:12.5px; color:var(--accent); font-weight:700; margin-top:2px; }
   footer{ text-align:center; color:var(--muted); font-size:12.5px; padding:0 20px 40px; }
 </style>
 </head>
 <body>
 <header>
   <h1>🎮 Reyaansh&#x27;s Game Arcade</h1>
-  <p>Click a game to play. Tip: click once inside the game window so the keyboard controls respond.</p>
+  <p>Pick a category, then choose a game to play. Tip: click once inside the game window so the keyboard controls respond.</p>
 </header>
 
-<div class="grid">
-  <a class="card" href="./road-racer.html"><span class="emoji">🏎️</span><span class="name">Road Racer 90</span><span class="controls">← → steer · Space / P pause</span></a>
-  <a class="card" href="./road-warrior.html"><span class="emoji">🚗</span><span class="name">Road Warrior</span><span class="controls">Arrow keys to drive · 20 levels</span></a>
-  <a class="card" href="./metro-rush.html"><span class="emoji">🚇</span><span class="name">Metro Rush</span><span class="controls">← → lanes · ↑ jump · ↓ roll</span></a>
-  <a class="card" href="./subway_runner.html"><span class="emoji">🚆</span><span class="name">Subway Runner</span><span class="controls">← → move · ↑ jump · ↓ slide · Space</span></a>
-  <a class="card" href="./moon_rush.html"><span class="emoji">🌙</span><span class="name">Moon Rush</span><span class="controls">Arrow keys · Space to start</span></a>
-  <a class="card" href="./sky_fighter.html"><span class="emoji">✈️</span><span class="name">Jet Flyer</span><span class="controls">Arrows fly · 1 shoot · 2 loop</span></a>
-  <a class="card" href="./jet_defender.html"><span class="emoji">🛩️</span><span class="name">Jet Defender</span><span class="controls">← → move · Space to fire / start</span></a>
-  <a class="card" href="./karate_fighter.html"><span class="emoji">🥋</span><span class="name">Karate Fighter</span><span class="controls">A / D move · ↑ kick · → punch · ← grab</span></a>
-  <a class="card" href="./street_brawl.html"><span class="emoji">🥊</span><span class="name">Street Brawl</span><span class="controls">Arrow keys move · Space to attack</span></a>
-  <a class="card" href="./corebound_pc.html"><span class="emoji">🤖</span><span class="name">Corebound PC</span><span class="controls">WASD move · mouse to aim &amp; shoot</span></a>
-  <a class="card" href="./cricket_game.html"><span class="emoji">🏏</span><span class="name">Cricket</span><span class="controls">← → aim · Space to bowl / hit</span></a>
-  <a class="card" href="./math-hero.html"><span class="emoji">➗</span><span class="name">Math Hero</span><span class="controls">Type the answer · Enter to check</span></a>
-  <a class="card" href="./code-typer.html"><span class="emoji">⌨️</span><span class="name">Code Typer</span><span class="controls">Type the words · learn Python typing</span></a>
-  <a class="card" href="./time-travel-explorer.html"><span class="emoji">🚀</span><span class="name">Time Travel Explorer</span><span class="controls">Interactive page</span></a>
-  <a class="card" href="./word-quest.html"><span class="emoji">🎮</span><span class="name">Word Quest</span><span class="controls">Click to play</span></a>
-  <a class="card" href="./division-game.html"><span class="emoji">🎮</span><span class="name">🚀 Reyaansh&#x27;s Math Adventure!</span><span class="controls">Click to play</span></a>
-</div>
+<div class="bar"><button class="back" id="backBtn">← All categories</button></div>
+<h2 class="section-title" id="sectionTitle"></h2>
+<div class="wrap"><div class="grid" id="grid"></div></div>
 
-<footer>16 games · this menu builds itself when a new game is added 🎮</footer>
+<footer>16 games · 6 categories · this menu builds itself when a new game is added 🎮</footer>
+
+<noscript>
+  <div class="wrap" style="padding-bottom:40px">
+    <p style="color:#a7adcf">JavaScript is off, so here are all the games as direct links:</p>
+  </div>
+</noscript>
+
+<script>
+  var DATA = {"categories": [{"id": "racing", "name": "Racing & Driving", "emoji": "🏎️", "order": 1, "blurb": "Steer, dodge and race to the finish.", "games": [{"file": "road-racer.html", "name": "Road Racer 90", "emoji": "🏎️", "controls": "← → steer · Space / P pause", "category": "racing", "order": 1}, {"file": "road-warrior.html", "name": "Road Warrior", "emoji": "🚗", "controls": "Arrow keys to drive · 20 levels", "category": "racing", "order": 2}], "count": 2}, {"id": "runners", "name": "Endless Runners", "emoji": "🏃", "order": 2, "blurb": "Run, jump and slide as long as you can.", "games": [{"file": "metro-rush.html", "name": "Metro Rush", "emoji": "🚇", "controls": "← → lanes · ↑ jump · ↓ roll", "category": "runners", "order": 1}, {"file": "subway_runner.html", "name": "Subway Runner", "emoji": "🚆", "controls": "← → move · ↑ jump · ↓ slide · Space", "category": "runners", "order": 2}, {"file": "moon_rush.html", "name": "Moon Rush", "emoji": "🌙", "controls": "Arrow keys · Space to start", "category": "runners", "order": 3}], "count": 3}, {"id": "action", "name": "Action & Shooters", "emoji": "✈️", "order": 3, "blurb": "Fly, aim and blast your way through.", "games": [{"file": "sky_fighter.html", "name": "Jet Flyer", "emoji": "✈️", "controls": "Arrows fly · 1 shoot · 2 loop", "category": "action", "order": 1}, {"file": "jet_defender.html", "name": "Jet Defender", "emoji": "🛩️", "controls": "← → move · Space to fire / start", "category": "action", "order": 2}, {"file": "corebound_pc.html", "name": "Corebound PC", "emoji": "🤖", "controls": "WASD move · mouse to aim & shoot", "category": "action", "order": 3}], "count": 3}, {"id": "fighting", "name": "Fighting", "emoji": "🥋", "order": 4, "blurb": "Punch, kick and brawl to win.", "games": [{"file": "karate_fighter.html", "name": "Karate Fighter", "emoji": "🥋", "controls": "A / D move · ↑ kick · → punch · ← grab", "category": "fighting", "order": 1}, {"file": "street_brawl.html", "name": "Street Brawl", "emoji": "🥊", "controls": "Arrow keys move · Space to attack", "category": "fighting", "order": 2}], "count": 2}, {"id": "sports", "name": "Sports", "emoji": "🏏", "order": 5, "blurb": "Play the game, score the runs.", "games": [{"file": "cricket_game.html", "name": "Cricket", "emoji": "🏏", "controls": "← → aim · Space to bowl / hit", "category": "sports", "order": 1}], "count": 1}, {"id": "learning", "name": "Learning & Brain", "emoji": "🧠", "order": 6, "blurb": "Have fun while you learn.", "games": [{"file": "math-hero.html", "name": "Math Hero", "emoji": "➗", "controls": "Type the answer · Enter to check", "category": "learning", "order": 1}, {"file": "division-game.html", "name": "Math Adventure", "emoji": "🚀", "controls": "Type the answer · Enter to check", "category": "learning", "order": 2}, {"file": "word-quest.html", "name": "Word Quest", "emoji": "📚", "controls": "Learn a new word a day", "category": "learning", "order": 3}, {"file": "code-typer.html", "name": "Code Typer", "emoji": "⌨️", "controls": "Type the words · learn Python typing", "category": "learning", "order": 4}, {"file": "time-travel-explorer.html", "name": "Time Travel Explorer", "emoji": "🚀", "controls": "Interactive page", "category": "learning", "order": 5}], "count": 5}]};
+
+  var grid = document.getElementById('grid');
+  var backBtn = document.getElementById('backBtn');
+  var sectionTitle = document.getElementById('sectionTitle');
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  function findCat(id){
+    for (var i=0;i<DATA.categories.length;i++) if (DATA.categories[i].id===id) return DATA.categories[i];
+    return null;
+  }
+
+  function showHome(){
+    backBtn.style.display = 'none';
+    sectionTitle.textContent = '';
+    var html = '';
+    DATA.categories.forEach(function(c){
+      var n = c.count + (c.count===1 ? ' game' : ' games');
+      html += '<div class="tile" role="button" tabindex="0" data-cat="'+esc(c.id)+'">'
+            + '<span class="emoji">'+esc(c.emoji||'🎮')+'</span>'
+            + '<span class="name">'+esc(c.name)+'</span>'
+            + (c.blurb ? '<span class="blurb">'+esc(c.blurb)+'</span>' : '')
+            + '<span class="count">'+n+'</span></div>';
+    });
+    grid.innerHTML = html;
+  }
+
+  function showCategory(id){
+    var c = findCat(id);
+    if (!c){ showHome(); return; }
+    backBtn.style.display = 'inline-flex';
+    sectionTitle.innerHTML = '<span class="em">'+esc(c.emoji||'🎮')+'</span>'+esc(c.name);
+    var html = '';
+    c.games.forEach(function(g){
+      html += '<a class="card" href="./'+esc(g.file)+'">'
+            + '<span class="emoji">'+esc(g.emoji||'🎮')+'</span>'
+            + '<span class="name">'+esc(g.name)+'</span>'
+            + '<span class="controls">'+esc(g.controls||'')+'</span></a>';
+    });
+    grid.innerHTML = html;
+  }
+
+  function route(){
+    var m = (location.hash||'').match(/cat=([^&]+)/);
+    if (m) showCategory(decodeURIComponent(m[1]));
+    else showHome();
+  }
+
+  grid.addEventListener('click', function(e){
+    var t = e.target.closest('.tile');
+    if (t) location.hash = 'cat=' + encodeURIComponent(t.getAttribute('data-cat'));
+  });
+  grid.addEventListener('keydown', function(e){
+    if (e.key!=='Enter' && e.key!==' ') return;
+    var t = e.target.closest('.tile');
+    if (t){ e.preventDefault(); location.hash = 'cat=' + encodeURIComponent(t.getAttribute('data-cat')); }
+  });
+  backBtn.addEventListener('click', function(){ location.hash = ''; });
+  window.addEventListener('hashchange', route);
+  route();
+</script>
 </body>
 </html>
