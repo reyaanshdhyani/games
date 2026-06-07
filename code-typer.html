@@ -304,26 +304,129 @@ function challengeFail(){
 /* go! */
 screenStart();
 </script>
+<!--PLAYLAYER:START-->
+<style id="pl-style">
+  html,body{margin:0;}
+  canvas{max-width:100vw !important; max-height:100vh !important;}
+  #pl-overlay{position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center;
+    background:rgba(8,10,25,.86); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); padding:20px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  #pl-overlay .pl-card{background:linear-gradient(160deg,#242a52,#1b1f3a); color:#eef1ff; border:1px solid #3a4178;
+    border-radius:18px; padding:26px 24px; max-width:440px; width:100%; max-height:88vh; overflow:auto; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.55);}
+  #pl-overlay .pl-title{font-size:26px; font-weight:800; margin:0 0 4px;}
+  #pl-overlay .pl-sub{font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#9aa0d0; margin-bottom:12px;}
+  #pl-overlay .pl-how{font-size:16px; line-height:1.55; color:#d7daf5; margin-bottom:22px;}
+  #pl-overlay .pl-btn{appearance:none; -webkit-appearance:none; border:0; cursor:pointer; background:#7c5cff; color:#fff;
+    font-size:19px; font-weight:800; padding:15px 34px; border-radius:14px; width:100%;
+    box-shadow:0 8px 22px rgba(124,92,255,.5);}
+  #pl-overlay .pl-btn:active{transform:translateY(1px);}
+  .pl-hint{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:99998;
+    background:rgba(20,24,52,.92); color:#eef1ff; padding:10px 16px; border-radius:12px; border:1px solid #3a4178;
+    max-width:90vw; text-align:center; pointer-events:none; transition:opacity .4s ease;
+    font:600 14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+</style>
 <script>
-/* --- Cowork input fix ---------------------------------------------------
-   Keeps keyboard focus on the game and stops arrow/space keys from
-   scrolling the page or triggering browser shortcuts. The game's own
-   key handlers still run (propagation is not stopped). */
+/* --- Reyaansh play layer (auto-added) -----------------------------------
+   "How to play" screen + responsive scaling + swipe/tap touch controls.
+   Per-game config is injected just below (see games.json -> "play"). */
 (function(){
-  function focusGame(){ try{ window.focus(); if(document.body){document.body.tabIndex=-1; document.body.focus();} }catch(e){} }
-  window.addEventListener('load', focusGame);
-  document.addEventListener('mousedown', focusGame);
-  document.addEventListener('touchstart', focusGame, {passive:true});
-  window.addEventListener('keydown', function(e){
-    var t=e.target;
-    if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
-    var k=e.key;
-    if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight'||k===' '||k==='Spacebar'){
-      e.preventDefault();
+  var PLAY = {"type": "keyboard", "how": "Tap the typing area to bring up your keyboard, then type the words shown to learn Python typing."};
+  if(!PLAY) PLAY = {type:"page", how:"Tap Play to start."};
+  var doc=document, win=window;
+  var isTouch = ('ontouchstart' in win) || (navigator.maxTouchPoints>0);
+
+  function focusGame(){ try{ win.focus(); if(doc.body){doc.body.tabIndex=-1; doc.body.focus();} }catch(e){} }
+  win.addEventListener('load', focusGame);
+  doc.addEventListener('mousedown', focusGame);
+  doc.addEventListener('touchstart', focusGame, {passive:true});
+
+  if(PLAY.type==='game'){
+    win.addEventListener('keydown', function(e){
+      var t=e.target;
+      if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+      var k=e.key;
+      if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight'||k===' '||k==='Spacebar'){ e.preventDefault(); }
+    }, true);
+  }
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  /* synthetic key dispatch -- sends both key and code so every game matches */
+  function fire(type, pair){ if(!pair) return; try{ doc.dispatchEvent(new KeyboardEvent(type,{key:pair[0],code:pair[1],bubbles:true,cancelable:true})); }catch(e){} }
+  var held=null;
+  function press(pair){ if(held){fire('keyup',held);} held=pair; fire('keydown',pair); }
+  function release(){ if(held){fire('keyup',held); held=null;} }
+  function tapKey(pair){ if(!pair) return; fire('keydown',pair); setTimeout(function(){fire('keyup',pair);},70); }
+
+  /* how-to-play overlay (shown every time the game opens) */
+  function buildOverlay(){
+    var ov=doc.createElement('div'); ov.id='pl-overlay';
+    ov.innerHTML='<div class="pl-card"><div class="pl-title">'+esc(PLAY.title||doc.title||'Ready?')+'</div>'
+      +'<div class="pl-sub">How to play</div><div class="pl-how">'+esc(PLAY.how||'Tap Play to begin.')+'</div>'
+      +'<button class="pl-btn" id="pl-play">▶ Play</button></div>';
+    doc.body.appendChild(ov);
+    doc.getElementById('pl-play').addEventListener('click', startPlay);
+  }
+  function startPlay(){
+    var ov=doc.getElementById('pl-overlay'); if(ov && ov.parentNode) ov.parentNode.removeChild(ov);
+    focusGame();
+    if(PLAY.type==='keyboard'){ var inp=doc.querySelector('input,textarea'); if(inp){ try{inp.focus(); inp.click();}catch(e){} } }
+    else if(PLAY.start){ setTimeout(function(){ tapKey(PLAY.start); }, 140); }
+    if(PLAY.type==='game' && isTouch) showHint();
+  }
+  function showHint(){
+    var h=doc.createElement('div'); h.className='pl-hint'; h.textContent=PLAY.how||'Swipe to move · Tap to act';
+    doc.body.appendChild(h);
+    setTimeout(function(){ h.style.opacity='0'; setTimeout(function(){ if(h.parentNode) h.parentNode.removeChild(h); },500); }, 3600);
+  }
+
+  /* swipe / tap gestures (game type, touch devices only) */
+  function isInteractive(el){ return el && el.closest && el.closest('button,a,input,textarea,select,[role=button],#pl-overlay,.pl-hint'); }
+  function aimAt(e){
+    var cv=doc.querySelector('canvas'); if(!cv) return;
+    var t=(e.changedTouches&&e.changedTouches[0]); if(!t) return;
+    try{ cv.dispatchEvent(new MouseEvent('mousemove',{clientX:t.clientX,clientY:t.clientY,bubbles:true,cancelable:true})); }catch(err){}
+  }
+  function attachGestures(){
+    var g=PLAY.g||{}, TH=24, sx=0,sy=0,st=0,dir=null,moved=false,skip=false,lastTap=0;
+    doc.addEventListener('touchstart', function(e){
+      if(e.touches.length>1){ skip=true; return; }
+      if(isInteractive(e.target)){ skip=true; return; }
+      skip=false; var t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); dir=null; moved=false;
+    }, {passive:false});
+    doc.addEventListener('touchmove', function(e){
+      if(skip) return; var t=e.touches[0]; var dx=t.clientX-sx, dy=t.clientY-sy;
+      if(Math.abs(dx)<TH && Math.abs(dy)<TH) return;
+      if(e.cancelable) e.preventDefault();
+      var nd = (Math.abs(dx)>Math.abs(dy)) ? (dx<0?'l':'r') : (dy<0?'u':'d');
+      moved=true; if(nd!==dir){ dir=nd; if(g[nd]) press(g[nd]); }
+    }, {passive:false});
+    doc.addEventListener('touchend', function(e){
+      if(skip){ skip=false; return; }
+      if(dir){ release(); dir=null; return; }
+      if(moved) return;
+      if(Date.now()-st>=320) return;
+      function doTap(ev){ if(PLAY.aim) aimAt(ev); tapKey(g.tap); }
+      var now=Date.now();
+      if(g.dtap && now-lastTap<300){ lastTap=0; tapKey(g.dtap); return; }
+      lastTap=now;
+      if(g.dtap){ var snap=now; setTimeout(function(){ if(lastTap===snap){ doTap(e); lastTap=0; } },270); }
+      else { doTap(e); }
+    }, {passive:false});
+  }
+
+  function init(){
+    if(PLAY.type==='game'){
+      try{ doc.documentElement.style.overflow='hidden'; doc.body.style.overflow='hidden';
+           doc.documentElement.style.touchAction='none'; doc.body.style.touchAction='none'; }catch(e){}
+      if(isTouch) attachGestures();
     }
-  }, true);
+    buildOverlay();
+  }
+  if(doc.readyState==='loading') doc.addEventListener('DOMContentLoaded', init); else init();
 })();
 </script>
-
+<!--PLAYLAYER:END-->
 </body>
 </html>
