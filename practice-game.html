@@ -1,0 +1,1144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daily Practice Game</title>
+<style>
+  :root{
+    --bg:#0f172a; --card:#1e293b; --card2:#273449; --ink:#f1f5f9; --muted:#94a3b8;
+    --brand:#6366f1; --brand2:#8b5cf6; --good:#22c55e; --bad:#ef4444; --warn:#f59e0b;
+    --line:#334155; --chip:#312e81;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:linear-gradient(160deg,#0f172a,#1e1b4b);color:var(--ink);min-height:100vh}
+  .wrap{max-width:860px;margin:0 auto;padding:18px}
+  .hidden{display:none!important}
+  h1,h2,h3{margin:0 0 .4em}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;margin:14px 0;box-shadow:0 8px 30px rgba(0,0,0,.25)}
+  .btn{background:var(--brand);color:#fff;border:none;border-radius:14px;padding:14px 22px;font-size:18px;font-weight:700;cursor:pointer;transition:.15s}
+  .btn:hover{filter:brightness(1.1)}
+  .btn:active{transform:scale(.97)}
+  .btn.sec{background:var(--card2);border:1px solid var(--line)}
+  .btn.big{font-size:22px;padding:18px 30px;width:100%}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .row{display:flex;gap:10px;flex-wrap:wrap}
+  .grow{flex:1}
+  input,select{font-size:18px;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--ink);width:100%}
+  label{display:block;margin:10px 0 6px;color:var(--muted);font-weight:600}
+  .pill{display:inline-block;background:var(--chip);color:#c7d2fe;padding:5px 12px;border-radius:999px;font-size:14px;font-weight:700;margin:2px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .timer{font-size:24px;font-weight:800;background:var(--card2);padding:8px 16px;border-radius:12px;border:1px solid var(--line)}
+  .timer.low{color:var(--bad);border-color:var(--bad)}
+  .progress{height:12px;background:var(--card2);border-radius:999px;overflow:hidden;margin:12px 0}
+  .progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--brand),var(--brand2));width:0}
+  .subjectTag{font-size:15px;color:var(--brand2);font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+  .qtext{font-size:26px;font-weight:700;line-height:1.4;margin:10px 0 18px}
+  .passage{background:var(--card2);border-left:5px solid var(--brand);padding:14px 16px;border-radius:10px;font-size:18px;line-height:1.7;margin-bottom:14px;white-space:pre-wrap}
+  .opt{display:block;width:100%;text-align:left;background:var(--card2);border:2px solid var(--line);border-radius:14px;padding:15px 18px;font-size:19px;margin:9px 0;color:var(--ink);cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--brand)}
+  .opt.sel{border-color:var(--brand);background:#312e81}
+  .opt.correct{border-color:var(--good);background:#064e3b}
+  .opt.wrong{border-color:var(--bad);background:#7f1d1d}
+  .feedback{border-radius:14px;padding:16px;margin-top:12px;font-size:18px;line-height:1.6}
+  .feedback.ok{background:#064e3b;border:1px solid var(--good)}
+  .feedback.no{background:#3b1d1d;border:1px solid var(--bad)}
+  .feedback b{display:block;margin-bottom:6px;font-size:20px}
+  .why{color:#fde68a;margin-top:8px}
+  .scoreGrid{display:grid;grid-template-columns:1fr;gap:10px}
+  .scoreRow{display:flex;justify-content:space-between;align-items:center;background:var(--card2);padding:14px 16px;border-radius:12px;font-size:19px}
+  .scoreRow .bar{flex:1;margin:0 14px;height:14px;background:#0b1220;border-radius:999px;overflow:hidden}
+  .scoreRow .bar > i{display:block;height:100%;border-radius:999px}
+  .muted{color:var(--muted)}
+  .center{text-align:center}
+  .big-emoji{font-size:60px;text-align:center;margin:10px}
+  .svgbox{background:#fff;border-radius:12px;padding:14px;display:inline-block;margin:6px 0}
+  .note{font-size:14px;color:var(--muted);margin-top:8px}
+  ul.clean{margin:8px 0;padding-left:20px;line-height:1.7}
+  .kbd{font-family:monospace;background:#0b1220;padding:2px 7px;border-radius:6px;border:1px solid var(--line)}
+  .playerCard{display:flex;justify-content:space-between;align-items:center;background:var(--card2);padding:14px 16px;border-radius:12px;margin:8px 0;cursor:pointer;border:2px solid var(--line)}
+  .playerCard:hover{border-color:var(--brand)}
+  .navItem{display:flex;justify-content:space-between;align-items:center;gap:6px;background:var(--card2);border:2px solid var(--line);border-radius:10px;padding:10px 12px;margin:7px 0;cursor:pointer;font-size:15px;font-weight:600;transition:.12s}
+  .navItem:hover{border-color:var(--brand)}
+  .statRow{display:flex;justify-content:space-between;align-items:center;background:var(--card2);border-radius:10px;padding:11px 13px;margin:7px 0;font-size:16px;font-weight:700}
+  @media(max-width:560px){.qtext{font-size:22px}.opt{font-size:17px}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ============================================================================
+   DAILY PRACTICE GAME  —  CBSE-aligned home learning game
+   ----------------------------------------------------------------------------
+   SINGLE FILE. Works offline. Saves progress in the browser (localStorage)
+   and exports a daily report file. Email is wired later (see EMAIL section).
+   ============================================================================ */
+
+/* ---------------------------------------------------------------------------
+   SETTINGS  — easy knobs to tune the game
+   --------------------------------------------------------------------------- */
+const SETTINGS = {
+  maxSessionMinutes: 60,        // hard cap; auto-submits when it hits 0
+  lengthFactor: 2,              // questions-per-category baseline (chosen on start screen 1..5)
+  parentEmail: "prabhash@metano.ai",
+  // EmailJS keys — fill these later to turn on auto-email (see README at bottom)
+  emailjs: { publicKey:"", serviceId:"", templateId:"" }
+};
+
+/* ---------------------------------------------------------------------------
+   HELPERS
+   --------------------------------------------------------------------------- */
+const $ = sel => document.querySelector(sel);
+const app = $("#app");
+const rint = (lo,hi)=> Math.floor(Math.random()*(hi-lo+1))+lo;
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const shuffle = arr => { const a=arr.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const todayKey = ()=>{ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const prettyDate = ()=> new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+function norm(s){ return String(s).toLowerCase().replace(/[^a-z0-9ऀ-ॿ ]/gi,"").replace(/\s+/g," ").trim(); }
+function numOnly(s){ const m=String(s).replace(/,/g,"").match(/-?\d+(\.\d+)?/g); return m? m.map(Number):[]; }
+
+/* normalized MCQ builder: takes correct text + array of wrong texts */
+function mcq(subject,category,prompt,correct,wrongs,explanation,extra){
+  const opts = shuffle([correct, ...wrongs]).slice(0,4);
+  if(!opts.includes(correct)) opts[0]=correct;
+  return Object.assign({ subject, category, qtype:"mcq", prompt, options:opts, correct, explanation }, extra||{});
+}
+function fillQ(subject,category,prompt,answerNums,explanation,extra){
+  return Object.assign({ subject, category, qtype:"fill", prompt, answerNums:[].concat(answerNums), explanation }, extra||{});
+}
+function textQ(subject,category,prompt,accept,explanation,extra){
+  return Object.assign({ subject, category, qtype:"text", prompt, accept:[].concat(accept).map(norm), explanation }, extra||{});
+}
+
+/* unique signature for de-duplication across days */
+function sig(q){
+  if(q.id) return q.id;
+  return q.subject+"|"+q.category+"|"+norm(q.prompt).slice(0,60)+"|"+(q.options?q.options.join(","):"")+"|"+(q.answerNums||"");
+}
+
+/* ---------------------------------------------------------------------------
+   STORAGE  (localStorage)   keys:  dpg.players  ,  dpg.data.<player>
+   --------------------------------------------------------------------------- */
+const DB = {
+  getPlayers(){ try{return JSON.parse(localStorage.getItem("dpg.players")||"[]")}catch(e){return[]} },
+  savePlayers(p){ localStorage.setItem("dpg.players",JSON.stringify(p)); },
+  getData(name){ try{return JSON.parse(localStorage.getItem("dpg.data."+name)||'{"seen":{},"days":{}}')}catch(e){return{seen:{},days:{}}} },
+  saveData(name,d){ localStorage.setItem("dpg.data."+name,JSON.stringify(d)); },
+  markSeen(name,ids){ const d=this.getData(name); ids.forEach(id=>d.seen[id]=todayKey()); this.saveData(name,d); },
+  seenSet(name){ return this.getData(name).seen||{}; },
+  saveDay(name,record){ const d=this.getData(name); d.days[record.date]=record; this.saveData(name,d); }
+};
+
+/* ===========================================================================
+   CONTENT CONFIG is attached below as GRADE_CONFIG[grade] = {subjects:[...]}
+   Each subject: { id, name, emoji, categories:[ {id,name,count,make(n)->[Q]} ] }
+   make(n) returns an array of n question objects.
+   GENERATORS + BANKS are defined in the next script blocks, then registered.
+   =========================================================================== */
+const GRADE_CONFIG = {};        // filled by registration calls below
+const BANKS = {};               // text question banks, filled below
+
+window.__APP = { state:null };  // app runtime state holder
+</script>
+
+<script>
+/* ===========================================================================
+   MATHS GENERATORS  (mostly infinite — never repeat)
+   =========================================================================== */
+const NAMES = ["Ram","Sita","Aarav","Diya","Kabir","Meera","Arjun","Anaya","Vihaan","Ishita","Reyansh","Saanvi"];
+const ITEMS = ["apples","chocolates","marbles","pencils","stickers","candies","balloons","books","mangoes","toffees"];
+
+function gAddition(){
+  const big = Math.random()<.5;
+  const a = big? rint(1000,9999): rint(100,999);
+  const b = big? rint(1000,9999): rint(100,999);
+  return fillQ("maths","Addition", a+" + "+b+" = ?", a+b,
+    "Add the ones, then tens, then hundreds (carry over when a column goes past 9). "+a+" + "+b+" = "+(a+b)+".");
+}
+function gSubtraction(){
+  const big = Math.random()<.5;
+  let a = big? rint(1000,9999): rint(200,999);
+  let b = big? rint(100,a-1): rint(100,a-1);
+  if(b>a){[a,b]=[b,a];}
+  return fillQ("maths","Subtraction", a+" − "+b+" = ?", a-b,
+    "Subtract column by column from the right; borrow from the next column when the top digit is smaller. "+a+" − "+b+" = "+(a-b)+".");
+}
+function gMultiplication(){
+  const threeDigit = Math.random()<.5;
+  const a = threeDigit? rint(100,999): rint(10,99);
+  const b = rint(11,99);
+  return fillQ("maths","Multiplication", a+" × "+b+" = ?", a*b,
+    "Multiply "+a+" by the ones digit of "+b+", then by the tens digit (shifted one place), and add. "+a+" × "+b+" = "+(a*b)+".");
+}
+function gDivision(){
+  const d = rint(2,9);
+  const q = rint(11,89);
+  const r = rint(0,d-1);
+  const dividend = d*q+r;
+  const ansTxt = r===0? (""+q) : (q+" r "+r);
+  return Object.assign(
+    fillQ("maths","Division", dividend+" ÷ "+d+" = ?  (write quotient, and remainder like "+'"'+"12 r 3"+'"'+" if any)", r===0?[q]:[q,r],
+      dividend+" ÷ "+d+" = "+q+(r?" remainder "+r:"")+".  Check: "+d+" × "+q+(r?" + "+r:"")+" = "+dividend+"."),
+    { divAnswer:{q,r} });
+}
+function gWordMul(){
+  const n=pick(NAMES), per=rint(3,9), groups=rint(4,12), item=pick(ITEMS);
+  return fillQ("maths","Word Problems",
+    n+" is giving "+per+" "+item+" to each of "+groups+" friends. How many "+item+" are needed in all?",
+    per*groups,
+    "This is repeated groups, so multiply: "+groups+" friends × "+per+" each = "+(per*groups)+" "+item+".");
+}
+function gWordDiv(){
+  const n=pick(NAMES), kids=rint(3,9), each=rint(3,9), item=pick(ITEMS);
+  const total=kids*each;
+  return fillQ("maths","Word Problems",
+    n+" has "+total+" "+item+" to share equally among "+kids+" children. How many does each child get?",
+    each,
+    "Sharing equally means divide: "+total+" ÷ "+kids+" = "+each+" "+item+" each.");
+}
+function gWord(){ return Math.random()<.5? gWordMul(): gWordDiv(); }
+
+function gTime(){
+  const t=rint(1,5);
+  if(t===1){ const h=rint(1,4); return fillQ("maths","Time","How many minutes are there in "+h+" hour"+(h>1?"s":"")+"?", h*60, "1 hour = 60 minutes, so "+h+" × 60 = "+(h*60)+" minutes."); }
+  if(t===2){ const sh=rint(1,9), sm=pick([0,15,30,45]), add=pick([20,30,40,45]); let tot=sh*60+sm+add; let eh=Math.floor(tot/60)%24, em=tot%60;
+    return fillQ("maths","Time","A show starts at "+sh+":"+String(sm).padStart(2,"0")+" and lasts "+add+" minutes. At what time does it end? (write hour and minutes, e.g. 3 45)",[eh,em],
+      "Add "+add+" min to "+sh+":"+String(sm).padStart(2,"0")+". End time = "+eh+":"+String(em).padStart(2,"0")+"."); }
+  if(t===3){ const d=rint(2,4); return fillQ("maths","Time","How many days are there in "+d+" weeks?", d*7, "1 week = 7 days, so "+d+" × 7 = "+(d*7)+" days."); }
+  if(t===4){ const days=rint(15,40); const w=Math.floor(days/7), dd=days%7; return fillQ("maths","Time",days+" days is how many weeks and days? (write weeks and days, e.g. 3 2)",[w,dd],days+" ÷ 7 = "+w+" weeks and "+dd+" days."); }
+  const hh=rint(13,23); return mcq("maths","Time","In 12-hour clock time, what is "+hh+":00 ?", ((hh-12)+":00 PM"), [ (hh-12)+":00 AM", (hh)+":00 PM", ((hh-12+1))+":00 PM" ], hh+":00 in 24-hour time means subtract 12 → "+(hh-12)+":00 PM.");
+}
+function gMoney(){
+  const t=rint(1,4);
+  if(t===1){ const a=rint(15,90), b=rint(15,90); return fillQ("maths","Money","A pen costs ₹"+a+" and a notebook costs ₹"+b+". What is the total cost in rupees?", a+b, "Add the prices: ₹"+a+" + ₹"+b+" = ₹"+(a+b)+"."); }
+  if(t===2){ const cost=rint(35,95), paid=pick([100,200,500]); return fillQ("maths","Money","You buy something for ₹"+cost+" and pay with a ₹"+paid+" note. How much change do you get back?", paid-cost, "Change = paid − cost = ₹"+paid+" − ₹"+cost+" = ₹"+(paid-cost)+"."); }
+  if(t===3){ const each=rint(6,20), n=rint(3,7); return fillQ("maths","Money","One toffee costs ₹"+each+". How much do "+n+" toffees cost?", each*n, "Multiply: "+n+" × ₹"+each+" = ₹"+(each*n)+"."); }
+  const r=rint(2,9); return fillQ("maths","Money","How many 50-paise coins make ₹"+r+"?", r*2, "₹1 = 100 paise = two 50-paise coins, so ₹"+r+" = "+(r*2)+" coins.");
+}
+
+/* --- Olympiad / analytical reasoning --- */
+function gAnalytical(){
+  const t=rint(1,5);
+  if(t===1){ const [x,y,z]=shuffle(NAMES).slice(0,3); return mcq("maths","Analytical Thinking",
+    x+" is taller than "+y+". "+y+" is taller than "+z+". Who is the shortest?", z, [x,y,"Cannot say"],
+    "Order from tallest: "+x+" > "+y+" > "+z+", so "+z+" is shortest."); }
+  if(t===2){ const start=rint(2,6), step=rint(2,5); const seq=[start,start+step,start+2*step,start+3*step];
+    return mcq("maths","Analytical Thinking","What number comes next?  "+seq.join(", ")+", ___", String(start+4*step),
+      [String(start+5*step),String(start+3*step+1),String(start+4*step+step)], "Each number goes up by "+step+", so next is "+(start+3*step)+" + "+step+" = "+(start+4*step)+"."); }
+  if(t===3){ const age=rint(7,11), diff=rint(2,5); return fillQ("maths","Analytical Thinking",
+    "Riya is "+age+" years old. Her brother is "+diff+" years older. What will the brother's age be after 3 years?", age+diff+3,
+    "Brother now = "+age+" + "+diff+" = "+(age+diff)+". After 3 years = "+(age+diff)+" + 3 = "+(age+diff+3)+"."); }
+  if(t===4){ const odd=pick([ {set:["2","4","7","6"],ans:"7",why:"7 is the only odd number; the rest are even."},
+      {set:["10","20","25","30"],ans:"25",why:"25 is not a multiple of 10; the rest are."},
+      {set:["square","circle","triangle","cube"],ans:"cube",why:"A cube is a 3-D solid; the others are flat shapes."},
+      {set:["cat","dog","cow","rose"],ans:"rose",why:"A rose is a plant; the rest are animals."} ]);
+    return mcq("maths","Analytical Thinking","Find the odd one out: "+odd.set.join(", "), odd.ans, odd.set.filter(x=>x!==odd.ans), odd.why); }
+  const a=rint(2,5),b=rint(2,5); return fillQ("maths","Analytical Thinking",
+    "If "+a+" pencils cost ₹"+(a*b)+", what is the cost of 1 pencil?", b, "Cost of 1 = total ÷ number = ₹"+(a*b)+" ÷ "+a+" = ₹"+b+".");
+}
+
+/* --- Number patterns / series --- */
+function gPattern(){
+  const t=rint(1,3);
+  if(t===1){ const s=rint(1,5), step=rint(2,6); const arr=[s,s+step,s+2*step,"__",s+4*step];
+    return fillQ("maths","Number Patterns","Find the missing number:  "+arr.join(", "), s+3*step, "The pattern adds "+step+" each time, so the missing number is "+(s+2*step)+" + "+step+" = "+(s+3*step)+"."); }
+  if(t===2){ const s=pick([1,2,3]); const arr=[s,s*2,s*4,"__",s*16];
+    return fillQ("maths","Number Patterns","Find the missing number:  "+arr.join(", "), s*8, "Each number doubles, so the missing one is "+(s*4)+" × 2 = "+(s*8)+"."); }
+  const s=rint(20,40), step=rint(2,5); const arr=[s,s-step,s-2*step,"__",s-4*step];
+  return fillQ("maths","Number Patterns","Find the missing number:  "+arr.join(", "), s-3*step, "The pattern goes down by "+step+" each time, so it is "+(s-2*step)+" − "+step+" = "+(s-3*step)+".");
+}
+
+/* --- Visual / spatial (inline SVG) --- */
+function svgShapes(n,shape){
+  let s='<svg width="300" height="90" viewBox="0 0 300 90">';
+  for(let i=0;i<n;i++){ const x=20+i*46; if(shape==="circle") s+='<circle cx="'+(x+15)+'" cy="45" r="16" fill="#6366f1"/>';
+    else if(shape==="square") s+='<rect x="'+x+'" y="29" width="32" height="32" rx="4" fill="#22c55e"/>';
+    else s+='<polygon points="'+(x+16)+',28 '+(x+32)+',61 '+x+',61" fill="#f59e0b"/>'; }
+  return s+'</svg>';
+}
+function gVisual(){
+  const t=rint(1,3);
+  if(t===1){ const n=rint(4,8), shape=pick(["circle","square","triangle"]);
+    return fillQ("maths","Visual & Spatial","Count the shapes below and write how many there are:", n,
+      "Count them one by one — there are "+n+".", { svg:'<div class="svgbox">'+svgShapes(n,shape)+'</div>' }); }
+  if(t===2){ // pattern: shapes repeating ABAB, what's next
+    const seq=pick([ {p:["circle","square","circle","square"],next:"circle",label:"a circle"},
+                     {p:["triangle","circle","triangle","circle"],next:"triangle",label:"a triangle"},
+                     {p:["square","square","triangle","square","square","triangle"],next:"square",label:"a square"} ]);
+    let s='<svg width="320" height="80" viewBox="0 0 320 80">';
+    seq.p.forEach((sh,i)=>{ const x=14+i*48; if(sh==="circle")s+='<circle cx="'+(x+15)+'" cy="40" r="15" fill="#6366f1"/>'; else if(sh==="square")s+='<rect x="'+x+'" y="25" width="30" height="30" rx="4" fill="#22c55e"/>'; else s+='<polygon points="'+(x+15)+',24 '+(x+30)+',56 '+x+',56" fill="#f59e0b"/>'; });
+    s+='<text x="'+(14+seq.p.length*48+6)+'" y="50" font-size="34" fill="#94a3b8">?</text></svg>';
+    const opts={circle:"Circle",square:"Square",triangle:"Triangle"};
+    return mcq("maths","Visual & Spatial","Look at the repeating pattern. What shape comes next (the ?)?",
+      opts[seq.next], Object.values(opts).filter(v=>v!==opts[seq.next]),
+      "The pattern repeats, so the next shape is "+seq.label+".", { svg:'<div class="svgbox">'+s+'</div>' }); }
+  // count corners/sides
+  const sh=pick([ {n:"triangle",sides:3}, {n:"square",sides:4}, {n:"rectangle",sides:4}, {n:"pentagon",sides:5}, {n:"hexagon",sides:6} ]);
+  return fillQ("maths","Visual & Spatial","How many sides does a "+sh.n+" have?", sh.sides, "A "+sh.n+" has "+sh.sides+" sides.");
+}
+</script>
+
+<script>
+/* ===========================================================================
+   ENGLISH — READING COMPREHENSION (passages with short typed answers)
+   =========================================================================== */
+BANKS.engComp = [
+ { id:"ec1", passage:"The Thirsty Crow\n\nOn a hot summer day, a crow was very thirsty. He flew everywhere looking for water. At last he saw a pot with a little water at the bottom. His beak could not reach it. The clever crow picked up small stones and dropped them into the pot one by one. Slowly the water rose to the top. The crow drank the water happily and flew away.",
+   q:[ {prompt:"How did the crow feel at the beginning of the story?",accept:["thirsty"],explanation:"The story begins 'a crow was very thirsty.'"},
+       {prompt:"What did the crow find with a little water in it?",accept:["a pot","pot"],explanation:"He saw a pot with a little water at the bottom."},
+       {prompt:"What did the crow drop into the pot?",accept:["stones","small stones","pebbles"],explanation:"He picked up small stones and dropped them in."},
+       {prompt:"One word from the story means 'smart'. Write it.",accept:["clever"],explanation:"The story calls him 'the clever crow.'"} ] },
+ { id:"ec2", passage:"Meena's Garden\n\nMeena loves her little garden. Every morning she waters the plants before school. She has grown roses, marigolds and a small tomato plant. Yesterday she saw a butterfly sitting on a flower. It had orange and black wings. Meena watched it quietly so it would not fly away. She wants to be a gardener when she grows up.",
+   q:[ {prompt:"When does Meena water her plants?",accept:["morning","every morning","in the morning"],explanation:"'Every morning she waters the plants before school.'"},
+       {prompt:"What colour were the butterfly's wings?",accept:["orange and black","orange black","black and orange"],explanation:"'It had orange and black wings.'"},
+       {prompt:"Name one flower Meena has grown.",accept:["roses","rose","marigolds","marigold"],explanation:"She grew roses and marigolds."},
+       {prompt:"What does Meena want to be when she grows up?",accept:["gardener","a gardener"],explanation:"'She wants to be a gardener when she grows up.'"} ] },
+ { id:"ec3", passage:"The Lion and the Mouse\n\nA lion was sleeping in the forest. A tiny mouse ran over his nose and woke him up. The angry lion caught the mouse. The mouse begged, 'Please let me go. One day I will help you.' The lion laughed but set him free. Later the lion was trapped in a hunter's net. The little mouse came and cut the net with his sharp teeth. The lion was free again.",
+   q:[ {prompt:"Who woke the lion up?",accept:["mouse","a mouse","the mouse"],explanation:"'A tiny mouse ran over his nose and woke him up.'"},
+       {prompt:"How did the mouse free the lion from the net?",accept:["cut the net","with his teeth","sharp teeth","bit the net"],explanation:"'The little mouse came and cut the net with his sharp teeth.'"},
+       {prompt:"Was the lion kind to let the mouse go? Write yes or no.",accept:["yes"],explanation:"Yes — he set the mouse free, which was kind."},
+       {prompt:"This story teaches that even small friends can be ___ . (one word)",accept:["helpful","useful","important","big"],explanation:"The lesson is that even a small friend can be very helpful."} ] },
+ { id:"ec4", passage:"A Rainy Day\n\nDark clouds covered the sky. Soon it began to rain. Ravi put on his yellow raincoat and took his blue umbrella. He jumped in the puddles on his way home. The frogs were croaking happily. When he reached home, his mother gave him hot pakoras and a glass of milk.",
+   q:[ {prompt:"What colour was Ravi's raincoat?",accept:["yellow"],explanation:"'Ravi put on his yellow raincoat.'"},
+       {prompt:"What did Ravi jump in on his way home?",accept:["puddles","the puddles","water"],explanation:"'He jumped in the puddles on his way home.'"},
+       {prompt:"Which animal was croaking happily?",accept:["frogs","frog","the frogs"],explanation:"'The frogs were croaking happily.'"},
+       {prompt:"What did his mother give him to eat?",accept:["pakoras","hot pakoras","pakora"],explanation:"'His mother gave him hot pakoras and a glass of milk.'"} ] },
+ { id:"ec5", passage:"The Honest Boy\n\nGopal was a poor boy who sold milk in the village. One day he found a purse full of money on the road. He could have kept it, but he looked inside and found the owner's name. He returned the purse to the rich merchant. The merchant was very happy and gave Gopal a job in his shop. Honesty made Gopal's life better.",
+   q:[ {prompt:"What did Gopal sell in the village?",accept:["milk"],explanation:"'Gopal was a poor boy who sold milk in the village.'"},
+       {prompt:"What did Gopal find on the road?",accept:["a purse","purse","money","a purse full of money"],explanation:"'He found a purse full of money on the road.'"},
+       {prompt:"Did Gopal keep the money? Write yes or no.",accept:["no"],explanation:"No — he honestly returned it to the owner."},
+       {prompt:"What good quality did Gopal show? (one word)",accept:["honesty","honest","honesty."],explanation:"He showed honesty by returning the purse."} ] },
+ { id:"ec6", passage:"My Favourite Festival\n\nDiwali is my favourite festival. We clean our house and decorate it with lights and rangoli. My mother makes sweets like ladoo and barfi. In the evening we wear new clothes and light diyas. We also burst a few crackers safely with our parents. Diwali is called the festival of lights because it brings light and joy to everyone.",
+   q:[ {prompt:"Which festival is the writer's favourite?",accept:["diwali"],explanation:"'Diwali is my favourite festival.'"},
+       {prompt:"Name one sweet the mother makes.",accept:["ladoo","laddu","barfi","burfi"],explanation:"'My mother makes sweets like ladoo and barfi.'"},
+       {prompt:"What do they light in the evening?",accept:["diyas","diya","lamps","lights"],explanation:"'In the evening we wear new clothes and light diyas.'"},
+       {prompt:"Diwali is called the festival of ___ .",accept:["lights","light"],explanation:"'Diwali is called the festival of lights.'"} ] }
+];
+
+/* ===========================================================================
+   ENGLISH GRAMMAR  (fill-in-the-blank + MCQ, with reasons)
+   =========================================================================== */
+BANKS.grammar = [
+ mcq("english_grammar","Grammar","Which word is a NOUN in: 'The dog ran fast.'","dog",["ran","fast","the"],"A noun names a person, animal, place or thing. 'Dog' is an animal, so it is a noun."),
+ mcq("english_grammar","Grammar","Pick the PROPER noun.","Delhi",["city","river","boy"],"A proper noun is a special name and starts with a capital letter. 'Delhi' is the name of a city."),
+ mcq("english_grammar","Grammar","Choose the correct PRONOUN: 'Riya is my friend. ___ is kind.'","She",["He","It","They"],"Riya is one girl, so we use 'She'."),
+ mcq("english_grammar","Grammar","Which word is a VERB (action word) in 'Birds fly in the sky.'","fly",["birds","sky","in"],"A verb shows an action. 'Fly' is the action the birds do."),
+ mcq("english_grammar","Grammar","Choose the ADJECTIVE: 'She has a beautiful dress.'","beautiful",["she","dress","has"],"An adjective describes a noun. 'Beautiful' tells us about the dress."),
+ mcq("english_grammar","Grammar","Choose the correct ARTICLE: 'I saw ___ elephant.'","an",["a","the","no article"],"Use 'an' before words beginning with a vowel sound. 'Elephant' starts with 'e'."),
+ mcq("english_grammar","Grammar","Choose the correct ARTICLE: 'She is reading ___ book.'","a",["an","the","no article"],"Use 'a' before a consonant sound. 'Book' starts with 'b'."),
+ mcq("english_grammar","Grammar","Pick the PLURAL of 'box'.","boxes",["boxs","boxies","box"],"Words ending in -x add '-es' to become plural: box → boxes."),
+ mcq("english_grammar","Grammar","Pick the PLURAL of 'baby'.","babies",["babys","babyes","babie"],"Words ending in consonant + y change y to 'ies': baby → babies."),
+ mcq("english_grammar","Grammar","Which sentence is in the PAST tense?","She played in the park.",["She plays in the park.","She will play in the park.","She is playing now."],"Past tense tells about something already done. 'Played' is past."),
+ mcq("english_grammar","Grammar","Choose the FUTURE tense verb: 'Tomorrow I ___ to school.'","will go",["go","went","going"],"Future tense uses 'will'. For tomorrow we say 'will go'."),
+ mcq("english_grammar","Grammar","Choose the correct PREPOSITION: 'The cat is ___ the table.'","on",["in","of","and"],"A preposition shows position. The cat sitting on top means 'on the table'."),
+ mcq("english_grammar","Grammar","Choose the correct PREPOSITION: 'The ball is ___ the box.' (inside)","in",["on","under","over"],"'In' means inside something. The ball is in the box."),
+ mcq("english_grammar","Grammar","Choose the correct CONJUNCTION: 'I like tea ___ coffee.'","and",["but","because","so"],"'And' joins two things we like together."),
+ mcq("english_grammar","Grammar","Choose the correct CONJUNCTION: 'He was tired ___ he kept working.'","but",["and","or","so"],"'But' shows a contrast — tired, yet he still worked."),
+ mcq("english_grammar","Grammar","Pick the ADVERB: 'The tortoise walks slowly.'","slowly",["tortoise","walks","the"],"An adverb tells how an action is done. 'Slowly' tells how it walks."),
+ mcq("english_grammar","Grammar","What is the OPPOSITE (antonym) of 'happy'?","sad",["glad","kind","big"],"The opposite of happy is sad."),
+ mcq("english_grammar","Grammar","What is the OPPOSITE of 'open'?","close",["start","push","run"],"The opposite of open is close (shut)."),
+ mcq("english_grammar","Grammar","Choose the correct verb: 'She ___ to school every day.'","goes",["go","going","gone"],"With 'she' in the present we add -s: 'She goes.'"),
+ mcq("english_grammar","Grammar","Pick the correct sentence.","I have a red ball.",["I has a red ball.","I having a red ball.","I haves a red ball."],"With 'I' we use 'have', not 'has'."),
+ mcq("english_grammar","Grammar","Which word should be capital? 'i live in mumbai.'","both 'I' and 'Mumbai'",["only i","only mumbai","none"],"'I' is always capital, and 'Mumbai' is a proper noun, so both are capital."),
+ mcq("english_grammar","Grammar","Choose the correct punctuation: 'What is your name___'","?",[".","!" ,","],"A question needs a question mark (?)."),
+ mcq("english_grammar","Grammar","Pick the PRONOUN in: 'They are playing cricket.'","They",["are","playing","cricket"],"A pronoun replaces a noun. 'They' stands for some people."),
+ mcq("english_grammar","Grammar","Choose the ADJECTIVE of number: 'There are ___ apples.' (count word)","three",["red","sweet","round"],"An adjective of number tells 'how many'. 'Three' counts the apples."),
+ mcq("english_grammar","Grammar","Pick the correct present continuous form: 'The baby ___ now.'","is sleeping",["sleep","slept","will sleep"],"Present continuous (happening now) = is + verb-ing → 'is sleeping'."),
+ mcq("english_grammar","Grammar","What is the OPPOSITE of 'day'?","night",["sun","time","week"],"The opposite of day is night.")
+];
+</script>
+
+<script>
+/* ===========================================================================
+   हिंदी — गद्यांश (comprehension, MCQ in Hindi)  +  शब्द-भंडार (vocabulary)
+   =========================================================================== */
+BANKS.hindiComp = [
+ { id:"hc1", passage:"प्यासा कौआ\n\nगर्मी का दिन था। एक कौआ बहुत प्यासा था। वह पानी की खोज में इधर-उधर उड़ता रहा। आख़िर उसे एक घड़ा दिखाई दिया जिसमें थोड़ा-सा पानी था। कौए ने एक-एक करके कंकड़ घड़े में डाले। पानी ऊपर आ गया और कौए ने पानी पी लिया।",
+   q:[ mcq("hindi","हिंदी गद्यांश","कौआ कैसा महसूस कर रहा था?","प्यासा",["भूखा","खुश","थका"],"कहानी कहती है — 'एक कौआ बहुत प्यासा था।'"),
+       mcq("hindi","हिंदी गद्यांश","कौए ने घड़े में क्या डाला?","कंकड़",["रेत","पत्ते","फूल"],"कौए ने एक-एक करके कंकड़ घड़े में डाले।"),
+       mcq("hindi","हिंदी गद्यांश","कंकड़ डालने से पानी क्या हुआ?","ऊपर आ गया",["सूख गया","गिर गया","गंदा हो गया"],"कंकड़ डालने से पानी ऊपर आ गया।"),
+       mcq("hindi","हिंदी गद्यांश","यह कहानी हमें क्या सिखाती है?","सूझ-बूझ से काम लेना",["झगड़ा करना","आलस करना","भागना"],"कौए ने अपनी सूझ-बूझ से पानी पाया।") ] },
+ { id:"hc2", passage:"मेरा विद्यालय\n\nमेरे विद्यालय का नाम सूरज पब्लिक स्कूल है। वहाँ एक सुंदर बगीचा है। हमारे शिक्षक बहुत अच्छे हैं। हम रोज़ प्रार्थना करते हैं और फिर कक्षा में पढ़ते हैं। मध्यांतर में हम मैदान में खेलते हैं। मुझे अपना विद्यालय बहुत पसंद है।",
+   q:[ mcq("hindi","हिंदी गद्यांश","विद्यालय में क्या सुंदर है?","बगीचा",["तालाब","पहाड़","बाज़ार"],"वहाँ एक सुंदर बगीचा है।"),
+       mcq("hindi","हिंदी गद्यांश","बच्चे रोज़ सबसे पहले क्या करते हैं?","प्रार्थना",["खेल","भोजन","नींद"],"हम रोज़ प्रार्थना करते हैं और फिर पढ़ते हैं।"),
+       mcq("hindi","हिंदी गद्यांश","मध्यांतर में बच्चे कहाँ खेलते हैं?","मैदान में",["कक्षा में","घर में","बाज़ार में"],"मध्यांतर में हम मैदान में खेलते हैं।"),
+       mcq("hindi","हिंदी गद्यांश","लेखक को क्या बहुत पसंद है?","अपना विद्यालय",["अपना खिलौना","अपनी साइकिल","अपना बस्ता"],"'मुझे अपना विद्यालय बहुत पसंद है।'") ] },
+ { id:"hc3", passage:"चींटी और टिड्डा\n\nगर्मियों में चींटी दिन-रात मेहनत करके अनाज इकट्ठा करती रही। टिड्डा दिन भर गाता और आराम करता रहा। जब सर्दी आई तो टिड्डे के पास खाने को कुछ न था। चींटी ने उसे थोड़ा अनाज दिया और कहा कि मेहनत करनी चाहिए।",
+   q:[ mcq("hindi","हिंदी गद्यांश","गर्मियों में चींटी क्या करती रही?","अनाज इकट्ठा करती रही",["सोती रही","गाती रही","घूमती रही"],"चींटी मेहनत करके अनाज इकट्ठा करती रही।"),
+       mcq("hindi","हिंदी गद्यांश","टिड्डा दिन भर क्या करता रहा?","गाता और आराम करता रहा",["मेहनत करता रहा","पढ़ता रहा","अनाज जमा करता रहा"],"टिड्डा दिन भर गाता और आराम करता रहा।"),
+       mcq("hindi","हिंदी गद्यांश","सर्दी में टिड्डे के पास क्या नहीं था?","खाना",["घर","कपड़े","दोस्त"],"सर्दी में टिड्डे के पास खाने को कुछ न था।"),
+       mcq("hindi","हिंदी गद्यांश","कहानी की सीख क्या है?","मेहनत करनी चाहिए",["खूब सोना चाहिए","गाना चाहिए","झगड़ना चाहिए"],"कहानी सिखाती है कि हमें मेहनत करनी चाहिए।") ] },
+ { id:"hc4", passage:"हमारा तिरंगा\n\nहमारे देश का झंडा तिरंगा कहलाता है। इसमें तीन रंग होते हैं — केसरिया, सफ़ेद और हरा। बीच में नीले रंग का अशोक चक्र होता है। केसरिया रंग वीरता का, सफ़ेद रंग शांति का और हरा रंग हरियाली का प्रतीक है। हमें अपने तिरंगे का सम्मान करना चाहिए।",
+   q:[ mcq("hindi","हिंदी गद्यांश","हमारे झंडे में कितने रंग होते हैं?","तीन",["दो","चार","पाँच"],"तिरंगे में तीन रंग होते हैं।"),
+       mcq("hindi","हिंदी गद्यांश","बीच में किस रंग का चक्र होता है?","नीले",["लाल","हरे","काले"],"बीच में नीले रंग का अशोक चक्र होता है।"),
+       mcq("hindi","हिंदी गद्यांश","सफ़ेद रंग किसका प्रतीक है?","शांति",["वीरता","हरियाली","धन"],"सफ़ेद रंग शांति का प्रतीक है।"),
+       mcq("hindi","हिंदी गद्यांश","हमें तिरंगे के साथ कैसा व्यवहार करना चाहिए?","सम्मान करना चाहिए",["फेंक देना चाहिए","भूल जाना चाहिए","छिपा देना चाहिए"],"हमें अपने तिरंगे का सम्मान करना चाहिए।") ] }
+];
+BANKS.hindiVocab = [
+ mcq("hindi","हिंदी शब्द","'दिन' का विलोम शब्द क्या है?","रात",["सुबह","शाम","समय"],"'दिन' का विलोम 'रात' है।"),
+ mcq("hindi","हिंदी शब्द","'सच' का विलोम शब्द क्या है?","झूठ",["सही","बात","कथा"],"'सच' का विलोम 'झूठ' है।"),
+ mcq("hindi","हिंदी शब्द","'अमीर' का विलोम शब्द क्या है?","गरीब",["धनी","बड़ा","छोटा"],"'अमीर' का विलोम 'गरीब' है।"),
+ mcq("hindi","हिंदी शब्द","'ऊपर' का विलोम शब्द क्या है?","नीचे",["आगे","पीछे","पास"],"'ऊपर' का विलोम 'नीचे' है।"),
+ mcq("hindi","हिंदी शब्द","'खुश' का विलोम शब्द क्या है?","दुखी",["हँसी","अच्छा","प्यारा"],"'खुश' का विलोम 'दुखी' है।"),
+ mcq("hindi","हिंदी शब्द","'सुंदर' का समानार्थी (एक जैसा अर्थ) शब्द क्या है?","खूबसूरत",["गंदा","बुरा","छोटा"],"'सुंदर' का अर्थ 'खूबसूरत' होता है।"),
+ mcq("hindi","हिंदी शब्द","'जल' का समानार्थी शब्द क्या है?","पानी",["आग","हवा","मिट्टी"],"'जल' का अर्थ 'पानी' होता है।"),
+ mcq("hindi","हिंदी शब्द","'घर' के लिए दूसरा शब्द क्या है?","मकान",["सड़क","बाग","नदी"],"'घर' का समानार्थी 'मकान' है।"),
+ mcq("hindi","हिंदी शब्द","'गाय का बच्चा' क्या कहलाता है?","बछड़ा",["पिल्ला","बिल्ली","मेमना"],"गाय के बच्चे को 'बछड़ा' कहते हैं।"),
+ mcq("hindi","हिंदी शब्द","'फूल' का बहुवचन क्या है?","फूल",["फूलों","फूले","फूली"],"'फूल' का बहुवचन भी 'फूल' ही रहता है (कई फूल)।"),
+ mcq("hindi","हिंदी शब्द","'बड़ा' का विलोम शब्द क्या है?","छोटा",["लंबा","मोटा","ऊँचा"],"'बड़ा' का विलोम 'छोटा' है।"),
+ mcq("hindi","हिंदी शब्द","'मित्र' का विलोम शब्द क्या है?","शत्रु",["भाई","साथी","दोस्त"],"'मित्र' (दोस्त) का विलोम 'शत्रु' है।")
+];
+</script>
+
+<script>
+/* ===========================================================================
+   SCIENCE / EVS  (NCERT 'Looking Around' themes)
+   =========================================================================== */
+BANKS.science = [
+ mcq("science","Plants","Which part of the plant takes in water from the soil?","Roots",["Leaves","Flower","Fruit"],"Roots are underground and absorb water and minerals from the soil."),
+ mcq("science","Plants","Which part of the plant makes food using sunlight?","Leaves",["Roots","Stem","Seed"],"Leaves make food using sunlight in a process called photosynthesis."),
+ mcq("science","Plants","Which of these grows on a creeper that needs support?","Money plant",["Mango tree","Grass","Rose bush"],"A creeper has a weak stem and needs support to climb, like a money plant."),
+ mcq("science","Animals","Where does a bird usually live?","Nest",["Den","Burrow","Web"],"Birds build nests to live in and lay their eggs."),
+ mcq("science","Animals","What is a baby dog called?","Puppy",["Kitten","Calf","Cub"],"A baby dog is called a puppy."),
+ mcq("science","Animals","Which animal gives us milk?","Cow",["Hen","Snake","Lion"],"Cows, buffaloes and goats give us milk."),
+ mcq("science","Animals","Which of these is an insect?","Butterfly",["Sparrow","Frog","Fish"],"An insect has six legs; a butterfly is an insect."),
+ mcq("science","Our Body","How many senses do humans have?","Five",["Three","Four","Six"],"The five senses are sight, hearing, smell, taste and touch."),
+ mcq("science","Our Body","Which sense organ do we use to smell?","Nose",["Eyes","Ears","Tongue"],"We smell with our nose."),
+ mcq("science","Our Body","Which body part helps us to breathe?","Lungs",["Heart","Stomach","Brain"],"We breathe with the help of our lungs."),
+ mcq("science","Food","Which of these is a healthy food?","Fruits",["Chips","Candy","Cola"],"Fruits give us vitamins and keep us healthy."),
+ mcq("science","Food","Milk, curd and butter come from ___ .","Animals",["Plants","Rocks","Air"],"Milk and its products come from animals like cows and buffaloes."),
+ mcq("science","Food","Which food gives us energy and is a grain?","Rice",["Apple","Spinach","Milk"],"Rice and wheat are grains that give us energy."),
+ mcq("science","Water","Which of these is a source of water?","River",["Road","Mountain top only","Cloud only"],"Rivers, lakes, ponds, wells and rain are sources of water."),
+ mcq("science","Water","We should not ___ water.",["waste"][0]||"waste",["save","store","drink"],"We must save water and not waste it because it is precious."),
+ mcq("science","Water","Water turns into ice when it becomes very ___ .","cold",["hot","dry","fast"],"When water gets very cold (freezes) it turns into solid ice."),
+ mcq("science","Houses","A house made of ice in very cold places is called an ___ .","igloo",["apartment","tent","hut"],"In very cold places like the poles, people make houses of ice called igloos."),
+ mcq("science","Houses","A house that can be folded and carried is a ___ .","tent",["bungalow","palace","flat"],"A tent is a temporary house that can be folded and moved."),
+ mcq("science","Transport","Which of these travels on water?","Boat",["Bus","Train","Aeroplane"],"A boat or ship is a water transport."),
+ mcq("science","Transport","Which transport flies in the air?","Aeroplane",["Car","Cycle","Ship"],"An aeroplane and a helicopter are air transport."),
+ mcq("science","Transport","An ambulance is used to ___ .","carry sick people to hospital",["deliver letters","put out fire","catch thieves"],"An ambulance quickly carries sick or injured people to the hospital."),
+ mcq("science","Weather & Seasons","In which season do we wear woollen clothes?","Winter",["Summer","Rainy","Spring"],"We wear warm woollen clothes in winter because it is cold."),
+ mcq("science","Weather & Seasons","We use an umbrella mostly in the ___ season.","Rainy",["Winter","Summer","Autumn"],"We use umbrellas and raincoats in the rainy season."),
+ mcq("science","Weather & Seasons","Which of these do we see in the sky at night?","Moon",["Sun","Rainbow","Kite"],"We see the moon and stars in the sky at night."),
+ mcq("science","Family & Work","Who treats us when we are sick?","Doctor",["Teacher","Farmer","Pilot"],"A doctor checks and treats people who are ill."),
+ mcq("science","Family & Work","A person who grows crops on a farm is a ___ .","farmer",["tailor","driver","painter"],"A farmer grows food crops on a farm."),
+ mcq("science","Plants","Which of these do we get from plants?","Vegetables",["Wool","Milk","Eggs"],"Vegetables, fruits and grains come from plants; wool, milk and eggs come from animals."),
+ mcq("science","Animals","Animals that eat only plants are called ___ .","herbivores",["carnivores","omnivores","insects"],"Plant-eating animals like cows and deer are herbivores."),
+ mcq("science","Our Body","We should brush our teeth ___ a day.","twice",["never","once a week","once a month"],"We should brush twice a day to keep teeth clean and healthy."),
+ mcq("science","Directions","The sun rises in the ___ .","East",["West","North","South"],"The sun rises in the east and sets in the west."),
+ mcq("science","Plants","Trees give out which gas that we breathe in?","Oxygen",["Smoke","Carbon dioxide","Steam"],"Plants give out oxygen, which we need to breathe.")
+];
+
+/* ===========================================================================
+   GENERAL KNOWLEDGE
+   =========================================================================== */
+BANKS.gk = [
+ mcq("gk","India","What is the capital of India?","New Delhi",["Mumbai","Kolkata","Chennai"],"New Delhi is the capital of India."),
+ mcq("gk","India","Which is the national animal of India?","Tiger",["Lion","Elephant","Peacock"],"The Royal Bengal Tiger is India's national animal."),
+ mcq("gk","India","Which is the national bird of India?","Peacock",["Parrot","Crow","Eagle"],"The peacock is the national bird of India."),
+ mcq("gk","India","Which is the national flower of India?","Lotus",["Rose","Sunflower","Marigold"],"The lotus is the national flower of India."),
+ mcq("gk","India","How many colours are there in the Indian flag?","Three",["Two","Four","Five"],"The flag has three colours — saffron, white and green (the tricolour)."),
+ mcq("gk","India","Which river is called the holiest river of India?","Ganga",["Yamuna","Godavari","Krishna"],"The Ganga (Ganges) is considered the holiest river in India."),
+ mcq("gk","India","Who is called the 'Father of the Nation' in India?","Mahatma Gandhi",["Jawaharlal Nehru","Bhagat Singh","Sardar Patel"],"Mahatma Gandhi is known as the Father of the Nation."),
+ mcq("gk","World","How many days are there in a leap year?","366",["365","364","360"],"A leap year has 366 days; February has 29 days that year."),
+ mcq("gk","World","How many continents are there in the world?","Seven",["Five","Six","Eight"],"There are seven continents on Earth."),
+ mcq("gk","World","Which is the largest planet in our solar system?","Jupiter",["Earth","Mars","Saturn"],"Jupiter is the largest planet in the solar system."),
+ mcq("gk","World","Which planet do we live on?","Earth",["Mars","Venus","Moon"],"We live on planet Earth."),
+ mcq("gk","World","Which is the fastest land animal?","Cheetah",["Lion","Horse","Tiger"],"The cheetah is the fastest land animal."),
+ mcq("gk","World","Which is the largest animal in the world?","Blue whale",["Elephant","Giraffe","Shark"],"The blue whale is the largest animal on Earth."),
+ mcq("gk","Time","How many months are there in a year?","12",["10","11","24"],"There are 12 months in a year."),
+ mcq("gk","Time","How many days are there in a week?","7",["5","6","8"],"There are 7 days in a week."),
+ mcq("gk","Time","Which month has the fewest days?","February",["January","April","December"],"February has 28 days (29 in a leap year), the fewest."),
+ mcq("gk","Science Around Us","Which colour do we get by mixing blue and yellow?","Green",["Orange","Purple","Brown"],"Blue mixed with yellow makes green."),
+ mcq("gk","Science Around Us","How many legs does a spider have?","Eight",["Six","Four","Ten"],"A spider has eight legs."),
+ mcq("gk","Sports","How many players are there in a cricket team on the field?","11",["9","10","12"],"A cricket team has 11 players on the field."),
+ mcq("gk","Sports","In which sport do you use a racket and a shuttlecock?","Badminton",["Cricket","Football","Hockey"],"Badminton is played with a racket and a shuttlecock."),
+ mcq("gk","India","What is the national sport-like game often called India's national game (hockey)?","Hockey",["Chess","Kabaddi","Carrom"],"Hockey is traditionally regarded as India's national game."),
+ mcq("gk","World","Which is the nearest star to the Earth?","The Sun",["The Moon","Jupiter","North Star"],"The Sun is the closest star to Earth."),
+ mcq("gk","World","Water covers most of the Earth. What colour does Earth look from space?","Blue",["Green","Red","Yellow"],"Because of the oceans, Earth looks blue from space — the 'blue planet'."),
+ mcq("gk","India","The Taj Mahal is in which city?","Agra",["Delhi","Jaipur","Lucknow"],"The Taj Mahal is in Agra, Uttar Pradesh."),
+ mcq("gk","World","Which animal is known as the 'King of the Jungle'?","Lion",["Tiger","Elephant","Bear"],"The lion is called the King of the Jungle."),
+ mcq("gk","Time","Which comes first in the year?","January",["December","June","March"],"January is the first month of the year.")
+];
+
+/* ===========================================================================
+   COMPUTER SCIENCE
+   =========================================================================== */
+BANKS.computer = [
+ mcq("computer","Computer Basics","Which part of the computer shows us pictures and text (the screen)?","Monitor",["Keyboard","Mouse","CPU"],"The monitor is the screen that displays text and pictures."),
+ mcq("computer","Input Devices","Which device is used to type letters and numbers?","Keyboard",["Monitor","Speaker","Printer"],"We type using the keyboard, which is an input device."),
+ mcq("computer","Input Devices","Which device is used to point and click on the screen?","Mouse",["Monitor","Speaker","CPU"],"The mouse moves the pointer and clicks; it is an input device."),
+ mcq("computer","Output Devices","Which device prints documents on paper?","Printer",["Keyboard","Mouse","Scanner"],"A printer gives us a printed copy on paper; it is an output device."),
+ mcq("computer","Output Devices","Which device lets us hear sound from a computer?","Speaker",["Keyboard","Mouse","Scanner"],"Speakers are output devices that produce sound."),
+ mcq("computer","Computer Basics","The 'brain' of the computer that does all the work is the ___ .","CPU",["Monitor","Mouse","Keyboard"],"The CPU (Central Processing Unit) is called the brain of the computer."),
+ mcq("computer","Hardware & Software","Parts of the computer we can touch are called ___ .","Hardware",["Software","Internet","Email"],"Things we can touch, like the keyboard and mouse, are hardware."),
+ mcq("computer","Hardware & Software","Programs and apps that we cannot touch are called ___ .","Software",["Hardware","Monitor","Cable"],"Programs like games and apps are software — we cannot touch them."),
+ mcq("computer","Input Devices","Is the keyboard an input or an output device?","Input device",["Output device","Both","Neither"],"A keyboard puts information INTO the computer, so it is an input device."),
+ mcq("computer","Uses of Computer","Computers are used in a school mainly to ___ .","learn and teach",["cook food","wash clothes","drive cars"],"In schools computers help students learn and teachers teach."),
+ mcq("computer","Computer Basics","Which key is used to make a space between words?","Spacebar",["Enter","Shift","Delete"],"The long key at the bottom, the spacebar, makes spaces."),
+ mcq("computer","Computer Basics","Which key is used to delete a letter to the left?","Backspace",["Spacebar","Caps Lock","Tab"],"The Backspace key erases the letter to the left of the cursor."),
+ mcq("computer","Computer Basics","Which key makes a CAPITAL letter when held down with a letter?","Shift",["Enter","Spacebar","Tab"],"Holding Shift with a letter types it as a capital letter."),
+ mcq("computer","Computer Safety","For how long should children use the computer at one time?","A short time, with breaks",["The whole day","All night","Never sleep"],"Children should use computers only for a short time and take breaks to rest their eyes."),
+ mcq("computer","Uses of Computer","A machine at the bank that gives out cash is called an ___ .","ATM",["TV","Radio","Fan"],"An ATM (Automated Teller Machine) is a computer that gives out cash."),
+ mcq("computer","Computer Basics","What do we call the small arrow that moves on the screen?","Cursor / Pointer",["Icon","Window","Folder"],"The moving arrow controlled by the mouse is the cursor or pointer."),
+ mcq("computer","Computer Basics","A small picture on the screen that opens a program is called an ___ .","Icon",["Cable","Plug","Wire"],"An icon is a small picture you click to open a program."),
+ mcq("computer","Hardware & Software","Which of these is a storage device?","Pen drive",["Monitor","Speaker","Mouse"],"A pen drive (USB) stores and carries data; it is a storage device."),
+ mcq("computer","Uses of Computer","Which of these can a computer do?","Play games and store information",["Eat food","Sleep","Feel happy"],"Computers can play games, store information, draw and much more."),
+ mcq("computer","Computer Basics","Which key takes you to a new line (next line)?","Enter",["Spacebar","Shift","Esc"],"The Enter (Return) key moves the cursor to a new line.")
+];
+</script>
+
+<script>
+/* ===========================================================================
+   BANK PICKERS  (avoid repeats using the player's "seen" record)
+   =========================================================================== */
+function playerName(){ return (window.__APP.state && window.__APP.state.player) || "_"; }
+function pickUnseen(items, n, idOf){
+  const seen = DB.seenSet(playerName());
+  let pool = items.filter(it => !seen[idOf(it)]);
+  if(pool.length < n) pool = items.slice();        // not enough fresh → allow recycle
+  return shuffle(pool).slice(0, Math.min(n, pool.length));
+}
+function bankPick(bankName, n){
+  const items = BANKS[bankName];
+  const chosen = pickUnseen(items, n, q=>sig(q));
+  DB.markSeen(playerName(), chosen.map(q=>sig(q)));
+  return chosen.map(q=>Object.assign({}, q));     // clone so we can attach answers
+}
+function passagePick(bankName){
+  const items = BANKS[bankName];
+  const chosen = pickUnseen(items, 1, p=>p.id);
+  const p = chosen[0];
+  DB.markSeen(playerName(), [p.id]);
+  return p.q.map(q => {
+    if(q.qtype) return Object.assign({}, q, { passage:p.passage });   // already a built MCQ (e.g. Hindi)
+    // raw short-answer comprehension item → make it a proper text question
+    return Object.assign({}, q, {
+      subject:"english_reading", category:"Comprehension", qtype:"text",
+      accept:[].concat(q.accept).map(norm), passage:p.passage
+    });
+  });
+}
+
+/* ===========================================================================
+   CLASS / GRADE CONFIG.  Add a new class by copying this block with new content.
+   Each category's make(n) returns an array of question objects.
+   =========================================================================== */
+GRADE_CONFIG[3] = {
+  label:"Class 3 (CBSE)",
+  subjects:[
+    { id:"maths", name:"Maths", emoji:"🔢", categories:[
+      { id:"add",  name:"Addition",            count:2, make:n=>Array.from({length:n},gAddition) },
+      { id:"sub",  name:"Subtraction",         count:2, make:n=>Array.from({length:n},gSubtraction) },
+      { id:"mul",  name:"Multiplication",      count:2, make:n=>Array.from({length:n},gMultiplication) },
+      { id:"div",  name:"Division",            count:2, make:n=>Array.from({length:n},gDivision) },
+      { id:"word", name:"Word Problems",       count:2, make:n=>Array.from({length:n},gWord) },
+      { id:"time", name:"Time",                count:1, make:n=>Array.from({length:n},gTime) },
+      { id:"money",name:"Money",               count:1, make:n=>Array.from({length:n},gMoney) },
+      { id:"anly", name:"Analytical Thinking", count:2, make:n=>Array.from({length:n},gAnalytical) },
+      { id:"patt", name:"Number Patterns",     count:1, make:n=>Array.from({length:n},gPattern) },
+      { id:"vis",  name:"Visual & Spatial",    count:1, make:n=>Array.from({length:n},gVisual) }
+    ]},
+    { id:"english_reading", name:"English Reading", emoji:"📖", categories:[
+      { id:"comp", name:"Comprehension", count:1, passage:true, make:()=>passagePick("engComp") }
+    ]},
+    { id:"english_grammar", name:"English Grammar", emoji:"✏️", categories:[
+      { id:"gram", name:"Grammar", count:3, make:n=>bankPick("grammar",n) }
+    ]},
+    { id:"hindi", name:"हिंदी (Hindi)", emoji:"📝", categories:[
+      { id:"hcomp", name:"हिंदी गद्यांश", count:1, passage:true, make:()=>passagePick("hindiComp") },
+      { id:"hvocab",name:"हिंदी शब्द",    count:2, make:n=>bankPick("hindiVocab",n) }
+    ]},
+    { id:"science", name:"Science / EVS", emoji:"🌿", categories:[
+      { id:"sci", name:"Science", count:4, make:n=>bankPick("science",n) }
+    ]},
+    { id:"gk", name:"General Knowledge", emoji:"🌍", categories:[
+      { id:"gkq", name:"GK", count:3, make:n=>bankPick("gk",n) }
+    ]},
+    { id:"computer", name:"Computer Science", emoji:"💻", categories:[
+      { id:"comp2", name:"Computer", count:3, make:n=>bankPick("computer",n) }
+    ]}
+  ]
+};
+
+/* Placeholders for future years — fill these next year (same structure). */
+GRADE_CONFIG[4] = { label:"Class 4 (CBSE) — coming soon", subjects:[] };
+GRADE_CONFIG[5] = { label:"Class 5 (CBSE) — coming soon", subjects:[] };
+</script>
+
+<script>
+/* ===========================================================================
+   APP ENGINE  — screens, timer, scoring, re-practice, persistence, report
+   =========================================================================== */
+const S = { state:null };
+function setState(s){ S.state=s; window.__APP.state=s; }
+
+/* ---------- PROFILE SCREEN ---------- */
+function renderProfile(){
+  const players = DB.getPlayers();
+  let html = `<div class="card center">
+    <div class="big-emoji">🎓</div>
+    <h1>Daily Practice Game</h1>
+    <p class="muted">Pick who is playing today.</p></div>`;
+  if(players.length){
+    html += `<div class="card"><h3>Choose a player</h3>`;
+    players.forEach((p,i)=>{ html += `<div class="playerCard" data-pi="${i}">
+      <span>👦 <b>${esc(p.name)}</b> <span class="pill">Class ${p.grade}</span></span>
+      <span class="muted">${(DB.getData(p.name).days&&Object.keys(DB.getData(p.name).days).length)||0} days played</span></div>`; });
+    html += `</div>`;
+  }
+  html += `<div class="card"><h3>Add a new player</h3>
+    <label>Name</label><input id="newName" placeholder="Child's name">
+    <label>Class</label>
+    <select id="newGrade">
+      <option value="3">Class 3</option>
+      <option value="4">Class 4 (coming soon)</option>
+      <option value="5">Class 5 (coming soon)</option>
+    </select>
+    <div style="height:14px"></div>
+    <button class="btn big" id="addBtn">Add player</button></div>`;
+  app.innerHTML = html;
+  document.querySelectorAll(".playerCard").forEach(el=>el.onclick=()=>{
+    const p = DB.getPlayers()[+el.dataset.pi]; startScreen(p.name, p.grade);
+  });
+  $("#addBtn").onclick=()=>{
+    const name=$("#newName").value.trim(); const grade=+$("#newGrade").value;
+    if(!name){ alert("Please type a name."); return; }
+    const players=DB.getPlayers();
+    if(!players.find(p=>p.name===name)){ players.push({name,grade}); DB.savePlayers(players); }
+    startScreen(name, grade);
+  };
+}
+
+/* ---------- START SCREEN ---------- */
+function startScreen(name, grade){
+  const cfg = GRADE_CONFIG[grade];
+  if(!cfg || !cfg.subjects.length){
+    app.innerHTML = `<div class="card center"><div class="big-emoji">🚧</div>
+      <h2>${cfg?cfg.label:("Class "+grade)}</h2>
+      <p class="muted">Questions for this class haven't been added yet. Class 3 is ready to play.</p>
+      <button class="btn" onclick="renderProfile()">← Back</button></div>`;
+    return;
+  }
+  const today = todayKey();
+  const already = DB.getData(name).days[today];
+  let subjList = cfg.subjects.map(s=>`<span class="pill">${s.emoji} ${esc(s.name)}</span>`).join(" ");
+  app.innerHTML = `<div class="card">
+      <div class="topbar"><h2>Hi ${esc(name)}! 👋</h2><span class="pill">${cfg.label}</span></div>
+      <p class="muted">${prettyDate()}</p>
+      ${already?`<div class="feedback ok">You already played today (scored ${already.percent}%). You can play again for extra practice — new questions will come!</div>`:""}
+      <h3 style="margin-top:14px">Today you'll practise:</h3>
+      <div>${subjList}</div>
+      <label style="margin-top:18px">How long do you have?</label>
+      <select id="lenSel">
+        <option value="1">Short — fewer questions (~25 min)</option>
+        <option value="2" selected>Standard — recommended (~45 min)</option>
+        <option value="3">Long — more practice (~60 min)</option>
+      </select>
+      <p class="note">⏱️ A timer will run. It stops automatically after ${SETTINGS.maxSessionMinutes} minutes. You can finish earlier too.</p>
+      <div style="height:10px"></div>
+      <button class="btn big" id="goBtn">Start today's practice ▶</button>
+      <div style="height:8px"></div>
+      <button class="btn sec" onclick="renderProfile()">← Switch player</button>
+    </div>`;
+  $("#goBtn").onclick=()=>{ const factor=+$("#lenSel").value; beginSession(name, grade, factor); };
+}
+
+/* ---------- BUILD SESSION ---------- */
+function clamp(v,lo,hi){ return Math.max(lo,Math.min(hi,v)); }
+function buildQuestions(grade, factor){
+  const cfg = GRADE_CONFIG[grade];
+  const out = [];
+  cfg.subjects.forEach(sub=>{
+    sub.categories.forEach(cat=>{
+      let count = cat.passage ? 1 : clamp(Math.round((cat.count||1)*factor/2),1,5);
+      let qs = [];
+      try{ qs = cat.make(count) || []; }catch(e){ console.error("make failed",sub.id,cat.id,e); }
+      qs.forEach(q=>{ q.subjectId=sub.id; q.subjectName=sub.name; q.emoji=sub.emoji; q.categoryName=cat.name; out.push(q); });
+    });
+  });
+  return out;
+}
+function beginSession(name, grade, factor){
+  setState({ player:name, grade, factor, phase:"main",
+             questions:[], results:[], attempts:[], curIndex:0,
+             paused:false, elapsedSec:0, timerId:null,
+             answers:[], wrongQueue:[], rIdx:0 });
+  // build AFTER state is set so bank pickers know the player
+  S.state.questions = buildQuestions(grade, factor);
+  S.state.results  = new Array(S.state.questions.length).fill(null);
+  S.state.attempts = new Array(S.state.questions.length).fill(0);
+  startTimer();
+  renderQuiz();
+}
+
+/* ---------- TIMER (with pause) ---------- */
+function startTimer(){
+  const st=S.state;
+  st.timerId = setInterval(()=>{
+    if(st.paused) return;                 // frozen while paused
+    st.elapsedSec++;
+    const remain = SETTINGS.maxSessionMinutes*60 - st.elapsedSec;
+    if(remain<=0){ stopTimer(); finishMain(true); return; }
+    const el = $("#timer");
+    if(el){ const m=Math.floor(remain/60), s=remain%60;
+      el.textContent = "⏱ "+m+":"+String(s).padStart(2,"0");
+      el.classList.toggle("low", remain<=120); }
+  },1000);
+}
+function stopTimer(){ if(S.state&&S.state.timerId){ clearInterval(S.state.timerId); S.state.timerId=null; } }
+
+/* ---------- QUIZ LAYOUT (subjects in any order · pause · live tally) ---------- */
+function subjectGroups(){
+  const groups=[]; const map={};
+  S.state.questions.forEach((q,i)=>{
+    if(!map[q.subjectId]){ map[q.subjectId]={id:q.subjectId,name:q.subjectName,emoji:q.emoji,idxs:[]}; groups.push(map[q.subjectId]); }
+    map[q.subjectId].idxs.push(i);
+  });
+  return groups;
+}
+function tally(){ let c=0,w=0,a=0; S.state.results.forEach(r=>{ if(r){a++; r.correct?c++:w++;} }); return {c,w,a,total:S.state.questions.length}; }
+function firstUnanswered(idxs){ for(const i of idxs){ if(!S.state.results[i]) return i; } return -1; }
+function gotoNextUnanswered(){
+  const st=S.state; const groups=subjectGroups();
+  const cur=st.questions[st.curIndex];
+  const g=groups.find(x=>x.id===cur.subjectId);
+  let n=firstUnanswered(g.idxs);
+  if(n!==-1){ st.curIndex=n; renderQuiz(); return; }
+  for(const gg of groups){ const u=firstUnanswered(gg.idxs); if(u!==-1){ st.curIndex=u; renderQuiz(); return; } }
+  renderQuiz(true);   // nothing left unanswered
+}
+function renderQuiz(allDone){
+  const st=S.state;
+  if(st.paused){ renderPaused(); return; }
+  const groups=subjectGroups(); const t=tally();
+  const cur=st.questions[st.curIndex]; const curGroup=cur.subjectId;
+  const remain=Math.max(0,SETTINGS.maxSessionMinutes*60 - st.elapsedSec); const mm=Math.floor(remain/60), ss=remain%60;
+  const nav=groups.map(g=>{
+    const att=g.idxs.filter(i=>st.results[i]).length;
+    const active=g.id===curGroup?'border-color:var(--brand);background:#312e81':'';
+    return `<div class="navItem" data-sid="${g.id}" style="${active}">
+       <span>${g.emoji} ${esc(g.name)}</span>
+       <span class="pill">${att}/${g.idxs.length}</span></div>`;
+  }).join("");
+  const right=`<div class="card" style="margin:0">
+     <h3 style="margin-bottom:10px">Score so far</h3>
+     <div class="statRow" style="color:#86efac">✅ Correct <b>${t.c}</b></div>
+     <div class="statRow" style="color:#fca5a5">❌ Incorrect <b>${t.w}</b></div>
+     <div class="statRow">📝 Done <b>${t.a}/${t.total}</b></div>
+     <div class="progress"><i style="width:${Math.round(t.a/t.total*100)}%"></i></div>
+     <button class="btn big" id="finishBtn" style="margin-top:8px">🏁 Finish &amp; see results</button>
+   </div>`;
+  const center = allDone
+    ? `<div class="card center" style="margin:0"><div class="big-emoji">🎉</div><h2>All questions done!</h2><p class="muted">Click “Finish &amp; see results” on the right.</p></div>`
+    : centerCardHTML(st.curIndex);
+  app.innerHTML = `
+    <div class="card" style="margin-bottom:10px"><div class="topbar">
+       <h2 style="margin:0">📚 ${esc(st.player)}</h2>
+       <div class="row" style="align-items:center">
+         <span class="timer" id="timer">⏱ ${mm}:${String(ss).padStart(2,"0")}</span>
+         <button class="btn sec" id="pauseBtn">⏸ Pause</button>
+       </div></div></div>
+    <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap">
+      <div style="flex:0 0 210px;min-width:170px"><div class="card" style="margin:0">
+        <h3 style="margin-bottom:6px">Subjects</h3>
+        <p class="note" style="margin-top:0">Tap any subject — do them in any order.</p>
+        ${nav}</div></div>
+      <div style="flex:1 1 360px;min-width:280px">${center}</div>
+      <div style="flex:0 0 200px;min-width:160px">${right}</div>
+    </div>`;
+  document.querySelectorAll(".navItem").forEach(el=>el.onclick=()=>{
+    const g=groups.find(x=>x.id===el.dataset.sid);
+    let n=firstUnanswered(g.idxs); if(n===-1) n=g.idxs[0];
+    st.curIndex=n; renderQuiz();
+  });
+  $("#pauseBtn").onclick=()=>{ st.paused=true; renderQuiz(); };
+  $("#finishBtn").onclick=()=>{ if(confirm("Finish now and see your results?")) finishMain(false); };
+  if(!allDone) wireCenter(st.curIndex);
+}
+function renderPaused(){
+  app.innerHTML=`<div class="card center"><div class="big-emoji">⏸</div>
+    <h1>Paused</h1><p class="muted">The timer is stopped. Take a break and come back!</p>
+    <div style="height:10px"></div>
+    <button class="btn big" id="resumeBtn">▶ Resume</button></div>`;
+  $("#resumeBtn").onclick=()=>{ S.state.paused=false; renderQuiz(); };
+}
+function centerCardHTML(i){
+  const st=S.state; const q=st.questions[i]; const res=st.results[i];
+  const retrying = !res && (st.attempts[i]||0)>=1;
+  let body = q.passage ? `<div class="passage">${esc(q.passage)}</div>`:"";
+  if(q.svg) body+=q.svg;
+  body+=`<div class="subjectTag">${q.emoji} ${esc(q.subjectName)} · ${esc(q.categoryName)}</div><div class="qtext">${esc(q.prompt)}</div>`;
+  if(res){
+    if(q.qtype==="mcq"){
+      body+=`<div>`+q.options.map(o=>{ let c=''; if(norm(o)===norm(q.correct))c='correct'; else if(norm(o)===norm(res.given))c='wrong';
+        return `<div class="opt ${c}">${esc(o)}</div>`; }).join("")+`</div>`;
+    } else {
+      body+=`<div class="opt ${res.correct?'correct':'wrong'}">Your answer: ${esc(res.given)}</div>`;
+    }
+    body+=feedbackHTML(q,res.given,res.correct,res.retried);
+    body+=`<div style="height:10px"></div><button class="btn big" id="nextBtn">Next →</button>`;
+  } else {
+    if(q.qtype==="mcq"){
+      body+=`<div id="opts">`+q.options.map((o,k)=>`<button class="opt" data-i="${k}">${esc(o)}</button>`).join("")+`</div>`;
+    } else {
+      body+=`<input id="ans" ${q.qtype==='fill'?'inputmode="numeric"':''} placeholder="Type your answer" autocomplete="off">
+             <div style="height:10px"></div><button class="btn" id="submitBtn">Check ✓</button>`;
+    }
+    if(retrying) body+=`<div class="feedback no" style="margin-top:12px"><b>❌ Not quite — try once more!</b>This is a maths question — you get one more try.</div>`;
+  }
+  return `<div class="card" style="margin:0">${body}</div>`;
+}
+function wireCenter(i){
+  const st=S.state; const q=st.questions[i];
+  if(st.results[i]){ const nb=$("#nextBtn"); if(nb) nb.onclick=gotoNextUnanswered; return; }
+  if(q.qtype==="mcq"){
+    document.querySelectorAll(".opt").forEach(b=>{ if(b.dataset.i!==undefined) b.onclick=()=>answerCurrent(q.options[+b.dataset.i]); });
+  } else {
+    const submit=()=>{ const a=$("#ans"); if(!a||a.value.trim()===""){ if(a)a.focus(); return; } answerCurrent(a.value); };
+    const sb=$("#submitBtn"); if(sb) sb.onclick=submit;
+    const ai=$("#ans"); if(ai){ ai.addEventListener("keydown",e=>{ if(e.key==="Enter") submit(); }); setTimeout(()=>ai.focus(),40); }
+  }
+}
+
+/* ---------- EVALUATE ---------- */
+function evaluate(q, given){
+  if(q.qtype==="mcq") return norm(given)===norm(q.correct);
+  if(q.qtype==="fill"){ const u=numOnly(given); const exp=q.answerNums;
+    return u.length>=exp.length && exp.every((v,i)=>u[i]===v); }
+  // text — lenient keyword match
+  const g=norm(given); if(!g) return false;
+  return q.accept.some(a=> a && (g===a || g.includes(a) || a.includes(g)));
+}
+function correctAnswerText(q){
+  if(q.qtype==="mcq") return q.correct;
+  if(q.qtype==="fill") return q.answerNums.join(q.answerNums.length>1?" ":"");
+  return q.accept[0];
+}
+
+/* ---------- ANSWER (with 1 retry for Maths) ---------- */
+function feedbackHTML(q,given,ok,retried){
+  return `<div class="feedback ${ok?'ok':'no'}" style="margin-top:12px">
+      <b>${ok?'✅ Correct! Well done!':'❌ Not quite.'}</b>
+      ${ok?(retried?'You got it on the 2nd try — nice work!':''):`Correct answer: <b style="display:inline">${esc(correctAnswerText(q))}</b>`}
+      <div class="why">💡 ${esc(q.explanation)}</div>
+    </div>`;
+}
+function answerCurrent(given){
+  const st=S.state; const i=st.curIndex; const q=st.questions[i];
+  if(st.results[i]) return;                       // already finalized
+  const ok=evaluate(q,given);
+  st.attempts[i]=(st.attempts[i]||0)+1;
+  if(!ok && q.subjectId==="maths" && st.attempts[i]<2){ renderQuiz(); return; }  // 1 retry for maths
+  st.results[i]={ subjectId:q.subjectId, subjectName:q.subjectName, category:q.categoryName,
+    prompt:q.prompt, options:q.options||null, given, correctAnswer:correctAnswerText(q),
+    correct:ok, explanation:q.explanation, retried:st.attempts[i]>1 };
+  renderQuiz();
+}
+
+/* ---------- RE-PRACTICE renderer (linear, no timer) ---------- */
+function renderRepractice(){
+  const st=S.state; const q=st.wrongQueue[st.rIdx];
+  if(!q){ finishRepractice(); return; }
+  let body = q.passage?`<div class="passage">${esc(q.passage)}</div>`:""; if(q.svg) body+=q.svg;
+  body+=`<div class="subjectTag">🔁 ${esc(q.subjectName)} · ${esc(q.categoryName)}</div><div class="qtext">${esc(q.prompt)}</div>`;
+  if(q.qtype==="mcq") body+=`<div id="opts">`+q.options.map((o,k)=>`<button class="opt" data-i="${k}">${esc(o)}</button>`).join("")+`</div>`;
+  else body+=`<input id="ans" ${q.qtype==='fill'?'inputmode="numeric"':''} placeholder="Type your answer" autocomplete="off"><div style="height:10px"></div><button class="btn" id="submitBtn">Check ✓</button>`;
+  app.innerHTML=`<div class="card"><div class="topbar"><span class="subjectTag">🔁 Practise your wrong answers</span><span class="pill">${st.wrongQueue.length} left</span></div>${body}<div id="fb"></div></div>`;
+  const handle=given=>{ const ok=evaluate(q,given);
+    if(q.qtype==="mcq"){ document.querySelectorAll(".opt").forEach(b=>{ b.dataset.done="1"; const tx=b.textContent;
+      if(norm(tx)===norm(q.correct))b.classList.add("correct"); else if(norm(tx)===norm(given))b.classList.add("wrong"); }); }
+    $("#fb").innerHTML=feedbackHTML(q,given,ok,false)+`<div style="height:10px"></div><button class="btn big" id="nextBtn">${ok?'Next →':'Try again →'}</button>`;
+    $("#nextBtn").onclick=()=>{ if(ok){ st.wrongQueue.splice(st.rIdx,1); } else { st.rIdx++; }
+      if(st.rIdx>=st.wrongQueue.length) st.rIdx=0;
+      if(st.wrongQueue.length===0){ finishRepractice(); return; } renderRepractice(); };
+  };
+  if(q.qtype==="mcq") document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{ if(b.dataset.done) return; handle(q.options[+b.dataset.i]); });
+  else { const s=()=>{ const a=$("#ans"); if(!a||!a.value.trim()){ if(a)a.focus(); return; } handle(a.value); };
+    $("#submitBtn").onclick=s; const ai=$("#ans"); if(ai){ ai.addEventListener("keydown",e=>{ if(e.key==="Enter") s(); }); setTimeout(()=>ai.focus(),40); } }
+}
+
+/* ---------- FINISH MAIN → RESULTS ---------- */
+function computeScores(){
+  const by={}; const order=[];
+  GRADE_CONFIG[S.state.grade].subjects.forEach(s=>{ by[s.id]={name:s.name,emoji:s.emoji,correct:0,total:0}; order.push(s.id); });
+  S.state.answers.forEach(a=>{ if(!by[a.subjectId]) by[a.subjectId]={name:a.subjectName,emoji:"",correct:0,total:0};
+    by[a.subjectId].total++; if(a.correct) by[a.subjectId].correct++; });
+  const subjects = order.map(id=>by[id]).filter(x=>x.total>0);
+  const totalC = subjects.reduce((s,x)=>s+x.correct,0);
+  const totalT = subjects.reduce((s,x)=>s+x.total,0);
+  return { subjects, totalC, totalT, percent: totalT? Math.round(totalC/totalT*100):0 };
+}
+function analysis(scores){
+  const strong=[], weak=[];
+  scores.subjects.forEach(s=>{ const p=Math.round(s.correct/s.total*100);
+    if(p>=80) strong.push(s.name); else if(p<60) weak.push(s.name); });
+  return { strong, weak };
+}
+function barColor(p){ return p>=80?"var(--good)":p>=50?"var(--warn)":"var(--bad)"; }
+
+function finishMain(auto){
+  stopTimer();
+  // build the answer log (only questions that were attempted) and the wrong-question queue
+  S.state.answers = S.state.results.filter(Boolean);
+  S.state.wrongQueue = S.state.questions.filter((q,i)=> S.state.results[i] && !S.state.results[i].correct);
+  const scores=computeScores(); const an=analysis(scores);
+  S.state.scores=scores; S.state.an=an;
+  saveDay(scores, an);   // persist + build report immediately
+  const rows = scores.subjects.map(s=>{ const p=Math.round(s.correct/s.total*100);
+    return `<div class="scoreRow"><span>${s.emoji} ${esc(s.name)}</span>
+       <span class="bar"><i style="width:${p}%;background:${barColor(p)}"></i></span>
+       <b>${s.correct}/${s.total}</b></div>`; }).join("");
+  const wrongCount=S.state.wrongQueue.length;
+  app.innerHTML = `<div class="card center">
+      <div class="big-emoji">${scores.percent>=80?'🏆':scores.percent>=50?'🌟':'💪'}</div>
+      <h1>${scores.percent}%</h1>
+      <p class="muted">${esc(S.state.player)} · ${prettyDate()}${auto?' · (time was up)':''}</p>
+      <h3>You scored ${scores.totalC} out of ${scores.totalT}</h3>
+    </div>
+    <div class="card"><h3>Subject scorecard</h3><div class="scoreGrid">${rows}</div></div>
+    <div class="card"><h3>How you did</h3>
+      <p>${an.strong.length?("💚 <b>Strong in:</b> "+an.strong.map(esc).join(", ")+"."):"Keep practising every day to build your strong subjects!"}</p>
+      <p>${an.weak.length?("🔶 <b>Needs more practice:</b> "+an.weak.map(esc).join(", ")+"."):"👏 No weak areas today — great balance!"}</p>
+    </div>
+    <div class="card center">
+      ${wrongCount? `<p>You got <b>${wrongCount}</b> question(s) wrong. Practise them now to reach 100%!</p>
+        <button class="btn big" id="fixBtn">🔁 Practise my wrong answers</button><div style="height:8px"></div>`:`<p>🎉 Perfect — no wrong answers!</p>`}
+      <button class="btn ${wrongCount?'sec':'big'}" id="reportBtn">📄 Open / save today's report</button>
+      <div style="height:8px"></div>
+      <button class="btn sec" onclick="renderProfile()">🏠 Exit to home</button>
+      <p class="note">${SETTINGS.emailjs.publicKey?'A copy was emailed to your parent.':'Tip: email to parent can be turned on later (see notes).'}</p>
+    </div>`;
+  if(wrongCount) $("#fixBtn").onclick=()=>startRepractice();
+  $("#reportBtn").onclick=()=>downloadReport();
+}
+
+/* ---------- RE-PRACTICE ---------- */
+function startRepractice(){
+  S.state.phase="repractice"; S.state.rIdx=0;
+  // dedupe wrongQueue
+  const seen=new Set(); S.state.wrongQueue=S.state.wrongQueue.filter(q=>{const k=sig(q); if(seen.has(k))return false; seen.add(k); return true;});
+  renderRepractice();
+}
+function finishRepractice(){
+  app.innerHTML = `<div class="card center">
+      <div class="big-emoji">🎯</div>
+      <h1>100%!</h1>
+      <p>Brilliant, ${esc(S.state.player)} — you corrected every mistake!</p>
+      <p class="muted">Your assessment score for today stays saved in the report.</p>
+      <div style="height:10px"></div>
+      <button class="btn big" id="reportBtn2">📄 Open / save today's report</button>
+      <div style="height:8px"></div>
+      <button class="btn sec" onclick="renderProfile()">🏠 Exit game</button>
+    </div>`;
+  $("#reportBtn2").onclick=()=>downloadReport();
+}
+
+/* ---------- PERSISTENCE + REPORT ---------- */
+function buildRecord(scores, an){
+  return {
+    date: todayKey(), prettyDate: prettyDate(), player: S.state.player, grade: S.state.grade,
+    percent: scores.percent, totalCorrect: scores.totalC, totalQuestions: scores.totalT,
+    subjects: scores.subjects.map(s=>({name:s.name, correct:s.correct, total:s.total, percent:Math.round(s.correct/s.total*100)})),
+    strong: an.strong, weak: an.weak,
+    questions: S.state.answers.map((a,i)=>({ n:i+1, subject:a.subjectName, category:a.category,
+      question:a.prompt, options:a.options, chosen:a.given, correctAnswer:a.correctAnswer,
+      result:a.correct?"Correct":"Wrong", explanation:a.explanation }))
+  };
+}
+function saveDay(scores, an){
+  const rec=buildRecord(scores,an);
+  S.state.record=rec;
+  DB.saveDay(S.state.player, rec);
+  trySendEmail(rec);   // no-op until EmailJS keys are filled
+}
+function reportHTML(rec){
+  const subjRows=rec.subjects.map(s=>`<tr><td>${s.name}</td><td style="text-align:center">${s.correct}/${s.total}</td><td style="text-align:center">${s.percent}%</td></tr>`).join("");
+  const qRows=rec.questions.map(q=>`<tr style="background:${q.result==='Correct'?'#eafff1':'#fff0f0'}">
+      <td>${q.n}</td><td>${esc(q.subject)}<br><small>${esc(q.category)}</small></td>
+      <td>${esc(q.question)}${q.options?'<br><small>Options: '+q.options.map(esc).join(" | ")+'</small>':''}</td>
+      <td>${esc(q.chosen)}</td><td>${esc(q.correctAnswer)}</td>
+      <td><b>${q.result}</b></td><td><small>${esc(q.explanation)}</small></td></tr>`).join("");
+  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Report ${rec.date} ${esc(rec.player)}</title>
+    <style>body{font-family:Segoe UI,system-ui,sans-serif;margin:24px;color:#111}
+    h1{margin:0}table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px}
+    th,td{border:1px solid #ccc;padding:7px;vertical-align:top;text-align:left}
+    th{background:#312e81;color:#fff}.tag{display:inline-block;background:#eef;padding:3px 10px;border-radius:20px;margin:2px}
+    .big{font-size:34px;font-weight:800}</style></head><body>
+    <h1>📘 Daily Practice Report</h1>
+    <p><b>${esc(rec.player)}</b> · Class ${rec.grade} · ${esc(rec.prettyDate)}</p>
+    <p class="big">${rec.percent}% &nbsp; <span style="font-size:16px;color:#555">(${rec.totalCorrect}/${rec.totalQuestions} correct)</span></p>
+    <h3>Subject scorecard</h3>
+    <table><tr><th>Subject</th><th>Score</th><th>%</th></tr>${subjRows}</table>
+    <h3>Assessment</h3>
+    <p>💚 <b>Strong in:</b> ${rec.strong.length?rec.strong.map(esc).join(", "):"—"}<br>
+       🔶 <b>Needs practice:</b> ${rec.weak.length?rec.weak.map(esc).join(", "):"—"}</p>
+    <h3>Every question</h3>
+    <table><tr><th>#</th><th>Subject</th><th>Question</th><th>Child's answer</th><th>Correct answer</th><th>Result</th><th>Why</th></tr>${qRows}</table>
+    <p style="color:#888;font-size:12px">Generated by Daily Practice Game · ${rec.date}</p>
+    </body></html>`;
+}
+function downloadReport(){
+  const rec=S.state.record||buildRecord(S.state.scores,S.state.an);
+  const html=reportHTML(rec);
+  const blob=new Blob([html],{type:"text/html"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url; a.download="practice-report-"+rec.player.replace(/\s+/g,"_")+"-"+rec.date+".html";
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),3000);
+  // also open in a new tab for immediate viewing
+  const w=window.open(); if(w){ w.document.write(html); w.document.close(); }
+}
+
+/* ---------- EMAIL (turned on later by filling SETTINGS.emailjs) ---------- */
+function trySendEmail(rec){
+  const k=SETTINGS.emailjs;
+  if(!k.publicKey||!k.serviceId||!k.templateId) return;  // not configured yet
+  const send=()=>{ try{
+      emailjs.init(k.publicKey);
+      const summary=rec.subjects.map(s=>s.name+": "+s.correct+"/"+s.total+" ("+s.percent+"%)").join("\n");
+      const detail=rec.questions.map(q=>`#${q.n} [${q.subject}] ${q.question}\n   Chose: ${q.chosen} | Correct: ${q.correctAnswer} | ${q.result}`).join("\n");
+      emailjs.send(k.serviceId,k.templateId,{
+        to_email:SETTINGS.parentEmail, child_name:rec.player, date:rec.prettyDate,
+        percent:rec.percent, score:rec.totalCorrect+"/"+rec.totalQuestions,
+        summary, strong:rec.strong.join(", ")||"—", weak:rec.weak.join(", ")||"—", detail
+      });
+    }catch(e){ console.warn("email failed",e); } };
+  if(window.emailjs){ send(); }
+  else { const sc=document.createElement("script");
+    sc.src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js";
+    sc.onload=send; document.head.appendChild(sc); }
+}
+
+/* ---------- BOOT ---------- */
+renderProfile();
+</script>
+<!--PLAYLAYER:START-->
+<style id="pl-style">
+  html,body{margin:0;}
+  canvas{max-width:100vw !important; max-height:100vh !important;}
+  #pl-overlay{position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center;
+    background:rgba(8,10,25,.86); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); padding:20px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  #pl-overlay .pl-card{background:linear-gradient(160deg,#242a52,#1b1f3a); color:#eef1ff; border:1px solid #3a4178;
+    border-radius:18px; padding:26px 24px; max-width:440px; width:100%; max-height:88vh; overflow:auto; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.55);}
+  #pl-overlay .pl-title{font-size:26px; font-weight:800; margin:0 0 4px;}
+  #pl-overlay .pl-sub{font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#9aa0d0; margin-bottom:12px;}
+  #pl-overlay .pl-how{font-size:16px; line-height:1.55; color:#d7daf5; margin-bottom:22px;}
+  #pl-overlay .pl-btn{appearance:none; -webkit-appearance:none; border:0; cursor:pointer; background:#7c5cff; color:#fff;
+    font-size:19px; font-weight:800; padding:15px 34px; border-radius:14px; width:100%;
+    box-shadow:0 8px 22px rgba(124,92,255,.5);}
+  #pl-overlay .pl-btn:active{transform:translateY(1px);}
+  .pl-hint{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:99998;
+    background:rgba(20,24,52,.92); color:#eef1ff; padding:10px 16px; border-radius:12px; border:1px solid #3a4178;
+    max-width:90vw; text-align:center; pointer-events:none; transition:opacity .4s ease;
+    font:600 14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+</style>
+<script>
+/* --- Reyaansh play layer (auto-added) -----------------------------------
+   "How to play" screen + responsive scaling + swipe/tap touch controls.
+   Per-game config is injected just below (see games.json -> "play"). */
+(function(){
+  var PLAY = {"type": "page", "how": "Tap Play to start."};
+  if(!PLAY) PLAY = {type:"page", how:"Tap Play to start."};
+  var doc=document, win=window;
+  var isTouch = ('ontouchstart' in win) || (navigator.maxTouchPoints>0);
+
+  function focusGame(){ try{ win.focus(); if(doc.body){doc.body.tabIndex=-1; doc.body.focus();} }catch(e){} }
+  win.addEventListener('load', focusGame);
+  doc.addEventListener('mousedown', focusGame);
+  doc.addEventListener('touchstart', focusGame, {passive:true});
+
+  if(PLAY.type==='game'){
+    win.addEventListener('keydown', function(e){
+      var t=e.target;
+      if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+      var k=e.key;
+      if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight'||k===' '||k==='Spacebar'){ e.preventDefault(); }
+    }, true);
+  }
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  /* synthetic key dispatch -- sends both key and code so every game matches */
+  function fire(type, pair){ if(!pair) return; try{ doc.dispatchEvent(new KeyboardEvent(type,{key:pair[0],code:pair[1],bubbles:true,cancelable:true})); }catch(e){} }
+  var held=null;
+  function press(pair){ if(held){fire('keyup',held);} held=pair; fire('keydown',pair); }
+  function release(){ if(held){fire('keyup',held); held=null;} }
+  function tapKey(pair){ if(!pair) return; fire('keydown',pair); setTimeout(function(){fire('keyup',pair);},70); }
+
+  /* how-to-play overlay (shown every time the game opens) */
+  function buildOverlay(){
+    var ov=doc.createElement('div'); ov.id='pl-overlay';
+    ov.innerHTML='<div class="pl-card"><div class="pl-title">'+esc(PLAY.title||doc.title||'Ready?')+'</div>'
+      +'<div class="pl-sub">How to play</div><div class="pl-how">'+esc(PLAY.how||'Tap Play to begin.')+'</div>'
+      +'<button class="pl-btn" id="pl-play">▶ Play</button></div>';
+    doc.body.appendChild(ov);
+    doc.getElementById('pl-play').addEventListener('click', startPlay);
+  }
+  function startPlay(){
+    var ov=doc.getElementById('pl-overlay'); if(ov && ov.parentNode) ov.parentNode.removeChild(ov);
+    focusGame();
+    if(PLAY.type==='keyboard'){ var inp=doc.querySelector('input,textarea'); if(inp){ try{inp.focus(); inp.click();}catch(e){} } }
+    else if(PLAY.start){ setTimeout(function(){ tapKey(PLAY.start); }, 140); }
+    if(PLAY.type==='game' && isTouch) showHint();
+  }
+  function showHint(){
+    var h=doc.createElement('div'); h.className='pl-hint'; h.textContent=PLAY.how||'Swipe to move · Tap to act';
+    doc.body.appendChild(h);
+    setTimeout(function(){ h.style.opacity='0'; setTimeout(function(){ if(h.parentNode) h.parentNode.removeChild(h); },500); }, 3600);
+  }
+
+  /* swipe / tap gestures (game type, touch devices only) */
+  function isInteractive(el){ return el && el.closest && el.closest('button,a,input,textarea,select,[role=button],#pl-overlay,.pl-hint'); }
+  function aimAt(e){
+    var cv=doc.querySelector('canvas'); if(!cv) return;
+    var t=(e.changedTouches&&e.changedTouches[0]); if(!t) return;
+    try{ cv.dispatchEvent(new MouseEvent('mousemove',{clientX:t.clientX,clientY:t.clientY,bubbles:true,cancelable:true})); }catch(err){}
+  }
+  function attachGestures(){
+    var g=PLAY.g||{}, TH=24, sx=0,sy=0,st=0,dir=null,moved=false,skip=false,lastTap=0;
+    doc.addEventListener('touchstart', function(e){
+      if(e.touches.length>1){ skip=true; return; }
+      if(isInteractive(e.target)){ skip=true; return; }
+      skip=false; var t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); dir=null; moved=false;
+    }, {passive:false});
+    doc.addEventListener('touchmove', function(e){
+      if(skip) return; var t=e.touches[0]; var dx=t.clientX-sx, dy=t.clientY-sy;
+      if(Math.abs(dx)<TH && Math.abs(dy)<TH) return;
+      if(e.cancelable) e.preventDefault();
+      var nd = (Math.abs(dx)>Math.abs(dy)) ? (dx<0?'l':'r') : (dy<0?'u':'d');
+      moved=true; if(nd!==dir){ dir=nd; if(g[nd]) press(g[nd]); }
+    }, {passive:false});
+    doc.addEventListener('touchend', function(e){
+      if(skip){ skip=false; return; }
+      if(dir){ release(); dir=null; return; }
+      if(moved) return;
+      if(Date.now()-st>=320) return;
+      function doTap(ev){ if(PLAY.aim) aimAt(ev); tapKey(g.tap); }
+      var now=Date.now();
+      if(g.dtap && now-lastTap<300){ lastTap=0; tapKey(g.dtap); return; }
+      lastTap=now;
+      if(g.dtap){ var snap=now; setTimeout(function(){ if(lastTap===snap){ doTap(e); lastTap=0; } },270); }
+      else { doTap(e); }
+    }, {passive:false});
+  }
+
+  function init(){
+    if(PLAY.type==='game'){
+      try{ doc.documentElement.style.overflow='hidden'; doc.body.style.overflow='hidden';
+           doc.documentElement.style.touchAction='none'; doc.body.style.touchAction='none'; }catch(e){}
+      if(isTouch) attachGestures();
+    }
+    buildOverlay();
+  }
+  if(doc.readyState==='loading') doc.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+<!--PLAYLAYER:END-->
+</body>
+</html>

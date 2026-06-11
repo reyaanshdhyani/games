@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jet Flyer - Kids Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+      font-family: 'Comic Sans MS', 'Chalkboard SE', Arial, sans-serif;
+    }
+    #gameCanvas {
+      display: block;
+      background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 50%, #E0F6FF 100%);
+    }
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(135, 206, 235, 0.85);
+      color: #333;
+      text-align: center;
+      padding: 20px;
+    }
+    .overlay h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      color: #FF6B35;
+      text-shadow: 2px 2px 0 #fff;
+    }
+    .overlay p {
+      font-size: 1.1rem;
+      margin-bottom: 20px;
+      max-width: 320px;
+    }
+    .btn {
+      padding: 15px 35px;
+      font-size: 1.3rem;
+      font-family: inherit;
+      font-weight: bold;
+      border: 4px solid #FF6B35;
+      border-radius: 12px;
+      background: #FF9F7A;
+      color: #fff;
+      cursor: pointer;
+      transition: transform 0.1s;
+      box-shadow: 0 4px 0 #E85A2A;
+    }
+    .btn:hover {
+      transform: scale(1.05);
+    }
+    .btn:active {
+      transform: scale(0.98);
+      box-shadow: 0 2px 0 #E85A2A;
+    }
+    #gameWrapper {
+      position: relative;
+    }
+    #scoreDisplay {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #333;
+      z-index: 10;
+      text-shadow: 1px 1px 0 #fff;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameWrapper">
+    <canvas id="gameCanvas" width="800" height="500"></canvas>
+    <div id="scoreDisplay">Level: 1 | Score: 0</div>
+    <div id="startOverlay" class="overlay">
+      <h1>✈️ Jet Flyer</h1>
+      <p>Fly your jet through the city! Use Arrow Keys or W A S D to move. Avoid the buildings and reach the goal!</p>
+      <button id="startBtn" class="btn">Start Flying!</button>
+    </div>
+    <div id="gameOverOverlay" class="overlay" style="display: none;">
+      <h1>💥 Oops!</h1>
+      <p>You crashed! Try again - you can do it!</p>
+      <button id="restartBtn" class="btn">Try Again</button>
+    </div>
+    <div id="levelCompleteOverlay" class="overlay" style="display: none;">
+      <h1>🎉 Level Complete!</h1>
+      <p>Great flying! Get ready for the next level!</p>
+      <button id="nextLevelBtn" class="btn">Next Level</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const GAME_WIDTH = 800;
+    const GAME_HEIGHT = 500;
+    const JET_SPEED = 6;
+    const AUTO_SPEED = 3;
+    const JET_WIDTH = 50;
+    const JET_HEIGHT = 30;
+    const BUILDING_GAP = 140;
+    const MIDDLE_OBSTACLE_HEIGHT = 200;
+    const MIDDLE_OBSTACLE_WIDTH = 70;
+
+    let gameState = 'start';
+    let jet = { x: 100, y: GAME_HEIGHT / 2 - 15, width: JET_WIDTH, height: JET_HEIGHT };
+    let score = 0;
+    let currentLevel = 1;
+    let buildings = [];
+    let keys = { up: false, down: false, left: false, right: false };
+    let cameraX = 0;
+    let levelWidth = 1200;
+    let goalX = 1100;
+    let goalFloatOffset = 0;
+
+    function createLevelBuildings(numBuildings) {
+      const list = [];
+      const gap = BUILDING_GAP;
+      const bw = MIDDLE_OBSTACLE_WIDTH;
+      const h = MIDDLE_OBSTACLE_HEIGHT;
+      const centerY = GAME_HEIGHT / 2;
+      const innerW = 22;
+      const innerH = 45;
+      for (let i = 0; i < numBuildings; i++) {
+        const x = 300 + i * (bw + gap);
+        const alternate = i % 2 === 0;
+        let y;
+        if (alternate) {
+          y = centerY - h - 40;
+        } else {
+          y = centerY + 40;
+        }
+        y = Math.max(20, Math.min(GAME_HEIGHT - h - 20, y));
+        const innerCenterX = x + (bw - innerW) / 2;
+        const innerCenterY = y + (h - innerH) / 2;
+        const innerObstacles = [
+          { x: innerCenterX, y: innerCenterY, width: innerW, height: innerH }
+        ];
+        list.push({ x, y, width: bw, height: h, innerObstacles });
+      }
+      return list;
+    }
+
+    const LEVELS = [
+      { numBuildings: 3, goalX: 1300 },
+      { numBuildings: 5, goalX: 1800 },
+      { numBuildings: 7, goalX: 2300 },
+      { numBuildings: 10, goalX: 3000 },
+      { numBuildings: 13, goalX: 3800 }
+    ];
+
+    function loadLevel(levelNum) {
+      const levelIndex = Math.min(levelNum - 1, LEVELS.length - 1);
+      const level = LEVELS[levelIndex];
+      buildings = createLevelBuildings(level.numBuildings);
+      goalX = level.goalX;
+      levelWidth = goalX + 100;
+      jet.x = 100;
+      jet.y = GAME_HEIGHT / 2 - 15;
+      cameraX = 0;
+      score = 0;
+    }
+
+    function drawJet() {
+      const sx = jet.x - cameraX;
+      if (sx + jet.width < 0 || sx > GAME_WIDTH) return;
+      ctx.save();
+      ctx.translate(sx + jet.width / 2, jet.y + jet.height / 2);
+
+      ctx.fillStyle = '#FF6B35';
+      ctx.beginPath();
+      ctx.moveTo(jet.width / 2, 0);
+      ctx.lineTo(-jet.width / 2 + 5, -jet.height / 2 + 5);
+      ctx.lineTo(-jet.width / 2 + 5, jet.height / 2 - 5);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = '#E85A2A';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = '#FFD700';
+      ctx.beginPath();
+      ctx.arc(jet.width / 4, 0, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    function drawBuilding(b) {
+      const sx = b.x - cameraX;
+      if (sx + b.width < 0 || sx > GAME_WIDTH) return;
+      ctx.save();
+
+      ctx.fillStyle = '#7A99AC';
+      ctx.strokeStyle = '#5A798C';
+      const barW = 14;
+      const barH = 18;
+      ctx.fillRect(sx, b.y, b.width, barH);
+      ctx.fillRect(sx, b.y + b.height - barH, b.width, barH);
+      ctx.fillRect(sx, b.y, barW, b.height);
+      ctx.fillRect(sx + b.width - barW, b.y, barW, b.height);
+
+      for (const inner of b.innerObstacles) {
+        const isx = inner.x - cameraX;
+        if (isx + inner.width > 0 && isx < GAME_WIDTH) {
+          ctx.fillStyle = '#5A7080';
+          ctx.strokeStyle = '#4A6070';
+          ctx.fillRect(isx, inner.y, inner.width, inner.height);
+          ctx.strokeRect(isx, inner.y, inner.width, inner.height);
+        }
+      }
+
+      ctx.restore();
+    }
+
+    function drawBackground() {
+      ctx.fillStyle = 'rgba(255,255,255,0.35)';
+      for (let i = 0; i < 6; i++) {
+        const bx = ((i * 180 - cameraX * 0.3) % (GAME_WIDTH + 150)) - 50;
+        const by = 40 + (i * 43) % 180;
+        ctx.beginPath();
+        ctx.arc(bx, by, 35, 0, Math.PI * 2);
+        ctx.arc(bx + 30, by - 8, 28, 0, Math.PI * 2);
+        ctx.arc(bx + 55, by, 25, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawGoal() {
+      const gx = goalX - cameraX;
+      if (gx + 60 < 0 || gx > GAME_WIDTH) return;
+      const floatY = Math.sin(goalFloatOffset) * 35;
+      const gy = GAME_HEIGHT / 2 - 40 + floatY;
+      ctx.save();
+      ctx.fillStyle = '#4CAF50';
+      ctx.strokeStyle = '#2E7D32';
+      ctx.lineWidth = 3;
+      ctx.fillRect(gx, gy, 60, 80);
+      ctx.strokeRect(gx, gy, 60, 80);
+      ctx.fillStyle = '#FFF';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('GOAL', gx + 30, gy + 48);
+      ctx.restore();
+    }
+
+    function checkCollision() {
+      const barW = 14;
+      const barH = 18;
+      for (const b of buildings) {
+        const frameParts = [
+          { x: b.x, y: b.y, w: b.width, h: barH },
+          { x: b.x, y: b.y + b.height - barH, w: b.width, h: barH },
+          { x: b.x, y: b.y, w: barW, h: b.height },
+          { x: b.x + b.width - barW, y: b.y, w: barW, h: b.height }
+        ];
+        for (const fp of frameParts) {
+          if (fp.x + fp.w > jet.x && fp.x < jet.x + jet.width &&
+              fp.y + fp.h > jet.y && fp.y < jet.y + jet.height) return true;
+        }
+        for (const inner of b.innerObstacles) {
+          if (inner.x + inner.width > jet.x && inner.x < jet.x + jet.width &&
+              inner.y + inner.height > jet.y && inner.y < jet.y + jet.height) return true;
+        }
+      }
+      return false;
+    }
+
+    function update() {
+      if (gameState !== 'playing') return;
+
+      jet.x += AUTO_SPEED;
+      if (keys.up) jet.y -= JET_SPEED;
+      if (keys.down) jet.y += JET_SPEED;
+      if (keys.left) jet.x -= JET_SPEED;
+      if (keys.right) jet.x += JET_SPEED;
+
+      jet.y = Math.max(10, Math.min(GAME_HEIGHT - jet.height - 10, jet.y));
+      jet.x = Math.max(50, Math.min(levelWidth - jet.width - 50, jet.x));
+
+      cameraX = Math.max(0, jet.x - 250);
+      goalFloatOffset += 0.06;
+
+      score = Math.floor(jet.x / 10);
+
+      if (checkCollision()) {
+        gameState = 'gameover';
+        document.getElementById('gameOverOverlay').style.display = 'flex';
+      }
+
+      if (jet.x + jet.width >= goalX) {
+        gameState = 'levelcomplete';
+        document.getElementById('levelCompleteOverlay').style.display = 'flex';
+      }
+    }
+
+    function draw() {
+      ctx.fillStyle = '#87CEEB';
+      ctx.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+
+      drawBackground();
+      drawGoal();
+
+      for (const b of buildings) {
+        drawBuilding(b);
+      }
+
+      drawJet();
+
+      document.getElementById('scoreDisplay').textContent = `Level: ${currentLevel} | Score: ${score}`;
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      requestAnimationFrame(gameLoop);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = true;
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = true;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = true;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+      e.preventDefault();
+    });
+
+    document.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') keys.up = false;
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') keys.down = false;
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') keys.left = false;
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+    });
+
+    document.getElementById('startBtn').addEventListener('click', () => {
+      document.getElementById('startOverlay').style.display = 'none';
+      gameState = 'playing';
+      jet.y = GAME_HEIGHT / 2 - 15;
+      score = 0;
+      currentLevel = 1;
+      loadLevel(currentLevel);
+    });
+
+    document.getElementById('restartBtn').addEventListener('click', () => {
+      document.getElementById('gameOverOverlay').style.display = 'none';
+      gameState = 'playing';
+      jet.y = GAME_HEIGHT / 2 - 15;
+      loadLevel(currentLevel);
+    });
+
+    document.getElementById('nextLevelBtn').addEventListener('click', () => {
+      document.getElementById('levelCompleteOverlay').style.display = 'none';
+      currentLevel = Math.min(currentLevel + 1, LEVELS.length);
+      gameState = 'playing';
+      jet.y = GAME_HEIGHT / 2 - 15;
+      loadLevel(currentLevel);
+    });
+
+    gameLoop();
+  </script>
+<!--PLAYLAYER:START-->
+<style id="pl-style">
+  html,body{margin:0;}
+  canvas{max-width:100vw !important; max-height:100vh !important;}
+  #pl-overlay{position:fixed; inset:0; z-index:99999; display:flex; align-items:center; justify-content:center;
+    background:rgba(8,10,25,.86); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); padding:20px;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  #pl-overlay .pl-card{background:linear-gradient(160deg,#242a52,#1b1f3a); color:#eef1ff; border:1px solid #3a4178;
+    border-radius:18px; padding:26px 24px; max-width:440px; width:100%; max-height:88vh; overflow:auto; text-align:center;
+    box-shadow:0 20px 60px rgba(0,0,0,.55);}
+  #pl-overlay .pl-title{font-size:26px; font-weight:800; margin:0 0 4px;}
+  #pl-overlay .pl-sub{font-size:12px; letter-spacing:2px; text-transform:uppercase; color:#9aa0d0; margin-bottom:12px;}
+  #pl-overlay .pl-how{font-size:16px; line-height:1.55; color:#d7daf5; margin-bottom:22px;}
+  #pl-overlay .pl-btn{appearance:none; -webkit-appearance:none; border:0; cursor:pointer; background:#7c5cff; color:#fff;
+    font-size:19px; font-weight:800; padding:15px 34px; border-radius:14px; width:100%;
+    box-shadow:0 8px 22px rgba(124,92,255,.5);}
+  #pl-overlay .pl-btn:active{transform:translateY(1px);}
+  .pl-hint{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:99998;
+    background:rgba(20,24,52,.92); color:#eef1ff; padding:10px 16px; border-radius:12px; border:1px solid #3a4178;
+    max-width:90vw; text-align:center; pointer-events:none; transition:opacity .4s ease;
+    font:600 14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+</style>
+<script>
+/* --- Reyaansh play layer (auto-added) -----------------------------------
+   "How to play" screen + responsive scaling + swipe/tap touch controls.
+   Per-game config is injected just below (see games.json -> "play"). */
+(function(){
+  var PLAY = {"type": "page", "how": "Tap Play to start."};
+  if(!PLAY) PLAY = {type:"page", how:"Tap Play to start."};
+  var doc=document, win=window;
+  var isTouch = ('ontouchstart' in win) || (navigator.maxTouchPoints>0);
+
+  function focusGame(){ try{ win.focus(); if(doc.body){doc.body.tabIndex=-1; doc.body.focus();} }catch(e){} }
+  win.addEventListener('load', focusGame);
+  doc.addEventListener('mousedown', focusGame);
+  doc.addEventListener('touchstart', focusGame, {passive:true});
+
+  if(PLAY.type==='game'){
+    win.addEventListener('keydown', function(e){
+      var t=e.target;
+      if(t && (t.tagName==='INPUT'||t.tagName==='TEXTAREA'||t.isContentEditable)) return;
+      var k=e.key;
+      if(k==='ArrowUp'||k==='ArrowDown'||k==='ArrowLeft'||k==='ArrowRight'||k===' '||k==='Spacebar'){ e.preventDefault(); }
+    }, true);
+  }
+
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+
+  /* synthetic key dispatch -- sends both key and code so every game matches */
+  function fire(type, pair){ if(!pair) return; try{ doc.dispatchEvent(new KeyboardEvent(type,{key:pair[0],code:pair[1],bubbles:true,cancelable:true})); }catch(e){} }
+  var held=null;
+  function press(pair){ if(held){fire('keyup',held);} held=pair; fire('keydown',pair); }
+  function release(){ if(held){fire('keyup',held); held=null;} }
+  function tapKey(pair){ if(!pair) return; fire('keydown',pair); setTimeout(function(){fire('keyup',pair);},70); }
+
+  /* how-to-play overlay (shown every time the game opens) */
+  function buildOverlay(){
+    var ov=doc.createElement('div'); ov.id='pl-overlay';
+    ov.innerHTML='<div class="pl-card"><div class="pl-title">'+esc(PLAY.title||doc.title||'Ready?')+'</div>'
+      +'<div class="pl-sub">How to play</div><div class="pl-how">'+esc(PLAY.how||'Tap Play to begin.')+'</div>'
+      +'<button class="pl-btn" id="pl-play">▶ Play</button></div>';
+    doc.body.appendChild(ov);
+    doc.getElementById('pl-play').addEventListener('click', startPlay);
+  }
+  function startPlay(){
+    var ov=doc.getElementById('pl-overlay'); if(ov && ov.parentNode) ov.parentNode.removeChild(ov);
+    focusGame();
+    if(PLAY.type==='keyboard'){ var inp=doc.querySelector('input,textarea'); if(inp){ try{inp.focus(); inp.click();}catch(e){} } }
+    else if(PLAY.start){ setTimeout(function(){ tapKey(PLAY.start); }, 140); }
+    if(PLAY.type==='game' && isTouch) showHint();
+  }
+  function showHint(){
+    var h=doc.createElement('div'); h.className='pl-hint'; h.textContent=PLAY.how||'Swipe to move · Tap to act';
+    doc.body.appendChild(h);
+    setTimeout(function(){ h.style.opacity='0'; setTimeout(function(){ if(h.parentNode) h.parentNode.removeChild(h); },500); }, 3600);
+  }
+
+  /* swipe / tap gestures (game type, touch devices only) */
+  function isInteractive(el){ return el && el.closest && el.closest('button,a,input,textarea,select,[role=button],#pl-overlay,.pl-hint'); }
+  function aimAt(e){
+    var cv=doc.querySelector('canvas'); if(!cv) return;
+    var t=(e.changedTouches&&e.changedTouches[0]); if(!t) return;
+    try{ cv.dispatchEvent(new MouseEvent('mousemove',{clientX:t.clientX,clientY:t.clientY,bubbles:true,cancelable:true})); }catch(err){}
+  }
+  function attachGestures(){
+    var g=PLAY.g||{}, TH=24, sx=0,sy=0,st=0,dir=null,moved=false,skip=false,lastTap=0;
+    doc.addEventListener('touchstart', function(e){
+      if(e.touches.length>1){ skip=true; return; }
+      if(isInteractive(e.target)){ skip=true; return; }
+      skip=false; var t=e.touches[0]; sx=t.clientX; sy=t.clientY; st=Date.now(); dir=null; moved=false;
+    }, {passive:false});
+    doc.addEventListener('touchmove', function(e){
+      if(skip) return; var t=e.touches[0]; var dx=t.clientX-sx, dy=t.clientY-sy;
+      if(Math.abs(dx)<TH && Math.abs(dy)<TH) return;
+      if(e.cancelable) e.preventDefault();
+      var nd = (Math.abs(dx)>Math.abs(dy)) ? (dx<0?'l':'r') : (dy<0?'u':'d');
+      moved=true; if(nd!==dir){ dir=nd; if(g[nd]) press(g[nd]); }
+    }, {passive:false});
+    doc.addEventListener('touchend', function(e){
+      if(skip){ skip=false; return; }
+      if(dir){ release(); dir=null; return; }
+      if(moved) return;
+      if(Date.now()-st>=320) return;
+      function doTap(ev){ if(PLAY.aim) aimAt(ev); tapKey(g.tap); }
+      var now=Date.now();
+      if(g.dtap && now-lastTap<300){ lastTap=0; tapKey(g.dtap); return; }
+      lastTap=now;
+      if(g.dtap){ var snap=now; setTimeout(function(){ if(lastTap===snap){ doTap(e); lastTap=0; } },270); }
+      else { doTap(e); }
+    }, {passive:false});
+  }
+
+  function init(){
+    if(PLAY.type==='game'){
+      try{ doc.documentElement.style.overflow='hidden'; doc.body.style.overflow='hidden';
+           doc.documentElement.style.touchAction='none'; doc.body.style.touchAction='none'; }catch(e){}
+      if(isTouch) attachGestures();
+    }
+    buildOverlay();
+  }
+  if(doc.readyState==='loading') doc.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+<!--PLAYLAYER:END-->
+</body>
+</html>

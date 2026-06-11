@@ -93,6 +93,7 @@ addEventListener('resize',resize); resize();
 
 // Input
 const K={}, M={x:0,y:0,down:false};
+const IS_TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints>0);
 addEventListener('keydown',e=>{K[e.key.toLowerCase()]=true;});
 addEventListener('keyup',e=>{K[e.key.toLowerCase()]=false;});
 CV.addEventListener('mousemove',e=>{const r=CV.getBoundingClientRect();M.x=e.clientX-r.left;M.y=e.clientY-r.top;});
@@ -282,9 +283,18 @@ function updateB(){
   B.py=Math.max(AY1+ps,Math.min(AY2-ps,B.py+dy));
   B.pA=Math.atan2(M.y-B.py,M.x-B.px);
 
+  // Auto-aim + auto-fire on touch devices (phones/tablets have no mouse to aim).
+  // On desktop this stays false, so mouse/keyboard play is unchanged.
+  let autoShoot=false;
+  if(IS_TOUCH){
+    let best=null,bd=Infinity;
+    for(const e of B.en){ if(!e.alive)continue; const ex=e.x-B.px,ey=e.y-B.py,d=ex*ex+ey*ey; if(d<bd){bd=d;best=e;} }
+    if(best){ B.pA=Math.atan2(best.y-B.py,best.x-B.px); autoShoot=true; }
+  }
+
   // Player shoot
   B.pST++;
-  if((M.down||K[' '])&&B.pST>=B.pSI){
+  if((M.down||K[' ']||autoShoot)&&B.pST>=B.pSI){
     B.pST=0;
     B.pb.push({x:B.px+Math.cos(B.pA)*ps*0.6,y:B.py+Math.sin(B.pA)*ps*0.6,
                a:B.pA,spd:B.pBs,dmg:B.pBd,col:B.pBc,life:90,dead:false});
@@ -1236,7 +1246,7 @@ loop();
    "How to play" screen + responsive scaling + swipe/tap touch controls.
    Per-game config is injected just below (see games.json -> "play"). */
 (function(){
-  var PLAY = {"type": "game", "how": "Swipe and hold to move (up/down/left/right). Tap where you want to shoot. This game is best on a laptop with a mouse for aiming.", "start": null, "aim": true, "g": {"l": ["ArrowLeft", "ArrowLeft"], "r": ["ArrowRight", "ArrowRight"], "u": ["ArrowUp", "ArrowUp"], "d": ["ArrowDown", "ArrowDown"], "tap": [" ", "Space"]}};
+  var PLAY = {"type": "game", "how": "Swipe and hold to move (up/down/left/right). On a phone your ship shoots the nearest enemy by itself — just move and dodge! On a laptop, use the mouse to aim and click to shoot.", "start": null, "g": {"l": ["ArrowLeft", "ArrowLeft"], "r": ["ArrowRight", "ArrowRight"], "u": ["ArrowUp", "ArrowUp"], "d": ["ArrowDown", "ArrowDown"]}};
   if(!PLAY) PLAY = {type:"page", how:"Tap Play to start."};
   var doc=document, win=window;
   var isTouch = ('ontouchstart' in win) || (navigator.maxTouchPoints>0);
